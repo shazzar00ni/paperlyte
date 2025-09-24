@@ -67,6 +67,9 @@ paperlyte/
 - **Routing:** React Router
 - **Storage:** localStorage (ready for API/db)
 - **Build:** Vite
+- **Analytics:** PostHog for usage tracking
+- **Monitoring:** Sentry for error reporting
+- **Performance:** Web Vitals monitoring
 
 ---
 
@@ -79,9 +82,13 @@ paperlyte/
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/paperlyte.git
+git clone https://github.com/shazzar00ni/paperlyte.git
 cd paperlyte
 npm install
+
+# Copy environment variables
+cp .env.example .env.local
+# Edit .env.local with your analytics keys (optional for development)
 ```
 
 ### Run Locally

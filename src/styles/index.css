@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Source Sans Pro', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-background text-dark antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary/90 focus:ring-primary/50;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-white text-dark border border-gray-300 hover:bg-gray-50 focus:ring-primary/50;
+  }
+  
+  .btn-ghost {
+    @apply btn text-dark hover:bg-gray-100 focus:ring-primary/50;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-2 text-sm;
+  }
+  
+  .btn-md {
+    @apply px-4 py-2.5 text-base;
+  }
+  
+  .btn-lg {
+    @apply px-6 py-3 text-lg;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors;
+  }
+  
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50;
+  }
+  
+  .modal-content {
+    @apply bg-white rounded-xl shadow-xl max-w-md w-full p-6;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  .animation-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(108, 99, 255, 0.3);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(108, 99, 255, 0.6);
+  }
+}
