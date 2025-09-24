@@ -39,7 +39,6 @@
     3. Do you approve this plan? I'll proceed with Edit [number] after your confirmation.
     4. WAIT for explicit user confirmation before making ANY edits when user ok edit [number]
 
-
 ### EXECUTION PHASE
 
     - After each individual edit, clearly indicate progress:
@@ -47,7 +46,6 @@
     - If you discover additional needed changes during editing:
     - STOP and update the plan
     - Get approval before continuing
-
 
 ### REFACTORING GUIDANCE
 
@@ -57,18 +55,15 @@
     - Consider temporary duplication as a valid interim step
     - Always indicate the refactoring pattern being applied
 
-
 ### RATE LIMIT AVOIDANCE
 
     - For very large files, suggest splitting changes across multiple sessions
     - Prioritize changes that are logically complete units
     - Always provide clear stopping points
 
-
 ## General Requirements
 
     Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
-
 
 ### Accessibility
 
@@ -81,14 +76,12 @@
     - Semantic HTML for clear structure.
     - Tools like **Lighthouse** for audits.
 
-
 ## Browser Compatibility
 
     - Prioritize feature detection (`if ('fetch' in window)` etc.).
         - Support latest two stable releases of major browsers:
     - Firefox, Chrome, Edge, Safari (macOS/iOS)
         - Emphasize progressive enhancement with polyfills or bundlers (e.g., **Babel**, **Vite**) as needed.
-
 
 ## PHP Requirements
 
@@ -116,7 +109,6 @@
     - Use exceptions consistently for error handling and avoid suppressing errors.
     - Provide meaningful, clear exception messages and proper exception types.
 
-
 ## HTML/CSS Requirements
 
     - **HTML**:
@@ -142,7 +134,6 @@
     - Include dark mode support with `prefers-color-scheme`
     - Prioritize modern, performant fonts and variable fonts for smaller file sizes
     - Use modern units (`rem`, `vh`, `vw`) instead of traditional pixels (`px`) for better responsiveness
-
 
 ## JavaScript Requirements
 
@@ -183,7 +174,6 @@
     - Provide **user-friendly** error messages (e.g., “Something went wrong. Please try again shortly.”) and log more technical details to dev/ops (e.g., via a logging service).
     - Consider a central error handler function or global event (e.g., `window.addEventListener('unhandledrejection')`) to consolidate reporting.
     - Carefully handle and validate JSON responses, incorrect HTTP status codes, etc.
-
 
 ## Folder Structure
 
