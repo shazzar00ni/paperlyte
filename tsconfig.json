@@ -18,7 +18,6 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-<<<<<<< HEAD
     "noFallthroughCasesInSwitch": true,
 
     /* Path mapping */
@@ -35,10 +34,3 @@
   "include": ["src/**/*", "vite.config.ts"],
   "exclude": ["node_modules", "dist", "build"]
 }
-=======
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
-}
->>>>>>> main
