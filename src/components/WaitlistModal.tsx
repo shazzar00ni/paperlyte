@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { X, Mail, User, Briefcase } from 'lucide-react'
 import { trackWaitlistEvent } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
+import { dataService } from '../services/dataService'
 import type { ModalProps } from '../types'
 
 interface WaitlistFormData {
@@ -37,22 +38,16 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         throw new Error('Please enter a valid email address')
       }
 
-      // Save to localStorage (in production, this would be an API call)
-      const existingEntries = JSON.parse(localStorage.getItem('paperlyte_waitlist') || '[]')
-      
-      // Check for duplicate email
-      if (existingEntries.some((entry: any) => entry.email === formData.email)) {
-        throw new Error('You\'re already on the waitlist!')
-      }
+      // Use data service for persistence (currently localStorage, will be API in Q4 2025)
+      const result = await dataService.addToWaitlist({
+        email: formData.email,
+        name: formData.name,
+        interest: formData.interest
+      })
 
-      const newEntry = {
-        id: crypto.randomUUID(),
-        ...formData,
-        createdAt: new Date().toISOString()
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to join waitlist')
       }
-
-      existingEntries.push(newEntry)
-      localStorage.setItem('paperlyte_waitlist', JSON.stringify(existingEntries))
 
       // Track successful signup
       trackWaitlistEvent('signup', {

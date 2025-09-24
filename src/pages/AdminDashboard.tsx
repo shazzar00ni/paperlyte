@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
+import { dataService } from '../services/dataService'
 
 interface AnalyticsData {
   totalUsers: number
@@ -49,24 +50,27 @@ const AdminDashboard: React.FC = () => {
   const loadAnalyticsData = async () => {
     setIsLoading(true)
     try {
-      // Simulate API call - in real app, this would fetch from PostHog/Sentry APIs
+      // Get real data from storage for notes and waitlist counts
+      const storageInfo = await dataService.getStorageInfo()
+      
+      // Simulate API call for other metrics - in real app, this would fetch from PostHog/Sentry APIs
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Mock data for demonstration
+      // Mock data with real storage counts
       setAnalyticsData({
-        totalUsers: 1247,
-        totalNotes: 8934,
+        totalUsers: 1247 + storageInfo.waitlistCount, // Include actual waitlist signups
+        totalNotes: storageInfo.notesCount, // Use real notes count
         activeUsers: 342,
         errorCount: 23,
         performanceMetrics: {
           avgLoadTime: 1.2,
           avgRenderTime: 0.3,
-          memoryUsage: 45.2
+          memoryUsage: storageInfo.storageUsed / (1024 * 1024) // Convert to MB
         },
         topFeatures: [
           { name: 'Note Editor', usage: 78, trend: 'up' },
           { name: 'Search', usage: 45, trend: 'stable' },
-          { name: 'Waitlist', usage: 34, trend: 'up' },
+          { name: 'Waitlist', usage: Math.min(100, (storageInfo.waitlistCount / 50) * 100), trend: 'up' },
           { name: 'Landing Page', usage: 89, trend: 'down' }
         ],
         errorReports: [
@@ -85,10 +89,39 @@ const AdminDashboard: React.FC = () => {
     }
   }
 
-  const exportData = () => {
+  const exportData = async () => {
     trackFeatureUsage('admin_dashboard', 'export_data')
-    // In real app, this would export analytics data
-    alert('Data export functionality will be implemented with real analytics APIs')
+    try {
+      // Use data service to export real data
+      const data = await dataService.exportData()
+      
+      // Create downloadable JSON file
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        notes: data.notes,
+        waitlist: data.waitlist,
+        summary: {
+          totalNotes: data.notes.length,
+          totalWaitlistEntries: data.waitlist.length
+        }
+      }
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `paperlyte-data-export-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'admin_dashboard',
+        action: 'export_data_failed'
+      })
+      alert('Export failed. Please try again.')
+    }
   }
 
   if (isLoading) {

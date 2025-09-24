@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Save, Tag, Search, PlusCircle } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
+import { dataService } from '../services/dataService'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
@@ -19,15 +20,13 @@ const NoteEditor: React.FC = () => {
     loadNotes()
   }, [])
 
-  const loadNotes = () => {
+  const loadNotes = async () => {
     try {
-      const savedNotes = localStorage.getItem('paperlyte_notes')
-      if (savedNotes) {
-        const parsedNotes = JSON.parse(savedNotes)
-        setNotes(parsedNotes)
-        if (parsedNotes.length > 0) {
-          setCurrentNote(parsedNotes[0])
-        }
+      // Use data service for persistence (currently localStorage, will be API in Q4 2025)
+      const savedNotes = await dataService.getNotes()
+      setNotes(savedNotes)
+      if (savedNotes.length > 0) {
+        setCurrentNote(savedNotes[0])
       }
     } catch (error) {
       monitoring.logError(error as Error, {
@@ -37,19 +36,7 @@ const NoteEditor: React.FC = () => {
     }
   }
 
-  const saveNotes = (updatedNotes: Note[]) => {
-    try {
-      localStorage.setItem('paperlyte_notes', JSON.stringify(updatedNotes))
-      setNotes(updatedNotes)
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'note_editor', 
-        action: 'save_notes'
-      })
-    }
-  }
-
-  const createNewNote = () => {
+  const createNewNote = async () => {
     const newNote: Note = {
       id: crypto.randomUUID(),
       title: 'Untitled Note',
@@ -59,14 +46,23 @@ const NoteEditor: React.FC = () => {
       updatedAt: new Date().toISOString()
     }
 
-    const updatedNotes = [newNote, ...notes]
-    saveNotes(updatedNotes)
-    setCurrentNote(newNote)
-    
-    trackNoteEvent('create', { noteId: newNote.id })
+    // Save the new note using data service
+    const success = await dataService.saveNote(newNote)
+    if (success) {
+      const updatedNotes = [newNote, ...notes]
+      setNotes(updatedNotes)
+      setCurrentNote(newNote)
+      
+      trackNoteEvent('create', { noteId: newNote.id })
+    } else {
+      monitoring.logError(new Error('Failed to create new note'), {
+        feature: 'note_editor',
+        action: 'create_note_failed'
+      })
+    }
   }
 
-  const updateCurrentNote = (updates: Partial<Note>) => {
+  const updateCurrentNote = async (updates: Partial<Note>) => {
     if (!currentNote) return
 
     const updatedNote = {
@@ -75,17 +71,26 @@ const NoteEditor: React.FC = () => {
       updatedAt: new Date().toISOString()
     }
 
-    const updatedNotes = notes.map(note => 
-      note.id === currentNote.id ? updatedNote : note
-    )
-
-    saveNotes(updatedNotes)
-    setCurrentNote(updatedNote)
-    
-    trackNoteEvent('edit', { 
-      noteId: currentNote.id,
-      field: Object.keys(updates)[0]
-    })
+    // Save individual note using data service
+    const success = await dataService.saveNote(updatedNote)
+    if (success) {
+      const updatedNotes = notes.map(note => 
+        note.id === currentNote.id ? updatedNote : note
+      )
+      setNotes(updatedNotes)
+      setCurrentNote(updatedNote)
+      
+      trackNoteEvent('edit', { 
+        noteId: currentNote.id,
+        field: Object.keys(updates)[0]
+      })
+    } else {
+      monitoring.logError(new Error('Failed to update note'), {
+        feature: 'note_editor',
+        action: 'update_note_failed',
+        additionalData: { noteId: currentNote.id }
+      })
+    }
   }
 
   const saveCurrentNote = async () => {

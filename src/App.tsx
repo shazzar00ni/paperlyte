@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard'
 // Components
 import Header from './components/Header'
 import Footer from './components/Footer'
+import DataPersistenceWarning from './components/DataPersistenceWarning'
 
 function App() {
   useEffect(() => {
@@ -53,6 +54,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <DataPersistenceWarning />
         </div>
       </Router>
     </ErrorBoundary>
