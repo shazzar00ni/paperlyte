@@ -100,7 +100,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
     e.preventDefault()
     const text = e.clipboardData.getData('text/plain')
-    document.execCommand('insertText', false, text)
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      range.deleteContents()
+      const textNode = document.createTextNode(text)
+      range.insertNode(textNode)
+      // Move the cursor after the inserted text node
+      range.setStartAfter(textNode)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
     handleInput()
   }, [disabled, handleInput])
 
