@@ -27,7 +27,7 @@ Paperlyte is a lightning-fast, beautifully minimal note-taking app designed for 
 
 ```
 paperlyte/
-├── src/
+├── src/                     (planned for Q4 2025)
 │   ├── components/
 │   ├── pages/
 │   ├── assets/
@@ -35,16 +35,20 @@ paperlyte/
 │   ├── types/
 │   ├── utils/
 │   └── App.tsx
-├── public/
-├── docs/
+├── public/                  (planned)
+├── simple-scribbles/        (current documentation)
 │   ├── architecture.md
 │   ├── roadmap.md
 │   ├── deployment.md
 │   ├── branding.md
 │   ├── api.md
-│   ├── faq.md
-│   └── privacy.md
-├── .github/
+│   ├── faqs.md
+│   ├── privacy.md
+│   ├── data-handling.md
+│   ├── security-audit-checklist.md
+│   ├── security-implementation-guide.md
+│   └── SECURITY_THREATS.md
+├── .github/                 (planned)
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md
 │   │   └── feature_request.md
@@ -54,8 +58,8 @@ paperlyte/
 ├── CODE_OF_CONDUCT.md
 ├── SECURITY.md
 ├── LICENSE
-├── package.json
-└── tailwind.config.js
+├── package.json            (planned)
+└── tailwind.config.js      (planned)
 ```
 
 ---
@@ -106,7 +110,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 🔒 Security & Privacy
 
-See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
+See [SECURITY.md](SECURITY.md) and [Privacy Policy](simple-scribbles/privacy.md).
 
 ---
 
@@ -118,7 +122,7 @@ MIT — see [LICENSE](LICENSE).
 
 ## 📤 Contact
 
-- [FAQ](docs/faq.md) | [About](docs/branding.md) | [Privacy](docs/privacy.md) | [Contact](mailto:hello@paperlyte.com)
+- [FAQ](simple-scribbles/faqs.md) | [About](simple-scribbles/branding.md) | [Privacy](simple-scribbles/privacy.md) | [Contact](mailto:hello@paperlyte.com)
 - Join the Paperlyte movement!  
   Follow us on [Twitter](#) | [Discord](#)
 
