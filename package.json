@@ -1,0 +1,74 @@
+{
+  "name": "paperlyte",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Note-taking, Lighter Than Ever - A lightning-fast, beautifully minimal note-taking app",
+  "keywords": [
+    "notes",
+    "productivity",
+    "react",
+    "typescript",
+    "note-taking"
+  ],
+  "homepage": "https://github.com/shazzar00ni/paperlyte#readme",
+  "bugs": {
+    "url": "https://github.com/shazzar00ni/paperlyte/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shazzar00ni/paperlyte.git"
+  },
+  "license": "MIT",
+  "author": "Paperlyte Team <hello@paperlyte.com>",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "security-audit": "npm audit --audit-level moderate",
+    "security-fix": "npm audit fix",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "lucide-react": "^0.294.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "@vitejs/plugin-react": "^4.1.1",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.1.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0",
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

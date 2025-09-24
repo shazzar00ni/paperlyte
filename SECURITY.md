@@ -16,23 +16,25 @@ This document outlines the security measures, threat assessments, and compliance
 
 ### Current Security Status
 
-| Component | Status | Last Review |
-|-----------|--------|-------------|
-| Authentication Flow | ⚠️ Planned | N/A |
-| Encryption Implementation | ⚠️ Planned | N/A |
-| Data Storage | ✅ Local-only | 2024-09 |
-| Privacy Policy | ✅ Compliant | 2024-09 |
-| GDPR Compliance | ✅ Implemented | 2024-09 |
+| Component                 | Status         | Last Review |
+| ------------------------- | -------------- | ----------- |
+| Authentication Flow       | ⚠️ Planned     | N/A         |
+| Encryption Implementation | ⚠️ Planned     | N/A         |
+| Data Storage              | ✅ Local-only  | 2024-09     |
+| Privacy Policy            | ✅ Compliant   | 2024-09     |
+| GDPR Compliance           | ✅ Implemented | 2024-09     |
 
 ### Security Architecture
 
 #### Current Implementation (MVP)
+
 - **Data Storage:** Client-side localStorage only
 - **Authentication:** None (planned for Q4 2025)
 - **Encryption:** None required (local storage only)
 - **Network Security:** Static hosting, no API endpoints
 
 #### Planned Implementation (Q4 2025+)
+
 - **Authentication:** OAuth2 with Google/Apple, JWT tokens
 - **Encryption:** End-to-end encryption for all user data
 - **API Security:** Rate limiting, input validation, HTTPS only
@@ -43,6 +45,7 @@ This document outlines the security measures, threat assessments, and compliance
 For detailed threat analysis, see [simple-scribbles/SECURITY_THREATS.md](simple-scribbles/SECURITY_THREATS.md).
 
 **High Priority Risks:**
+
 1. **Data Breaches** (Future) - Mitigated by end-to-end encryption
 2. **Account Hijacking** (Future) - Mitigated by OAuth and 2FA
 3. **XSS Attacks** - Mitigated by input sanitization and CSP headers
@@ -53,12 +56,14 @@ For detailed threat analysis, see [simple-scribbles/SECURITY_THREATS.md](simple-
 ### Security Controls
 
 #### Implemented
+
 - ✅ Client-side data storage (no server-side exposure)
 - ✅ HTTPS deployment (recommended)
 - ✅ Dependency management and updates
 - ✅ Privacy policy and GDPR compliance
 
 #### Planned (Q4 2025)
+
 - 🔄 OAuth2 authentication implementation
 - 🔄 End-to-end encryption for user data
 - 🔄 API rate limiting and input validation
@@ -81,12 +86,14 @@ See [Privacy Policy](simple-scribbles/privacy.md) for detailed information.
 ### Security Recommendations
 
 #### For Current Version
+
 1. Enable HTTPS for all deployments
 2. Implement Content Security Policy (CSP) headers
 3. Regular dependency audits using `npm audit`
 4. Input sanitization for user content
 
 #### For Future Versions
+
 1. Conduct penetration testing before production release
 2. Implement comprehensive logging and monitoring
 3. Set up automated security scanning in CI/CD pipeline
@@ -112,10 +119,10 @@ See [Privacy Policy](simple-scribbles/privacy.md) for detailed information.
 
 ### Audit Log
 
-| Date | Reviewer | Action | Notes |
-|------|----------|--------|-------|
-| 2024-09 | Security Team | Initial Security Review | Documented current state and planned improvements |
-| 2024-09 | Privacy Officer | GDPR Compliance Review | Implemented full GDPR compliance measures |
+| Date    | Reviewer        | Action                  | Notes                                             |
+| ------- | --------------- | ----------------------- | ------------------------------------------------- |
+| 2024-09 | Security Team   | Initial Security Review | Documented current state and planned improvements |
+| 2024-09 | Privacy Officer | GDPR Compliance Review  | Implemented full GDPR compliance measures         |
 
 ---
 

@@ -4,11 +4,11 @@
   "public": false,
   "template": "board",
   "columns": [
-    {"name": "Backlog", "description": "Future or nice-to-have tasks"},
-    {"name": "Todo", "description": "Ready to be picked up"},
-    {"name": "In Progress", "description": "Actively being developed"},
-    {"name": "Review", "description": "Awaiting PR review / QA"},
-    {"name": "Done", "description": "Closed / completed issues"}
+    { "name": "Backlog", "description": "Future or nice-to-have tasks" },
+    { "name": "Todo", "description": "Ready to be picked up" },
+    { "name": "In Progress", "description": "Actively being developed" },
+    { "name": "Review", "description": "Awaiting PR review / QA" },
+    { "name": "Done", "description": "Closed / completed issues" }
   ],
   "views": [
     {
