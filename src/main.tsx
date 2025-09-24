@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/index.css'
 
+<<<<<<< HEAD
 const rootElement = document.getElementById('root')
 if (!rootElement) {
   throw new Error(
@@ -15,3 +16,10 @@ ReactDOM.createRoot(rootElement).render(
     <App />
   </React.StrictMode>
 )
+=======
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+>>>>>>> main

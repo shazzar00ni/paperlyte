@@ -1,5 +1,6 @@
 {
   "name": "paperlyte",
+<<<<<<< HEAD
   "version": "0.1.0",
   "private": true,
   "description": "Note-taking, Lighter Than Ever - A lightning-fast, beautifully minimal note-taking app",
@@ -38,6 +39,28 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "lucide-react": "^0.294.0"
+=======
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lightning fast, distraction-free note-taking app",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "echo 'ESLint disabled - TypeScript compiler provides type checking'",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@sentry/react": "^7.80.0",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.2.7",
+    "lucide-react": "^0.292.0",
+    "posthog-js": "^1.89.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0"
+>>>>>>> main
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
@@ -45,6 +68,7 @@
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "@vitejs/plugin-react": "^4.1.1",
+<<<<<<< HEAD
     "eslint": "^8.53.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -69,5 +93,31 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
+=======
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "vitest": "^0.34.6"
+  },
+  "keywords": [
+    "notes",
+    "writing",
+    "productivity",
+    "minimal",
+    "typescript",
+    "react"
+  ],
+  "author": "Paperlyte Team",
+  "license": "MIT",
+  "homepage": "https://paperlyte.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shazzar00ni/paperlyte.git"
+>>>>>>> main
   }
 }
