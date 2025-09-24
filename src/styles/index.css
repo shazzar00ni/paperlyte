@@ -62,6 +62,47 @@
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
   }
+
+  /* Rich Text Editor Styles */
+  .rich-text-editor .rich-text-content:empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+  }
+  
+  .rich-text-editor strong {
+    font-weight: 600;
+  }
+  
+  .rich-text-editor em {
+    font-style: italic;
+  }
+  
+  .rich-text-editor ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .rich-text-editor ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .rich-text-editor li {
+    margin-bottom: 0.25rem;
+  }
+  
+  .rich-text-editor p {
+    margin-bottom: 0.75rem;
+  }
+  
+  .rich-text-editor p:last-child {
+    margin-bottom: 0;
+  }
 }
 
 @layer utilities {

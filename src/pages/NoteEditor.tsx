@@ -3,6 +3,7 @@ import { Save, Tag, Search, PlusCircle } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
+import RichTextEditor from '../components/RichTextEditor'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
@@ -221,12 +222,13 @@ const NoteEditor: React.FC = () => {
             </div>
 
             {/* Editor Content */}
-            <div className="flex-1 p-6">
-              <textarea
-                value={currentNote.content}
-                onChange={(e) => updateCurrentNote({ content: e.target.value })}
+            <div className="flex-1">
+              <RichTextEditor
+                content={currentNote.content}
+                onChange={(content) => updateCurrentNote({ content })}
                 placeholder="Start writing your thoughts..."
-                className="w-full h-full resize-none border-none outline-none text-dark bg-transparent text-lg leading-relaxed"
+                className="h-full"
+                disabled={isLoading}
               />
             </div>
           </>
