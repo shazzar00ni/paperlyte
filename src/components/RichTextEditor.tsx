@@ -46,12 +46,64 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange])
 
-  // Format text using execCommand
+  // Helper to wrap selection with a tag
+  const wrapSelectionWithTag = (tag: string) => {
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+    const range = selection.getRangeAt(0)
+    if (range.collapsed) return
+    const wrapper = document.createElement(tag)
+    wrapper.appendChild(range.extractContents())
+    range.insertNode(wrapper)
+    // Move selection to after the inserted node
+    selection.removeAllRanges()
+    const newRange = document.createRange()
+    newRange.selectNodeContents(wrapper)
+    newRange.collapse(false)
+    selection.addRange(newRange)
+  }
+
+  // Format text using Selection API
   const formatText = useCallback((command: string, value?: string) => {
     if (disabled) return
-    
-    document.execCommand(command, false, value)
-    editorRef.current?.focus()
+    if (!editorRef.current) return
+
+    switch (command) {
+      case 'bold':
+        wrapSelectionWithTag('b')
+        break
+      case 'italic':
+        wrapSelectionWithTag('i')
+        break
+      case 'underline':
+        wrapSelectionWithTag('u')
+        break
+      // Minimal stubs for outdent and formatBlock
+      case 'outdent':
+        // No-op or implement custom logic if needed
+        break
+      case 'formatBlock':
+        // For 'div', replace parent block element with <div>
+        if (value === 'div') {
+          const selection = window.getSelection()
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0)
+            let block = range.startContainer
+            while (block && block.nodeType === 3) {
+              block = block.parentNode
+            }
+            if (block && block instanceof HTMLElement && block !== editorRef.current) {
+              const div = document.createElement('div')
+              div.innerHTML = block.innerHTML
+              block.replaceWith(div)
+            }
+          }
+        }
+        break
+      default:
+        break
+    }
+    editorRef.current.focus()
     handleInput()
   }, [disabled, handleInput])
 
