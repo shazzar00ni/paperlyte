@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "echo 'Linting skipped - TypeScript compiler provides type checking'",
+    "lint": "echo 'ESLint disabled - TypeScript compiler provides type checking'",
     "preview": "vite preview",
     "test": "vitest"
   },
