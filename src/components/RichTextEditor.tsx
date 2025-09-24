@@ -118,10 +118,69 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Toolbar button states
   const isActive = useCallback((command: string): boolean => {
     if (disabled) return false
-    try {
-      return document.queryCommandState(command)
-    } catch {
-      return false
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return false
+    let node = selection.focusNode
+    // If the selection is a text node, get its parent element
+    if (node && node.nodeType === Node.TEXT_NODE) {
+      node = node.parentElement
+    }
+    if (!node) return false
+    // Traverse up the DOM tree to check for formatting tags
+    switch (command) {
+      case 'bold':
+        while (node && node !== editorRef.current) {
+          if (
+            node.nodeName === 'B' ||
+            node.nodeName === 'STRONG' ||
+            (node instanceof HTMLElement && node.style.fontWeight === 'bold')
+          ) {
+            return true
+          }
+          node = node.parentElement
+        }
+        return false
+      case 'italic':
+        while (node && node !== editorRef.current) {
+          if (
+            node.nodeName === 'I' ||
+            node.nodeName === 'EM' ||
+            (node instanceof HTMLElement && node.style.fontStyle === 'italic')
+          ) {
+            return true
+          }
+          node = node.parentElement
+        }
+        return false
+      case 'underline':
+        while (node && node !== editorRef.current) {
+          if (
+            node.nodeName === 'U' ||
+            (node instanceof HTMLElement && node.style.textDecoration.includes('underline'))
+          ) {
+            return true
+          }
+          node = node.parentElement
+        }
+        return false
+      case 'insertUnorderedList':
+        while (node && node !== editorRef.current) {
+          if (node.nodeName === 'UL') {
+            return true
+          }
+          node = node.parentElement
+        }
+        return false
+      case 'insertOrderedList':
+        while (node && node !== editorRef.current) {
+          if (node.nodeName === 'OL') {
+            return true
+          }
+          node = node.parentElement
+        }
+        return false
+      default:
+        return false
     }
   }, [disabled])
 
