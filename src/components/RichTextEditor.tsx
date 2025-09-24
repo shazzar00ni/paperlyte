@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useEffect } from 'react'
 import { Bold, Italic, List, ListOrdered } from 'lucide-react'
+import DOMPurify from 'dompurify'
 
 interface RichTextEditorProps {
   content: string
@@ -27,18 +28,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       const currentContent = editorRef.current.innerHTML
-      if (currentContent !== content) {
-        editorRef.current.innerHTML = content || ''
+      const sanitizedContent = DOMPurify.sanitize(content || '', {
+        ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'br', 'div', 'span', 'p'],
+        ALLOWED_ATTR: ['style']
+      })
+      if (currentContent !== sanitizedContent) {
+        editorRef.current.innerHTML = sanitizedContent
       }
     }
   }, [content])
 
-  // Handle content changes
+  // Handle content changes with sanitization
   const handleInput = useCallback(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       isUpdatingRef.current = true
-      const newContent = editorRef.current.innerHTML
-      onChange(newContent)
+      const rawContent = editorRef.current.innerHTML
+      const sanitizedContent = DOMPurify.sanitize(rawContent, {
+        ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'br', 'div', 'span', 'p'],
+        ALLOWED_ATTR: ['style']
+      })
+      onChange(sanitizedContent)
       // Reset flag after a short delay to allow for external updates
       setTimeout(() => {
         isUpdatingRef.current = false
@@ -89,7 +98,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           if (selection && selection.rangeCount > 0) {
             const range = selection.getRangeAt(0)
             let block = range.startContainer
-            while (block && block.nodeType === 3) {
+            while (block && block.nodeType === 3 && block.parentNode) {
               block = block.parentNode
             }
             if (block && block instanceof HTMLElement && block !== editorRef.current) {
