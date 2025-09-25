@@ -115,6 +115,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
+## 🚀 Launch Documentation
+
+Ready for launch! Check out our comprehensive launch resources:
+
+- **[Launch Checklist](LAUNCH_CHECKLIST.md)** - Complete launch coordination
+- **[Product Hunt Guide](docs/product-hunt-guide.md)** - Product Hunt launch strategy
+- **[App Store Listings](docs/app-store-listings.md)** - App directory submissions
+- **[Documentation Polish](docs/documentation-polish.md)** - Content review guide
+
+### User Documentation
+- **[Getting Started](docs/getting-started.md)** - Quick start guide for new users
+- **[Keyboard Shortcuts](docs/keyboard-shortcuts.md)** - Complete shortcuts reference
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+
+---
+
 ## 🔒 Security & Privacy
 
 See [SECURITY.md](SECURITY.md) and [Privacy Policy](simple-scribbles/privacy.md).

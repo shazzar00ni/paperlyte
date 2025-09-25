@@ -7,6 +7,8 @@ Complete launch checklist for Paperlyte including Product Hunt launch, app store
 **Phase:** Phase 7 - Launch  
 **Priority:** P1
 
+**Quick Reference:** See [Launch Timeline](LAUNCH_TIMELINE.md) for time-based coordination.
+
 ---
 
 ## 📋 Pre-Launch Checklist
