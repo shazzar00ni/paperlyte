@@ -37,6 +37,7 @@
   "dependencies": {
     "@sentry/react": "^10.15.0",
     "@types/dompurify": "^3.0.5",
+    "@types/node": "^24.5.2",
     "dompurify": "^3.2.7",
     "lucide-react": "^0.294.0",
     "posthog-js": "^1.268.5",

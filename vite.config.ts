@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   root: '.',
   resolve: {
@@ -19,10 +19,15 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    // Set CSP headers for development server
+    headers: {
+      'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
+    },
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Only enable sourcemaps in development mode for security
+    sourcemap: mode === 'development',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -31,4 +36,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

@@ -14,11 +14,11 @@
     />
     <meta name="author" content="Paperlyte Team" />
 
-    <!-- Security Headers -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;"
-    />
+    <!-- 
+      Note: Content Security Policy should be set via HTTP headers on the server
+      for production deployments. CSP via meta tags is less secure and can be 
+      bypassed in some browsers. Development server sets CSP headers via vite.config.ts
+    -->
 
     <title>Paperlyte - Note-taking, Lighter Than Ever</title>
   </head>
