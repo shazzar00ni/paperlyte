@@ -6,8 +6,8 @@ export interface User {
   id: string
   name: string
   email: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Note {
@@ -15,8 +15,8 @@ export interface Note {
   title: string
   content: string
   tags: string[]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
   userId?: string
 }
 
@@ -25,7 +25,13 @@ export interface WaitlistEntry {
   email: string
   name: string
   interest: 'student' | 'professional' | 'creator' | 'other'
-  createdAt: Date
+  createdAt: string
+}
+
+export interface ModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSubmit?: (data: Record<string, unknown>) => void
 }
 
 export type Theme = 'light' | 'dark' | 'auto'

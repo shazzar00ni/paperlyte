@@ -36,4 +36,13 @@ module.exports = {
       version: 'detect',
     },
   },
+  overrides: [
+    {
+      files: ['src/utils/analytics.ts', 'src/utils/monitoring.ts'],
+      rules: {
+        'no-console': 'off', // Allow console statements in utility files
+        '@typescript-eslint/no-explicit-any': 'off', // Allow any for external service integrations
+      },
+    },
+  ],
 }
