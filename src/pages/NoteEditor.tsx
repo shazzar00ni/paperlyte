@@ -248,8 +248,10 @@ const NoteEditor: React.FC = () => {
                 </div>
                 <button
                   onClick={(e) => handleDeleteNote(note, e)}
-                  className="ml-2 p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                  disabled={isDeleteModalOpen || isDeleting}
+                  className="ml-2 p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 focus:text-red-600 focus:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Delete note"
+                  aria-label={`Delete note "${note.title}"`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
 import type { ModalProps } from '../types'
 
@@ -26,6 +26,24 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   isLoading = false
 }) => {
+  // Generate stable IDs for accessibility
+  const titleId = `confirmation-title-${React.useId()}`
+  const messageId = `confirmation-message-${React.useId()}`
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isLoading) {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isLoading, onClose])
+
   if (!isOpen) return null
 
   const handleConfirm = () => {
@@ -46,34 +64,44 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content max-w-sm" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="modal-content max-w-sm" 
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+      >
         {/* Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
               <AlertTriangle className="h-6 w-6 text-amber-500" />
             </div>
-            <h2 className="text-lg font-semibold text-dark">
+            <h2 id={titleId} className="text-lg font-semibold text-dark">
               {title}
             </h2>
           </div>
           <button
+            type="button"
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 p-1"
             disabled={isLoading}
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Message */}
-        <p className="text-gray-600 mb-6 ml-9">
+        <p id={messageId} className="text-gray-600 mb-6 ml-9">
           {message}
         </p>
 
         {/* Actions */}
         <div className="flex justify-end space-x-3">
           <button
+            type="button"
             onClick={handleClose}
             disabled={isLoading}
             className="btn-secondary btn-sm"
@@ -81,6 +109,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             {cancelText}
           </button>
           <button
+            type="button"
             onClick={handleConfirm}
             disabled={isLoading}
             className={`btn btn-sm ${confirmButtonClass} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
