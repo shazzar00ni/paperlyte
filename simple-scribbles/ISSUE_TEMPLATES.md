@@ -16,9 +16,10 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots.
 
 **Environment (please complete the following):**
- - OS:
- - Browser:
- - App Version:
+
+- OS:
+- Browser:
+- App Version:
 
 **Additional context**
 Add any other context about the problem here.

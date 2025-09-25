@@ -1,0 +1,71 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+}
+
+.App-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  margin: 2rem;
+}
+
+.App-header h1 {
+  font-size: 3rem;
+  margin: 0 0 1rem 0;
+  font-weight: 700;
+  background: linear-gradient(45deg, #ffffff, #f0f0f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.App-header p {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.development-notice {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-header {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
