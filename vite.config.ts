@@ -21,7 +21,8 @@ export default defineConfig(({ mode }) => ({
     open: true,
     // Set CSP headers for development server
     headers: {
-      'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
+      'Content-Security-Policy':
+        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
     },
   },
   build: {

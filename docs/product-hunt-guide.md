@@ -1,6 +1,7 @@
 # 🏆 Product Hunt Launch Guide
 
 ## Overview
+
 Complete guide for launching Paperlyte on Product Hunt, including preparation timeline, asset requirements, and launch day execution.
 
 ---
@@ -8,6 +9,7 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
 ## 📅 Launch Timeline
 
 ### 4 Weeks Before Launch
+
 - [ ] Create Product Hunt maker account
 - [ ] Research successful similar product launches
 - [ ] Start building email list of supporters
@@ -15,6 +17,7 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
 - [ ] Identify potential hunters in our network
 
 ### 2 Weeks Before Launch
+
 - [ ] Finalize all launch assets
 - [ ] Schedule product submission (draft)
 - [ ] Reach out to potential hunters
@@ -22,6 +25,7 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
 - [ ] Coordinate with team for launch day availability
 
 ### 1 Week Before Launch
+
 - [ ] Submit product for approval (goes live next Tuesday)
 - [ ] Send save-the-date emails to supporters
 - [ ] Prepare launch day social media content
@@ -29,6 +33,7 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
 - [ ] Test all tracking and analytics
 
 ### Launch Day (Tuesday)
+
 - [ ] **12:01 AM PST:** Product goes live automatically
 - [ ] **12:01 AM:** Send launch notifications to supporters
 - [ ] **6:00 AM:** First social media posts
@@ -41,12 +46,14 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
 ## 🎨 Required Assets
 
 ### Product Logo
+
 - **Format:** PNG with transparent background
 - **Size:** 240x240 pixels
 - **Style:** Clean, recognizable at small sizes
 - **File:** Use the existing Paperlyte logo from `/simple-scribbles/`
 
 ### Gallery Images (Up to 5 images)
+
 - **Format:** PNG or JPG
 - **Size:** 1270x760 pixels (16:9.5 ratio)
 - **Content suggestions:**
@@ -57,6 +64,7 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
   5. **Use Cases:** Different user scenarios
 
 ### Demo Video/GIF (Optional but recommended)
+
 - **Format:** MP4 or GIF
 - **Duration:** 15-30 seconds
 - **Content:** Quick app walkthrough showing core features
@@ -67,12 +75,15 @@ Complete guide for launching Paperlyte on Product Hunt, including preparation ti
 ## ✍️ Copy and Messaging
 
 ### Product Tagline (60 characters max)
+
 **Suggested:** "Lightning-fast, distraction-free note-taking app"
 
 ### Short Description (260 characters max)
+
 **Suggested:** "Paperlyte is a lightning-fast, distraction-free note-taking app. Save ideas instantly, organize effortlessly, and focus on what matters. Private, secure, and minimal by design."
 
 ### Detailed Description
+
 ```
 🚀 **Why Paperlyte?**
 
@@ -80,7 +91,7 @@ In a world full of distractions, your thoughts deserve a serene home. Paperlyte 
 
 ✨ **Key Features:**
 • **Instant Save:** Ideas captured in milliseconds—never lose your spark
-• **Zero Distractions:** Clean, minimal interface that gets out of your way  
+• **Zero Distractions:** Clean, minimal interface that gets out of your way
 • **Smart Organization:** Tags, search, and grouping that actually work
 • **Works Everywhere:** Responsive design for web, tablet, and mobile
 • **Private & Secure:** End-to-end encryption, ad-free experience
@@ -98,6 +109,7 @@ Try Paperlyte today and rediscover the joy of focused note-taking.
 ```
 
 ### Maker Comment Template
+
 ```
 Hey Product Hunt! 👋
 
@@ -121,17 +133,18 @@ Thanks for checking it out! 🚀
 ### Twitter/X Posts
 
 **Announcement Post:**
+
 ```
-🚀 We're live on @ProductHunt! 
+🚀 We're live on @ProductHunt!
 
 Paperlyte is a lightning-fast, distraction-free note-taking app built for creators, writers, and thinkers.
 
 ✨ Save ideas instantly
-🎯 Zero distractions  
+🎯 Zero distractions
 🔐 Private & secure
 📱 Works everywhere
 
-Check it out and let us know what you think! 
+Check it out and let us know what you think!
 
 [Product Hunt Link]
 
@@ -139,23 +152,25 @@ Check it out and let us know what you think!
 ```
 
 **Feature Highlight Posts:**
+
 ```
 ⚡ Lightning-fast saves mean you'll never lose an idea again
-🎯 Minimal design helps you focus on what matters  
+🎯 Minimal design helps you focus on what matters
 🔍 Smart search finds anything instantly
 🏷️ Tags and organization that actually work
 🔐 Your thoughts stay private and secure
 ```
 
 ### LinkedIn Post
+
 ```
-Excited to share that we've launched Paperlyte on Product Hunt today! 
+Excited to share that we've launched Paperlyte on Product Hunt today!
 
 After months of development, we've created a note-taking app that prioritizes speed, simplicity, and privacy. In a world of over-complicated productivity tools, sometimes you just need a clean canvas for your thoughts.
 
 Key features:
 • Instant note capture and saving
-• Distraction-free, minimal interface  
+• Distraction-free, minimal interface
 • Smart organization with tags and search
 • Privacy-first approach with local storage
 • Responsive design for any device
@@ -174,21 +189,25 @@ Check it out on Product Hunt and let me know what you think!
 ### Response Templates
 
 **Thank you for support:**
+
 ```
 Thanks so much for the support! 🙏 Really appreciate you checking out Paperlyte. Would love to hear what features you'd find most useful!
 ```
 
 **Feature questions:**
+
 ```
 Great question! [Specific answer]. We built Paperlyte to be [relevant benefit]. Is this something you'd find useful in your workflow?
 ```
 
 **Comparison questions:**
+
 ```
 Thanks for asking! What sets Paperlyte apart is [key differentiator]. We focused on [core benefit] because we found other apps were [common problem]. Hope that helps!
 ```
 
 **Technical questions:**
+
 ```
 Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies for [reason]. You can check out more technical details in our GitHub repo if you're interested!
 ```
@@ -198,6 +217,7 @@ Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies 
 ## 📊 Launch Day Analytics
 
 ### Metrics to Track
+
 - **Product Hunt ranking throughout the day**
 - **Total upvotes and comments**
 - **Website traffic from Product Hunt**
@@ -206,6 +226,7 @@ Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies 
 - **GitHub stars and repository activity**
 
 ### Tools Setup
+
 - [ ] Google Analytics goals for PH traffic
 - [ ] UTM tracking for all shared links
 - [ ] PostHog events for launch day activities
@@ -216,24 +237,28 @@ Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies 
 ## 🚨 Launch Day Team Roles
 
 ### Team Lead
+
 - Monitor overall launch progress
 - Coordinate team responses
 - Make real-time decisions
 - Handle media inquiries
 
 ### Community Manager
+
 - Respond to Product Hunt comments
 - Manage social media posts
 - Engage with supporters
 - Monitor brand mentions
 
 ### Developer
+
 - Monitor app performance
 - Handle any technical issues
 - Update analytics and tracking
 - Support user inquiries
 
 ### Content Creator
+
 - Create real-time social content
 - Update press kit if needed
 - Document launch highlights
@@ -244,12 +269,14 @@ Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies 
 ## 🎯 Success Criteria
 
 ### Minimum Success
+
 - **Top 20:** Daily ranking on Product Hunt
 - **100+ upvotes:** Community engagement
 - **25+ comments:** Active discussion
 - **500+ website visits:** Traffic generation
 
-### Stretch Goals  
+### Stretch Goals
+
 - **Top 10:** Daily ranking
 - **250+ upvotes:** Strong community support
 - **50+ comments:** High engagement
@@ -261,6 +288,7 @@ Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies 
 ## 📝 Post-Launch Follow-up
 
 ### Week 1
+
 - [ ] Thank you post to supporters
 - [ ] Analyze launch metrics and feedback
 - [ ] Update website with "Featured on Product Hunt" badge
@@ -268,6 +296,7 @@ Yes! Paperlyte is built with [relevant tech stack]. We chose these technologies 
 - [ ] Plan product iterations based on feedback
 
 ### Week 2-4
+
 - [ ] Create case study of launch results
 - [ ] Share lessons learned publicly
 - [ ] Build on launch momentum with regular updates

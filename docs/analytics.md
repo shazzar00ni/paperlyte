@@ -5,18 +5,20 @@ Paperlyte uses PostHog for analytics and Sentry for error monitoring to track fe
 ## PostHog Analytics
 
 ### Features Tracked
+
 - **User Actions**: Page views, feature usage, button clicks
 - **Note Editor**: Create, edit, save, delete operations
-- **Waitlist**: Signup events and conversion tracking  
+- **Waitlist**: Signup events and conversion tracking
 - **Performance**: Load times, render times, memory usage
 - **Feature Usage**: Which features are used most frequently
 
 ### Events Structure
+
 ```typescript
 // User actions
 analytics.track('user_action', { action: 'landing_page_view' })
 
-// Feature usage  
+// Feature usage
 analytics.trackFeature('note_editor', 'create', { noteId: 'uuid' })
 
 // Performance metrics
@@ -24,6 +26,7 @@ analytics.trackPerformance('page_load_time', 1200, { unit: 'millisecond' })
 ```
 
 ### Setup
+
 1. Sign up for PostHog at https://posthog.com
 2. Get your API key and host URL
 3. Add to environment variables:
@@ -35,6 +38,7 @@ analytics.trackPerformance('page_load_time', 1200, { unit: 'millisecond' })
 ## Sentry Error Monitoring
 
 ### Features Monitored
+
 - **JavaScript Errors**: Runtime exceptions and crashes
 - **Performance Issues**: Slow operations and memory leaks
 - **User Context**: Error attribution to specific users/features
@@ -42,16 +46,18 @@ analytics.trackPerformance('page_load_time', 1200, { unit: 'millisecond' })
 - **Release Tracking**: Error trends across app versions
 
 ### Error Context
+
 ```typescript
 monitoring.logError(error, {
   userId: 'user123',
   feature: 'note_editor',
   action: 'save_note',
-  additionalData: { noteId: 'uuid' }
+  additionalData: { noteId: 'uuid' },
 })
 ```
 
 ### Setup
+
 1. Create Sentry project at https://sentry.io
 2. Get your DSN (Data Source Name)
 3. Add to environment variables:
@@ -63,6 +69,7 @@ monitoring.logError(error, {
 ## Environment Configuration
 
 ### Production
+
 ```bash
 # Analytics enabled
 VITE_POSTHOG_API_KEY=ph_your_production_key
@@ -74,6 +81,7 @@ VITE_ENABLE_PERFORMANCE_MONITORING=true
 ```
 
 ### Development
+
 ```bash
 # Analytics disabled for development
 VITE_POSTHOG_API_KEY=
@@ -86,12 +94,14 @@ VITE_ENABLE_PERFORMANCE_MONITORING=true
 ## Privacy & Compliance
 
 ### Data Collection
+
 - **Minimal Data**: Only essential usage metrics and error data
 - **No PII**: Personal content is never sent to analytics services
 - **User Consent**: Users can opt-out of analytics in preferences
 - **GDPR Compliant**: Respects Do Not Track headers and user preferences
 
 ### User Controls
+
 ```typescript
 // Disable analytics
 analytics.disable()
@@ -115,6 +125,7 @@ The analytics data is displayed in the admin dashboard at `/admin`:
 ## Integration with Deployment
 
 ### Netlify
+
 ```toml
 # netlify.toml
 [build.environment]
@@ -122,7 +133,8 @@ The analytics data is displayed in the admin dashboard at `/admin`:
   VITE_SENTRY_DSN = "your_dsn"
 ```
 
-### Vercel  
+### Vercel
+
 ```json
 // vercel.json
 {
@@ -134,6 +146,7 @@ The analytics data is displayed in the admin dashboard at `/admin`:
 ```
 
 ### GitHub Actions
+
 ```yaml
 # .github/workflows/deploy.yml
 env:
@@ -164,13 +177,13 @@ const handleFeatureUse = () => {
 const handleError = (error: Error) => {
   monitoring.logError(error, {
     feature: 'component_name',
-    action: 'user_action'
+    action: 'user_action',
   })
 }
 
 // Add debugging context
-monitoring.addBreadcrumb('User clicked button', 'ui', { 
-  buttonId: 'save-note' 
+monitoring.addBreadcrumb('User clicked button', 'ui', {
+  buttonId: 'save-note',
 })
 ```
 
