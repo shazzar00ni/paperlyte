@@ -32,6 +32,9 @@
     "type-check": "tsc --noEmit",
     "security-audit": "npm audit --audit-level moderate",
     "security-fix": "npm audit fix",
+    "lighthouse:ci": "lhci autorun",
+    "lighthouse:local": "lighthouse http://localhost:4173 --output html --output-path ./lighthouse-report.html --view",
+    "performance:audit": "npm run build && npm run preview & sleep 3 && npm run lighthouse:ci && pkill -f 'vite preview'",
     "prepare": "husky install"
   },
   "dependencies": {
