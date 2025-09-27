@@ -5,6 +5,7 @@ This document outlines the security configurations required for production deplo
 ## Content Security Policy (CSP)
 
 ### Development
+
 The development server automatically sets CSP headers via Vite configuration. No additional setup required.
 
 ### Production Deployment
@@ -12,6 +13,7 @@ The development server automatically sets CSP headers via Vite configuration. No
 **Important**: CSP must be set via HTTP headers on your production server for proper security. CSP via meta tags is less secure and can be bypassed.
 
 #### Recommended CSP Header
+
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;
 ```
@@ -19,22 +21,26 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 #### Server Configuration Examples
 
 **Nginx:**
+
 ```nginx
 add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;";
 ```
 
 **Apache (.htaccess):**
+
 ```apache
 Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;"
 ```
 
-**Netlify (_headers file):**
+**Netlify (\_headers file):**
+
 ```
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;
 ```
 
 **Vercel (vercel.json):**
+
 ```json
 {
   "headers": [
@@ -56,6 +62,7 @@ Header always set Content-Security-Policy "default-src 'self'; script-src 'self'
 Source maps are automatically disabled in production builds to prevent source code exposure. They are only enabled in development mode for debugging purposes.
 
 ### Build Configuration
+
 - **Development**: `sourcemap: true` (enabled for debugging)
 - **Production**: `sourcemap: false` (disabled for security)
 
@@ -82,6 +89,7 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 ## Testing CSP
 
 Use browser developer tools to verify CSP is properly enforced:
+
 1. Open browser dev tools
 2. Check Console for CSP violations
 3. Verify Network tab shows CSP headers in response

@@ -20,12 +20,14 @@ docs/assets/launch/
 ## 🎨 Asset Guidelines
 
 ### Logo Requirements
+
 - **Format:** PNG with transparent background
 - **Quality:** High resolution, vector-based when possible
 - **Consistency:** Use official Paperlyte branding colors
 - **Source:** Based on existing logos in `/simple-scribbles/`
 
 ### File Naming Convention
+
 ```
 [platform]-[description]-[dimensions].[extension]
 Examples:
@@ -38,6 +40,7 @@ Examples:
 ## 📋 Asset Creation Status
 
 ### To Create
+
 - [ ] Product Hunt assets (logo, gallery images, demo GIF)
 - [ ] App store icons (multiple sizes)
 - [ ] Screenshots for different platforms
@@ -45,6 +48,7 @@ Examples:
 - [ ] Press kit materials
 
 ### Tools Needed
+
 - Design software for graphics
 - Screenshot tools for app captures
 - Image optimization tools

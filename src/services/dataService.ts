@@ -3,10 +3,10 @@ import { monitoring } from '../utils/monitoring'
 
 /**
  * Data Service - Abstraction layer for data persistence
- * 
+ *
  * CURRENT IMPLEMENTATION: localStorage (MVP phase)
  * FUTURE MIGRATION: Will be replaced with API calls in Q4 2025
- * 
+ *
  * This abstraction layer ensures easy migration from localStorage to API
  * without changing component code.
  */
@@ -25,7 +25,7 @@ class DataService {
       monitoring.logError(error as Error, {
         feature: 'data_service',
         action: 'get_from_storage',
-        additionalData: { key }
+        additionalData: { key },
       })
       return []
     }
@@ -39,7 +39,7 @@ class DataService {
       monitoring.logError(error as Error, {
         feature: 'data_service',
         action: 'save_to_storage',
-        additionalData: { key, dataLength: data.length }
+        additionalData: { key, dataLength: data.length },
       })
       return false
     }
@@ -47,7 +47,7 @@ class DataService {
 
   /**
    * Notes operations
-   * 
+   *
    * TODO: Replace with API calls in Q4 2025:
    * - GET /api/notes
    * - POST /api/notes
@@ -56,7 +56,7 @@ class DataService {
    */
   async getNotes(): Promise<Note[]> {
     // Simulate async API call for future compatibility
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const notes = this.getFromStorage<Note>('notes')
         resolve(notes)
@@ -65,17 +65,17 @@ class DataService {
   }
 
   async saveNote(note: Note): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const notes = this.getFromStorage<Note>('notes')
         const existingIndex = notes.findIndex(n => n.id === note.id)
-        
+
         if (existingIndex >= 0) {
           notes[existingIndex] = note
         } else {
           notes.unshift(note) // Add new notes to the beginning
         }
-        
+
         const success = this.saveToStorage('notes', notes)
         resolve(success)
       }, 0)
@@ -83,7 +83,7 @@ class DataService {
   }
 
   async deleteNote(noteId: string): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const notes = this.getFromStorage<Note>('notes')
         const filteredNotes = notes.filter(note => note.id !== noteId)
@@ -95,32 +95,37 @@ class DataService {
 
   /**
    * Waitlist operations
-   * 
+   *
    * TODO: Replace with API calls in Q4 2025:
    * - POST /api/waitlist
    * - GET /api/waitlist (admin only)
    */
-  async addToWaitlist(entry: Omit<WaitlistEntry, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: string }> {
-    return new Promise((resolve) => {
+  async addToWaitlist(
+    entry: Omit<WaitlistEntry, 'id' | 'createdAt'>
+  ): Promise<{ success: boolean; error?: string }> {
+    return new Promise(resolve => {
       setTimeout(() => {
         try {
           const existingEntries = this.getFromStorage<WaitlistEntry>('waitlist')
-          
+
           // Check for duplicate email
           if (existingEntries.some(e => e.email === entry.email)) {
-            resolve({ success: false, error: 'You\'re already on the waitlist!' })
+            resolve({
+              success: false,
+              error: "You're already on the waitlist!",
+            })
             return
           }
 
           const newEntry: WaitlistEntry = {
             id: crypto.randomUUID(),
             ...entry,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
           }
 
           existingEntries.push(newEntry)
           const success = this.saveToStorage('waitlist', existingEntries)
-          
+
           if (success) {
             resolve({ success: true })
           } else {
@@ -129,7 +134,7 @@ class DataService {
         } catch (error) {
           monitoring.logError(error as Error, {
             feature: 'data_service',
-            action: 'add_to_waitlist'
+            action: 'add_to_waitlist',
           })
           resolve({ success: false, error: 'An unexpected error occurred' })
         }
@@ -138,7 +143,7 @@ class DataService {
   }
 
   async getWaitlistEntries(): Promise<WaitlistEntry[]> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const entries = this.getFromStorage<WaitlistEntry>('waitlist')
         resolve(entries)
@@ -152,9 +157,9 @@ class DataService {
   async exportData(): Promise<{ notes: Note[]; waitlist: WaitlistEntry[] }> {
     const [notes, waitlist] = await Promise.all([
       this.getNotes(),
-      this.getWaitlistEntries()
+      this.getWaitlistEntries(),
     ])
-    
+
     return { notes, waitlist }
   }
 
@@ -162,7 +167,7 @@ class DataService {
    * Clear all data (for testing/development)
    */
   async clearAllData(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         localStorage.removeItem(`${this.storagePrefix}notes`)
         localStorage.removeItem(`${this.storagePrefix}waitlist`)
@@ -180,24 +185,26 @@ class DataService {
     storageUsed: number
     storageQuota: number
   }> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         const notes = this.getFromStorage<Note>('notes')
         const waitlist = this.getFromStorage<WaitlistEntry>('waitlist')
-        
+
         // Estimate storage usage
-        const notesData = localStorage.getItem(`${this.storagePrefix}notes`) || ''
-        const waitlistData = localStorage.getItem(`${this.storagePrefix}waitlist`) || ''
+        const notesData =
+          localStorage.getItem(`${this.storagePrefix}notes`) || ''
+        const waitlistData =
+          localStorage.getItem(`${this.storagePrefix}waitlist`) || ''
         const storageUsed = new Blob([notesData + waitlistData]).size
-        
+
         // Typical localStorage quota is 5-10MB, but we can't reliably detect it
         const storageQuota = 5 * 1024 * 1024 // 5MB assumption
-        
+
         resolve({
           notesCount: notes.length,
           waitlistCount: waitlist.length,
           storageUsed,
-          storageQuota
+          storageQuota,
         })
       }, 0)
     })

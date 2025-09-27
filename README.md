@@ -125,6 +125,7 @@ Ready for launch! Check out our comprehensive launch resources:
 - **[Documentation Polish](docs/documentation-polish.md)** - Content review guide
 
 ### User Documentation
+
 - **[Getting Started](docs/getting-started.md)** - Quick start guide for new users
 - **[Keyboard Shortcuts](docs/keyboard-shortcuts.md)** - Complete shortcuts reference
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
