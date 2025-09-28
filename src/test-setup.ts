@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { vi, beforeEach } from 'vitest'
 
 // Mock global crypto for tests
 Object.defineProperty(global, 'crypto', {
@@ -43,11 +43,13 @@ vi.mock('@sentry/react', () => ({
   addBreadcrumb: vi.fn(),
   setUser: vi.fn(),
   setMeasurement: vi.fn(),
-  withScope: vi.fn((callback) => callback({
-    setUser: vi.fn(),
-    setTag: vi.fn(),
-    setContext: vi.fn(),
-  })),
+  withScope: vi.fn(callback =>
+    callback({
+      setUser: vi.fn(),
+      setTag: vi.fn(),
+      setContext: vi.fn(),
+    })
+  ),
   withErrorBoundary: vi.fn(),
   ErrorBoundary: vi.fn(),
 }))

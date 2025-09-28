@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { dataService } from '../../services/dataService'
-import type { Note, WaitlistEntry } from '../../types'
+import type { Note } from '../../types'
 
 describe('DataService', () => {
   beforeEach(() => {
@@ -71,7 +71,7 @@ describe('DataService', () => {
       // Save multiple notes
       const note1 = { ...mockNote, id: 'note-1' }
       const note2 = { ...mockNote, id: 'note-2' }
-      
+
       await dataService.saveNote(note1)
       await dataService.saveNote(note2)
 
@@ -104,7 +104,7 @@ describe('DataService', () => {
 
     it('should add new waitlist entry', async () => {
       const result = await dataService.addToWaitlist(mockWaitlistEntry)
-      
+
       expect(result.success).toBe(true)
       expect(result.error).toBeUndefined()
 
@@ -121,7 +121,7 @@ describe('DataService', () => {
 
       // Try to add duplicate
       const result = await dataService.addToWaitlist(mockWaitlistEntry)
-      
+
       expect(result.success).toBe(false)
       expect(result.error).toBe("You're already on the waitlist!")
 
@@ -166,7 +166,7 @@ describe('DataService', () => {
       await dataService.addToWaitlist(mockWaitlistEntry)
 
       const exportedData = await dataService.exportData()
-      
+
       expect(exportedData.notes).toHaveLength(1)
       expect(exportedData.waitlist).toHaveLength(1)
       expect(exportedData.notes[0].id).toBe('note-1')
@@ -197,7 +197,7 @@ describe('DataService', () => {
       // Verify data is cleared
       const notes = await dataService.getNotes()
       const waitlist = await dataService.getWaitlistEntries()
-      
+
       expect(notes).toHaveLength(0)
       expect(waitlist).toHaveLength(0)
     })
@@ -215,7 +215,7 @@ describe('DataService', () => {
       await dataService.saveNote(mockNote)
 
       const storageInfo = await dataService.getStorageInfo()
-      
+
       expect(storageInfo.notesCount).toBe(1)
       expect(storageInfo.waitlistCount).toBe(0)
       expect(storageInfo.storageUsed).toBeGreaterThan(0)
