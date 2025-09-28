@@ -120,7 +120,7 @@ describe('Security Integration Tests', () => {
       render(<WaitlistModal isOpen={true} onClose={() => {}} onSubmit={onSubmit} />)
       
       const emailInput = screen.getByLabelText(/email/i)
-      const submitButton = screen.getByRole('button', { name: /submit/i })
+      const submitButton = screen.getByRole('button', { name: /join waitlist/i })
       
       // Test invalid email formats
       const invalidEmails = [
@@ -154,7 +154,7 @@ describe('Security Integration Tests', () => {
       await user.type(nameInput, '<script>alert("XSS")</script>John Doe')
       await user.type(emailInput, 'john@example.com')
       
-      const submitButton = screen.getByRole('button', { name: /submit/i })
+      const submitButton = screen.getByRole('button', { name: /join waitlist/i })
       await user.click(submitButton)
       
       if (onSubmit.mock.calls.length > 0) {
@@ -298,7 +298,7 @@ describe('Security Integration Tests', () => {
       
       const emailInput = screen.getByLabelText(/email/i)
       const nameInput = screen.getByLabelText(/name/i)
-      const submitButton = screen.getByRole('button', { name: /submit/i })
+      const submitButton = screen.getByRole('button', { name: /join waitlist/i })
       
       // Fill form
       await user.type(emailInput, 'test@example.com')
