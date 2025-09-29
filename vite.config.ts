@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
@@ -33,8 +33,21 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          monitoring: ['@sentry/react', 'posthog-js'],
+          utils: ['dompurify', 'lucide-react'],
         },
       },
     },
+    // Optimize chunk sizes for better loading performance
+    chunkSizeWarningLimit: 1000,
+    // Enable tree shaking for better bundle optimization
+    target: 'esnext',
+    minify: 'esbuild',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: [],
   },
 }))
