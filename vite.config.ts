@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
     // Set CSP headers for development server
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
+        "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
     },
   },
   build: {
@@ -42,12 +42,19 @@ export default defineConfig(({ mode }) => ({
     // Optimize chunk sizes for better loading performance
     chunkSizeWarningLimit: 1000,
     // Enable tree shaking for better bundle optimization
-    target: 'esnext',
+    target: 'es2020',
     minify: 'esbuild',
   },
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: [],
+    setupFiles: ['./tests/setup.ts'],
+    coverage: { 
+      provider: 'v8', 
+      reporter: ['text', 'lcov'], 
+      lines: 60, 
+      functions: 60, 
+      branches: 50 
+    },
   },
 }))
