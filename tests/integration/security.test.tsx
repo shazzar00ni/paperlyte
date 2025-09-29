@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DOMPurify from 'dompurify'
 import RichTextEditor from '../../src/components/RichTextEditor'
 import WaitlistModal from '../../src/components/WaitlistModal'
 
@@ -12,7 +11,6 @@ describe('Security Integration Tests', () => {
 
   describe('XSS Prevention', () => {
     it('should sanitize malicious script tags in rich text editor', async () => {
-      const user = userEvent.setup()
       const onChange = vi.fn()
       
       render(<RichTextEditor content="" onChange={onChange} />)
@@ -193,7 +191,6 @@ describe('Security Integration Tests', () => {
 
   describe('Data Sanitization', () => {
     it('should sanitize data before storage', async () => {
-      const user = userEvent.setup()
       const onChange = vi.fn()
       
       render(<RichTextEditor content="" onChange={onChange} />)
