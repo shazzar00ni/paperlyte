@@ -223,6 +223,33 @@ All pull requests must pass:
 - [ ] Linting and formatting
 - [ ] Type checking
 - [ ] Build verification
+- [ ] Commit message format (Conventional Commits)
+
+### Commit Message Requirements
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) to ensure consistent commit messages:
+
+**Format:** `<type>[optional scope]: <description>`
+
+**Valid types:**
+- `feat:` - New features
+- `fix:` - Bug fixes  
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting, etc.)
+- `refactor:` - Code refactoring
+- `perf:` - Performance improvements
+- `test:` - Adding or fixing tests
+- `build:` - Build system changes
+- `ci:` - CI configuration changes
+- `chore:` - Other maintenance tasks
+
+**Examples:**
+```
+feat: add user authentication
+fix: resolve memory leak in editor
+docs: update testing guidelines
+test: add integration tests for search
+```
 
 ## Performance Testing
 
