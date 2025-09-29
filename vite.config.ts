@@ -19,10 +19,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     open: true,
-    // Set CSP headers for development server
+    // Set relaxed CSP headers for development server (will be stricter in production)
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
     },
   },
   build: {
