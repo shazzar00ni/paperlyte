@@ -5,6 +5,14 @@
  * and critical functionality is working as expected.
  */
 
+import fs from 'fs';
+import path from 'path';
+import { 
+  readLatestLighthouseResults, 
+  getPerformanceTargets, 
+  getMockResults 
+} from './helpers/lighthouseHelper.js';
+
 describe('Launch Checklist Validation', () => {
   describe('Technical Readiness', () => {
     test.skip('application should build successfully', async () => {
@@ -12,36 +20,16 @@ describe('Launch Checklist Validation', () => {
     });
 
     test('performance metrics should meet targets', () => {
-      const performanceTargets = {
-        lighthouse: {
-          performance: 90, // Target: >90, Current: 96
-          accessibility: 95, // Target: >95, Current: 100
-          bestPractices: 90, // Target: >90, Current: 100
-          seo: 85, // Target: >85, Current: 91
-        },
-        coreWebVitals: {
-          fcp: 1800, // Target: <1.8s, Current: 1.2s
-          lcp: 2500, // Target: <2.5s, Current: 1.4s
-          cls: 0.1,  // Target: <0.1, Current: 0.0
-          tbt: 300,  // Target: <300ms, Current: 230ms
-        }
-      };
+      // Get targets from lighthouserc.json
+      const performanceTargets = getPerformanceTargets();
 
-      // Mock current performance results (from audit)
-      const currentResults = {
-        lighthouse: {
-          performance: 96,
-          accessibility: 100,
-          bestPractices: 100,
-          seo: 91,
-        },
-        coreWebVitals: {
-          fcp: 1200, // 1.2s
-          lcp: 1400, // 1.4s
-          cls: 0.0,
-          tbt: 230,
-        }
-      };
+      // Try to read actual Lighthouse results, fall back to mock if not available
+      const lighthouseResults = readLatestLighthouseResults();
+      const currentResults = lighthouseResults || getMockResults();
+
+      if (!lighthouseResults) {
+        console.log('Using mock performance results. Run Lighthouse CI for actual metrics.');
+      }
 
       // Validate Lighthouse scores
       expect(currentResults.lighthouse.performance).toBeGreaterThanOrEqual(performanceTargets.lighthouse.performance);
@@ -83,13 +71,20 @@ describe('Launch Checklist Validation', () => {
         'LICENSE',
         'LAUNCH_CHECKLIST.md',
         'docs/CODEBASE_AUDIT_REPORT.md',
-        'docs/PERFORMANCE_BASELINE.md'
+        'docs/PERFORMANCE_BASELINE.md',
+        'docs/SECURITY_CSP.md'
       ];
 
-      // In a real test, you'd check if these files exist
+      // Verify each required document exists on disk
       requiredDocs.forEach(doc => {
-        expect(typeof doc).toBe('string');
-        expect(doc.length).toBeGreaterThan(0);
+        const resolvedPath = path.resolve(process.cwd(), doc);
+        
+        // Check file exists
+        expect(fs.existsSync(resolvedPath)).toBe(true);
+        
+        // Verify it's a regular file (not a directory)
+        const stats = fs.statSync(resolvedPath);
+        expect(stats.isFile()).toBe(true);
       });
     });
 
