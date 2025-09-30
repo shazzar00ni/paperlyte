@@ -31,7 +31,11 @@
     <!-- 
       Note: Content Security Policy should be set via HTTP headers on the server
       for production deployments. CSP via meta tags is less secure and can be 
-      bypassed in some browsers. Development server sets CSP headers via vite.config.ts
+      bypassed in some browsers. Development server sets environment-aware CSP 
+      headers via vite.config.ts with minimal unsafe directives only in dev mode.
+      
+      Production CSP should use nonces or hashes for inline scripts/styles:
+      script-src 'self' 'nonce-{random}'; style-src 'self' 'nonce-{random}';
     -->
 
     <title>Paperlyte - Note-taking, Lighter Than Ever</title>

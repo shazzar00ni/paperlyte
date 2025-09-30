@@ -20,9 +20,13 @@ export default defineConfig(({ mode }) => ({
     port: 3000,
     open: true,
     // Set CSP headers for development server
+    // Note: These relaxed directives are for development only
+    // Production should use stricter CSP via HTTP headers with nonces/hashes
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
+        mode === 'development'
+          ? "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;"
+          : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
     },
   },
   build: {
@@ -49,12 +53,12 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
-    coverage: { 
-      provider: 'v8', 
-      reporter: ['text', 'lcov'], 
-      lines: 60, 
-      functions: 60, 
-      branches: 50 
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      lines: 60,
+      functions: 60,
+      branches: 50,
     },
   },
 }))
