@@ -3,6 +3,7 @@ import { CheckCircle, Zap, Shield, Smartphone, Search, Tag } from 'lucide-react'
 import { trackWaitlistEvent, trackUserAction } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import WaitlistModal from '../components/WaitlistModal'
+import DemoCarousel from '../components/DemoCarousel'
 
 const LandingPage: React.FC = () => {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
@@ -78,6 +79,21 @@ const LandingPage: React.FC = () => {
               Watch Demo
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-dark mb-4">
+              See Paperlyte in action
+            </h2>
+            <p className="text-xl text-gray-600">
+              Discover how effortless note-taking can be
+            </p>
+          </div>
+          <DemoCarousel />
         </div>
       </section>
 
