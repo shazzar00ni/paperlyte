@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
@@ -36,5 +37,17 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+  },
+  define: {
+    // Make environment variables available at build time
+    __POSTHOG_API_KEY__: JSON.stringify(process.env.VITE_POSTHOG_API_KEY),
+    __POSTHOG_HOST__: JSON.stringify(process.env.VITE_POSTHOG_HOST),
+    __SENTRY_DSN__: JSON.stringify(process.env.VITE_SENTRY_DSN),
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    css: true,
   },
 }))

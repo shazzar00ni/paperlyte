@@ -1,10 +1,10 @@
-# COPILOT EDITS OPERATIONAL GUIDELINES
+# Paperlyte Copilot Instructions
 
-## PRIME DIRECTIVE
+## Project Overview
+Paperlyte is a privacy-focused note-taking application built with React 18, TypeScript, and Vite. This is currently an MVP using localStorage for data persistence, with plans to migrate to a full API backend in Q4 2025.
 
-Avoid working on more than one file at a time.
-Multiple simultaneous edits to a file will cause corruption.
-Be chatting and teach about what you are doing while coding.
+## Prime Directive
+Avoid working on more than one file at a time. Multiple simultaneous edits will cause corruption. Be chatting and teach about what you are doing while coding.
 
 ## LARGE FILE & COMPLEX CHANGE PROTOCOL
 
@@ -63,6 +63,29 @@ When refactoring large files:
 - Prioritize changes that are logically complete units
 - Always provide clear stopping points
 
+## Paperlyte-Specific Patterns
+
+### Architecture Principles
+- **Data Service Layer**: Use `src/services/dataService.ts` for all persistence operations. It abstracts localStorage (current) from future API calls
+- **Monitoring First**: Always wrap operations with `monitoring.addBreadcrumb()` and `monitoring.logError()` from `src/utils/monitoring.ts`
+- **Analytics Tracking**: Use `trackFeatureUsage()` and `trackNoteEvent()` from `src/utils/analytics.ts` for user interactions
+- **Type Safety**: All data models are in `src/types/index.ts` - use `Note`, `WaitlistEntry`, `User` interfaces consistently
+
+### Component Conventions
+- **Error Boundaries**: Wrap all pages in `ErrorBoundary` component with custom fallback UI
+- **Async State**: Use loading states for all data operations (see `NoteEditor.tsx` pattern)
+- **Event Tracking**: Track page views with `trackFeatureUsage()` in component `useEffect`
+
+### Build & Development
+- **Commands**: `npm run dev` (Vite dev server), `npm run build` (TypeScript + Vite build)
+- **Environment**: Uses Vite env vars (`VITE_POSTHOG_API_KEY`, `VITE_SENTRY_DSN`) defined in `vite.config.ts`
+- **Styling**: Tailwind CSS with custom component classes in `src/styles/index.css` (`.btn`, `.card`, etc.)
+
+### Data Migration Strategy
+When adding features, consider the Q4 2025 API migration:
+- Keep `dataService` methods generic (return promises)
+- Don't directly use localStorage in components
+- Design for eventual real-time sync and conflict resolution
 ## General Requirements
 
 Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
@@ -85,32 +108,20 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Firefox, Chrome, Edge, Safari (macOS/iOS)
 - Emphasize progressive enhancement with polyfills or bundlers (e.g., **Babel**, **Vite**) as needed.
 
-## PHP Requirements
-
-- **Target Version**: PHP 8.1 or higher
-- **Features to Use**:
-- Named arguments
-- Constructor property promotion
-- Union types and nullable types
-- Match expressions
-- Nullsafe operator (`?->`)
-- Attributes instead of annotations
-- Typed properties with appropriate type declarations
-- Return type declarations
-- Enumerations (`enum`)
-- Readonly properties
-- Emphasize strict property typing in all generated code.
-- **Coding Standards**:
-- Follow PSR-12 coding standards
-- Use strict typing with `declare(strict_types=1);`
-- Prefer composition over inheritance
-- Use dependency injection
-- **Static Analysis:**
-- Include PHPDoc blocks compatible with PHPStan or Psalm for static analysis
-- **Error Handling:**
-- Use exceptions consistently for error handling and avoid suppressing errors.
-- Provide meaningful, clear exception messages and proper exception types.
-
+## React/TypeScript Requirements
+- **Target Version**: React 18 with TypeScript 5.2+
+- **Patterns to Follow**:
+  - Functional components with hooks (no class components)
+  - Custom hooks for shared logic (see analytics/monitoring utilities)
+  - Proper dependency arrays in `useEffect`
+  - Type props with interfaces from `src/types/index.ts`
+- **State Management**: 
+  - Local state with `useState` for component state
+  - No Redux/Zustand - keep state simple for MVP
+- **Async Operations**:
+  - Always use `async/await` with try/catch blocks
+  - Include loading states and error handling
+  - Use `dataService` methods for persistence
 ## HTML/CSS Requirements
 
 - **HTML**:
@@ -136,6 +147,37 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Prioritize modern, performant fonts and variable fonts for smaller file sizes
 - Use modern units (`rem`, `vh`, `vw`) instead of traditional pixels (`px`) for better responsiveness
 
+### Code Examples & Patterns
+
+**Error Handling Pattern:**
+```typescript
+try {
+  const result = await dataService.saveNote(note)
+  if (result) {
+    // Success path
+  }
+} catch (error) {
+  monitoring.logError(error as Error, {
+    feature: 'note_editor',
+    action: 'save_note'
+  })
+}
+```
+
+**Component Analytics Pattern:**
+```typescript
+useEffect(() => {
+  trackFeatureUsage('note_editor', 'view')
+  monitoring.addBreadcrumb('Note editor loaded', 'navigation')
+}, [])
+```
+
+**Data Service Usage:**
+```typescript
+// Always use dataService for persistence operations
+const notes = await dataService.getNotes()
+const success = await dataService.saveNote(updatedNote)
+```
 ## JavaScript Requirements
 
 - **Minimum Compatibility**: ECMAScript 2020 (ES11) or higher
@@ -176,31 +218,27 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Consider a central error handler function or global event (e.g., `window.addEventListener('unhandledrejection')`) to consolidate reporting.
 - Carefully handle and validate JSON responses, incorrect HTTP status codes, etc.
 
-## Folder Structure
+## Paperlyte Project Structure
+```
+paperlyte/
+├── src/
+│   ├── components/       # Reusable UI components
+│   ├── pages/           # Route-level page components  
+│   ├── services/        # Data service abstraction layer
+│   ├── styles/          # Tailwind CSS with custom component classes
+│   ├── types/           # TypeScript type definitions
+│   └── utils/           # Analytics and monitoring utilities
+├── simple-scribbles/    # Documentation and planning
+├── docs/                # Additional project documentation
+└── [config files]       # Vite, Tailwind, TypeScript configs
+```
 
-Follow this structured directory layout:
-
-    project-root/
-    ├── api/                  # API handlers and routes
-    ├── config/               # Configuration files and environment variables
-    ├── data/                 # Databases, JSON files, and other storage
-    ├── public/               # Publicly accessible files (served by web server)
-    │   ├── assets/
-    │   │   ├── css/
-    │   │   ├── js/
-    │   │   ├── images/
-    │   │   ├── fonts/
-    │   └── index.html
-    ├── src/                  # Application source code
-    │   ├── controllers/
-    │   ├── models/
-    │   ├── views/
-    │   └── utilities/
-    ├── tests/                # Unit and integration tests
-    ├── docs/                 # Documentation (Markdown files)
-    ├── logs/                 # Server and application logs
-    ├── scripts/              # Scripts for deployment, setup, etc.
-    └── temp/                 # Temporary/cache files
+### Key File Responsibilities
+- `src/App.tsx`: Router setup, error boundary, analytics/monitoring initialization
+- `src/services/dataService.ts`: Persistence abstraction (currently localStorage)
+- `src/utils/analytics.ts`: PostHog integration for user tracking
+- `src/utils/monitoring.ts`: Sentry integration for error reporting
+- `src/types/index.ts`: All TypeScript interfaces and types
 
 ## Documentation Requirements
 
@@ -209,10 +247,11 @@ Follow this structured directory layout:
 - Maintain concise Markdown documentation.
 - Minimum docblock info: `param`, `return`, `throws`, `author`
 
-## Database Requirements (SQLite 3.46+)
-
-- Leverage JSON columns, generated columns, strict mode, foreign keys, check constraints, and transactions.
-
+## Data Persistence (Current: localStorage)
+- Use `dataService` methods exclusively for data operations
+- Current storage keys: `paperlyte_notes`, `paperlyte_waitlist_entries`
+- All data operations return promises for future API compatibility
+- Future: Will migrate to encrypted cloud storage with sync capabilities
 ## Security Considerations
 
 - Sanitize all user inputs thoroughly.
