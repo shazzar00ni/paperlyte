@@ -79,21 +79,17 @@ paperlyte/
 
 ## 🚦 Getting Started
 
-### Prerequisites
-
-- Node.js 16+ and npm
-
-### Installation
+### Quick Start
 
 ```bash
 git clone https://github.com/shazzar00ni/paperlyte.git
 cd paperlyte
 npm install
-
-# Copy environment variables
-cp .env.example .env.local
-# Edit .env.local with your analytics keys (optional for development)
+cp .env.example .env
+npm run dev
 ```
+
+**For detailed setup instructions, see [SETUP.md](SETUP.md)**
 
 ### Run Locally
 
@@ -112,6 +108,23 @@ npm run build
 ## 📝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 🚀 Launch Documentation
+
+Ready for launch! Check out our comprehensive launch resources:
+
+- **[Launch Checklist](LAUNCH_CHECKLIST.md)** - Complete launch coordination
+- **[Product Hunt Guide](docs/product-hunt-guide.md)** - Product Hunt launch strategy
+- **[App Store Listings](docs/app-store-listings.md)** - App directory submissions
+- **[Documentation Polish](docs/documentation-polish.md)** - Content review guide
+
+### User Documentation
+
+- **[Getting Started](docs/getting-started.md)** - Quick start guide for new users
+- **[Keyboard Shortcuts](docs/keyboard-shortcuts.md)** - Complete shortcuts reference
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
 ---
 

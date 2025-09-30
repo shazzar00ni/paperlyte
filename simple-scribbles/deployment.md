@@ -24,21 +24,25 @@ npm run build
 ## Environment Variables
 
 ### Core App Variables
+
 - `VITE_API_BASE_URL` (for API integration)
 - `VITE_APP_VERSION` (app version for releases)
 
 ### Analytics & Monitoring
+
 - `VITE_POSTHOG_API_KEY` (PostHog analytics)
 - `VITE_POSTHOG_HOST` (PostHog host URL)
 - `VITE_SENTRY_DSN` (Sentry error monitoring)
 - `VITE_SENTRY_DEV_ENABLED` (enable Sentry in development)
 
 ### Feature Flags
+
 - `VITE_ENABLE_ANALYTICS` (enable/disable analytics)
 - `VITE_ENABLE_ERROR_REPORTING` (enable/disable error reporting)
 - `VITE_ENABLE_PERFORMANCE_MONITORING` (enable/disable performance monitoring)
 
 ### Database (Future)
+
 - `VITE_SUPABASE_URL` (if using Supabase)
 - `VITE_SUPABASE_ANON_KEY` (if using Supabase)
 

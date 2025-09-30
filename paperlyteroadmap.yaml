@@ -1,23 +1,23 @@
 name: Paperlyte Roadmap
-description: "Project board with milestones, mapped to GitHub Issues"
+description: 'Project board with milestones, mapped to GitHub Issues'
 public: false
 template: board
 
 columns:
   - name: Backlog
-    description: "Future or nice-to-have tasks"
+    description: 'Future or nice-to-have tasks'
   - name: Todo
-    description: "Ready to be picked up"
+    description: 'Ready to be picked up'
   - name: In Progress
-    description: "Actively being developed"
+    description: 'Actively being developed'
   - name: Review
-    description: "Awaiting PR review / QA"
+    description: 'Awaiting PR review / QA'
   - name: Done
-    description: "Closed / completed issues"
+    description: 'Closed / completed issues'
 
 views:
   - name: Milestones
-    filter: "is:open"
+    filter: 'is:open'
     type: table
     layout: table
     fields:
@@ -25,6 +25,6 @@ views:
       - milestone
       - labels
   - name: Priority
-    filter: "is:open sort:labels"
+    filter: 'is:open sort:labels'
     type: board
     layout: board

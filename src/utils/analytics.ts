@@ -2,7 +2,8 @@ import posthog from 'posthog-js'
 
 // Environment variables for analytics
 const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com'
+const POSTHOG_HOST =
+  import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com'
 
 export interface AnalyticsEvent {
   event: string
@@ -39,7 +40,7 @@ class Analytics {
         // Privacy-focused configuration
         capture_pageview: true,
         capture_pageleave: true,
-        loaded: (posthog) => {
+        loaded: posthog => {
           if (process.env.NODE_ENV === 'development') posthog.debug()
         },
         // Respect user privacy
@@ -68,7 +69,7 @@ class Analytics {
       posthog.capture(event, {
         ...properties,
         timestamp: new Date().toISOString(),
-        source: 'paperlyte-web'
+        source: 'paperlyte-web',
       })
     } catch (error) {
       console.error('Analytics: Failed to track event', event, error)
@@ -110,7 +111,7 @@ class Analytics {
     try {
       posthog.capture('$pageview', {
         $current_url: page || window.location.href,
-        page_title: document.title
+        page_title: document.title,
       })
     } catch (error) {
       console.error('Analytics: Failed to track page view', error)
@@ -133,22 +134,30 @@ class Analytics {
   /**
    * Track feature usage
    */
-  trackFeature(feature: string, action: string, properties?: Record<string, any>): void {
+  trackFeature(
+    feature: string,
+    action: string,
+    properties?: Record<string, any>
+  ): void {
     this.track(`feature_${action}`, {
       feature,
       action,
-      ...properties
+      ...properties,
     })
   }
 
   /**
    * Track performance metrics
    */
-  trackPerformance(metric: string, value: number, properties?: Record<string, any>): void {
+  trackPerformance(
+    metric: string,
+    value: number,
+    properties?: Record<string, any>
+  ): void {
     this.track('performance_metric', {
       metric,
       value,
-      ...properties
+      ...properties,
     })
   }
 
@@ -177,24 +186,34 @@ class Analytics {
 export const analytics = new Analytics()
 
 // Convenience functions for common tracking events
-export const trackEvent = (event: string, properties?: Record<string, any>) => 
+export const trackEvent = (event: string, properties?: Record<string, any>) =>
   analytics.track(event, properties)
 
-export const trackPageView = (page?: string) => 
-  analytics.pageView(page)
+export const trackPageView = (page?: string) => analytics.pageView(page)
 
-export const trackFeatureUsage = (feature: string, action: string, properties?: Record<string, any>) => 
-  analytics.trackFeature(feature, action, properties)
+export const trackFeatureUsage = (
+  feature: string,
+  action: string,
+  properties?: Record<string, any>
+) => analytics.trackFeature(feature, action, properties)
 
-export const trackUserAction = (action: string, properties?: Record<string, any>) => 
-  analytics.track(`user_${action}`, properties)
+export const trackUserAction = (
+  action: string,
+  properties?: Record<string, any>
+) => analytics.track(`user_${action}`, properties)
 
 // Specific event tracking functions
-export const trackNoteEvent = (action: 'create' | 'edit' | 'delete' | 'save', properties?: Record<string, any>) => 
-  trackFeatureUsage('note_editor', action, properties)
+export const trackNoteEvent = (
+  action: 'create' | 'edit' | 'delete' | 'save',
+  properties?: Record<string, any>
+) => trackFeatureUsage('note_editor', action, properties)
 
-export const trackWaitlistEvent = (action: 'signup' | 'view', properties?: Record<string, any>) => 
-  trackFeatureUsage('waitlist', action, properties)
+export const trackWaitlistEvent = (
+  action: 'signup' | 'view',
+  properties?: Record<string, any>
+) => trackFeatureUsage('waitlist', action, properties)
 
-export const trackNavigationEvent = (action: 'page_change' | 'menu_click', properties?: Record<string, any>) => 
-  trackFeatureUsage('navigation', action, properties)
+export const trackNavigationEvent = (
+  action: 'page_change' | 'menu_click',
+  properties?: Record<string, any>
+) => trackFeatureUsage('navigation', action, properties)

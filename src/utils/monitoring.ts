@@ -38,18 +38,21 @@ class Monitoring {
         dsn: SENTRY_DSN,
         environment: import.meta.env.MODE,
         release: APP_VERSION,
-        
+
         // Performance monitoring
         tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
-        
+
         // Session replay for debugging
         replaysSessionSampleRate: 0.1,
         replaysOnErrorSampleRate: 1.0,
-        
+
         // Error filtering
         beforeSend(event, hint) {
           // Don't send errors in development unless explicitly enabled
-          if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_SENTRY_DEV_ENABLED) {
+          if (
+            import.meta.env.MODE === 'development' &&
+            !import.meta.env.VITE_SENTRY_DEV_ENABLED
+          ) {
             return null
           }
 
@@ -57,8 +60,10 @@ class Monitoring {
           const error = hint.originalException
           if (error instanceof Error) {
             // Ignore network errors that are typically user-related
-            if (error.message.includes('NetworkError') || 
-                error.message.includes('Failed to fetch')) {
+            if (
+              error.message.includes('NetworkError') ||
+              error.message.includes('Failed to fetch')
+            ) {
               return null
             }
           }
@@ -69,9 +74,9 @@ class Monitoring {
         // Additional context
         initialScope: {
           tags: {
-            component: 'paperlyte-web'
-          }
-        }
+            component: 'paperlyte-web',
+          },
+        },
       })
 
       this.isInitialized = true
@@ -92,19 +97,19 @@ class Monitoring {
     }
 
     try {
-      Sentry.withScope((scope) => {
+      Sentry.withScope(scope => {
         if (context?.userId) {
           scope.setUser({ id: context.userId, email: context.userEmail })
         }
-        
+
         if (context?.feature) {
           scope.setTag('feature', context.feature)
         }
-        
+
         if (context?.action) {
           scope.setTag('action', context.action)
         }
-        
+
         if (context?.additionalData) {
           scope.setContext('additional_data', context.additionalData)
         }
@@ -117,7 +122,7 @@ class Monitoring {
         error_type: error.name,
         error_message: error.message,
         feature: context?.feature,
-        action: context?.action
+        action: context?.action,
       })
     } catch (e) {
       console.error('Monitoring: Failed to log error', e)
@@ -134,14 +139,15 @@ class Monitoring {
     }
 
     try {
-      Sentry.withScope((scope) => {
+      Sentry.withScope(scope => {
         if (context) {
           if (context.userId) scope.setUser({ id: context.userId })
           if (context.feature) scope.setTag('feature', context.feature)
           if (context.action) scope.setTag('action', context.action)
-          if (context.additionalData) scope.setContext('additional_data', context.additionalData)
+          if (context.additionalData)
+            scope.setContext('additional_data', context.additionalData)
         }
-        
+
         Sentry.captureMessage(message, 'warning')
       })
     } catch (error) {
@@ -152,14 +158,18 @@ class Monitoring {
   /**
    * Set user context for error reporting
    */
-  setUser(userId: string, email?: string, additionalData?: Record<string, any>): void {
+  setUser(
+    userId: string,
+    email?: string,
+    additionalData?: Record<string, any>
+  ): void {
     if (!this.isInitialized) return
 
     try {
       Sentry.setUser({
         id: userId,
         email,
-        ...additionalData
+        ...additionalData,
       })
     } catch (error) {
       console.error('Monitoring: Failed to set user context', error)
@@ -169,7 +179,11 @@ class Monitoring {
   /**
    * Add breadcrumb for debugging
    */
-  addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void {
+  addBreadcrumb(
+    message: string,
+    category?: string,
+    data?: Record<string, any>
+  ): void {
     if (!this.isInitialized) return
 
     try {
@@ -177,7 +191,7 @@ class Monitoring {
         message,
         category: category || 'custom',
         data,
-        timestamp: Date.now() / 1000
+        timestamp: Date.now() / 1000,
       })
     } catch (error) {
       console.error('Monitoring: Failed to add breadcrumb', error)
@@ -192,12 +206,16 @@ class Monitoring {
 
     try {
       // Send to Sentry as a measurement
-      Sentry.setMeasurement(metric.name, metric.value, metric.unit || 'millisecond')
-      
+      Sentry.setMeasurement(
+        metric.name,
+        metric.value,
+        metric.unit || 'millisecond'
+      )
+
       // Also track in analytics
       analytics.trackPerformance(metric.name, metric.value, {
         unit: metric.unit,
-        ...metric.tags
+        ...metric.tags,
       })
     } catch (error) {
       console.error('Monitoring: Failed to track performance', error)
@@ -212,22 +230,22 @@ class Monitoring {
     if ('PerformanceObserver' in window) {
       try {
         // Core Web Vitals
-        const observer = new PerformanceObserver((list) => {
+        const observer = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             if (entry.entryType === 'navigation') {
               const navEntry = entry as PerformanceNavigationTiming
               this.trackPerformance({
                 name: 'page_load_time',
                 value: navEntry.loadEventEnd - navEntry.loadEventStart,
-                unit: 'millisecond'
+                unit: 'millisecond',
               })
             }
-            
+
             if (entry.entryType === 'paint') {
               this.trackPerformance({
                 name: entry.name.replace('-', '_'),
                 value: entry.startTime,
-                unit: 'millisecond'
+                unit: 'millisecond',
               })
             }
           }
@@ -248,7 +266,7 @@ class Monitoring {
           this.trackPerformance({
             name: 'memory_used',
             value: memory.usedJSHeapSize,
-            unit: 'byte'
+            unit: 'byte',
           })
         }
       }, 30000) // Every 30 seconds
@@ -269,17 +287,20 @@ class Monitoring {
 export const monitoring = new Monitoring()
 
 // Convenience functions for common monitoring tasks
-export const logError = (error: Error, context?: ErrorContext) => 
+export const logError = (error: Error, context?: ErrorContext) =>
   monitoring.logError(error, context)
 
-export const logWarning = (message: string, context?: ErrorContext) => 
+export const logWarning = (message: string, context?: ErrorContext) =>
   monitoring.logWarning(message, context)
 
-export const trackPerformance = (metric: PerformanceMetric) => 
+export const trackPerformance = (metric: PerformanceMetric) =>
   monitoring.trackPerformance(metric)
 
-export const addBreadcrumb = (message: string, category?: string, data?: Record<string, any>) => 
-  monitoring.addBreadcrumb(message, category, data)
+export const addBreadcrumb = (
+  message: string,
+  category?: string,
+  data?: Record<string, any>
+) => monitoring.addBreadcrumb(message, category, data)
 
 // Error boundary helper
 export const withErrorBoundary = Sentry.withErrorBoundary
