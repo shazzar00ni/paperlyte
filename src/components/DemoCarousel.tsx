@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
 import { trackUserAction } from '../utils/analytics'
+import DemoVideoModal from './DemoVideoModal'
 
 interface DemoSlide {
   id: string
@@ -13,42 +14,47 @@ interface DemoSlide {
 const DemoCarousel: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false)
 
   const demoSlides: DemoSlide[] = [
     {
       id: 'note-creation',
       title: 'Lightning-Fast Note Creation',
-      description: 'Start writing immediately with our instant-load editor. No delays, no distractions.',
+      description:
+        'Start writing immediately with our instant-load editor. No delays, no distractions.',
       image: '/api/placeholder/600/400',
-      alt: 'Paperlyte note creation interface'
+      alt: 'Paperlyte note creation interface',
     },
     {
       id: 'rich-formatting',
       title: 'Rich Text & Markdown Support',
-      description: 'Format your notes beautifully with markdown support and rich text editing.',
+      description:
+        'Format your notes beautifully with markdown support and rich text editing.',
       image: '/api/placeholder/600/400',
-      alt: 'Rich text formatting in Paperlyte'
+      alt: 'Rich text formatting in Paperlyte',
     },
     {
       id: 'smart-organization',
       title: 'Smart Organization',
-      description: 'Tag, search, and organize your notes effortlessly with our intelligent system.',
+      description:
+        'Tag, search, and organize your notes effortlessly with our intelligent system.',
       image: '/api/placeholder/600/400',
-      alt: 'Note organization and tagging system'
+      alt: 'Note organization and tagging system',
     },
     {
       id: 'sync-everywhere',
       title: 'Sync Across All Devices',
-      description: 'Access your notes anywhere - web, mobile, tablet. Always in sync.',
+      description:
+        'Access your notes anywhere - web, mobile, tablet. Always in sync.',
       image: '/api/placeholder/600/400',
-      alt: 'Cross-device synchronization'
-    }
+      alt: 'Cross-device synchronization',
+    },
   ]
 
   useEffect(() => {
     if (isAutoPlaying) {
       const interval = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % demoSlides.length)
+        setCurrentSlide(prev => (prev + 1) % demoSlides.length)
       }, 4000)
       return () => clearInterval(interval)
     }
@@ -61,21 +67,24 @@ const DemoCarousel: React.FC = () => {
   }
 
   const goToPrevious = () => {
-    setCurrentSlide((prev) => (prev - 1 + demoSlides.length) % demoSlides.length)
+    setCurrentSlide(prev => (prev - 1 + demoSlides.length) % demoSlides.length)
     setIsAutoPlaying(false)
     trackUserAction('demo_navigation', { direction: 'previous' })
   }
 
   const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % demoSlides.length)
+    setCurrentSlide(prev => (prev + 1) % demoSlides.length)
     setIsAutoPlaying(false)
     trackUserAction('demo_navigation', { direction: 'next' })
   }
 
   const handlePlayDemo = () => {
-    trackUserAction('demo_play_click')
-    // This would open a demo video or interactive demo
-    console.log('Demo play clicked')
+    trackUserAction('demo_play_click', {
+      slide: demoSlides[currentSlide].id,
+      title: demoSlides[currentSlide].title,
+    })
+    setIsAutoPlaying(false)
+    setIsDemoModalOpen(true)
   }
 
   return (
@@ -101,10 +110,12 @@ const DemoCarousel: React.FC = () => {
                   alt={demoSlides[currentSlide].alt}
                   className='w-full h-full object-cover'
                 />
-                
+
                 {/* Play Button Overlay */}
-                <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 hover:bg-opacity-30 transition-all cursor-pointer group'
-                     onClick={handlePlayDemo}>
+                <div
+                  className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 hover:bg-opacity-30 transition-all cursor-pointer group'
+                  onClick={handlePlayDemo}
+                >
                   <div className='bg-primary text-white rounded-full p-4 group-hover:scale-110 transition-transform'>
                     <Play className='h-8 w-8 ml-1' />
                   </div>
@@ -119,7 +130,7 @@ const DemoCarousel: React.FC = () => {
               >
                 <ChevronLeft className='h-6 w-6 text-gray-700' />
               </button>
-              
+
               <button
                 onClick={goToNext}
                 className='absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all'
@@ -157,6 +168,14 @@ const DemoCarousel: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Demo Video Modal */}
+      <DemoVideoModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+        videoTitle={demoSlides[currentSlide].title}
+        videoDescription={demoSlides[currentSlide].description}
+      />
     </div>
   )
 }
