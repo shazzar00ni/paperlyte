@@ -1,11 +1,26 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { PenTool, BarChart3 } from 'lucide-react'
+import { PenTool } from 'lucide-react'
 import { trackNavigationEvent } from '../utils/analytics'
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onWaitlistClick?: () => void
+}
+
+const Header: React.FC<HeaderProps> = ({ onWaitlistClick }) => {
   const handleNavClick = (item: string) => {
     trackNavigationEvent('menu_click', { item })
+  }
+
+  const handleWaitlistClick = () => {
+    handleNavClick('waitlist_cta')
+    if (onWaitlistClick) {
+      onWaitlistClick()
+    }
+  }
+
+  const handleLogoClick = () => {
+    handleNavClick('logo')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -13,38 +28,43 @@ const Header: React.FC = () => {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex justify-between items-center h-16'>
           {/* Logo */}
-          <Link
-            to='/'
-            className='flex items-center space-x-2 font-bold text-xl text-dark'
-            onClick={() => handleNavClick('logo')}
+          <button
+            onClick={handleLogoClick}
+            className='flex items-center space-x-2 font-bold text-xl text-dark hover:opacity-80 transition-opacity'
           >
             <PenTool className='h-6 w-6 text-primary' />
             <span>Paperlyte</span>
-          </Link>
+          </button>
 
           {/* Navigation */}
           <nav className='hidden md:flex items-center space-x-8'>
-            <Link
-              to='/editor'
+            <a
+              href='#features'
               className='text-gray-600 hover:text-dark transition-colors'
-              onClick={() => handleNavClick('editor')}
+              onClick={() => handleNavClick('features')}
             >
-              Editor
-            </Link>
-            <Link
-              to='/admin'
-              className='text-gray-600 hover:text-dark transition-colors flex items-center space-x-1'
-              onClick={() => handleNavClick('admin')}
+              Features
+            </a>
+            <a
+              href='#demo'
+              className='text-gray-600 hover:text-dark transition-colors'
+              onClick={() => handleNavClick('demo')}
             >
-              <BarChart3 className='h-4 w-4' />
-              <span>Analytics</span>
-            </Link>
+              Demo
+            </a>
+            <a
+              href='#pricing'
+              className='text-gray-600 hover:text-dark transition-colors'
+              onClick={() => handleNavClick('pricing')}
+            >
+              Pricing
+            </a>
           </nav>
 
           {/* CTA Button */}
           <button
             className='btn-primary btn-md'
-            onClick={() => handleNavClick('waitlist_cta')}
+            onClick={handleWaitlistClick}
           >
             Join Waitlist
           </button>

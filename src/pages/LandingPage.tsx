@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import { CheckCircle, Zap, Shield, Smartphone, Search, Tag } from 'lucide-react'
-import { trackWaitlistEvent, trackUserAction } from '../utils/analytics'
+import React, { useEffect } from 'react'
+import { CheckCircle, Zap, Shield, Smartphone, Search, Tag, FileText, Sparkles } from 'lucide-react'
+import { trackUserAction } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
-import WaitlistModal from '../components/WaitlistModal'
+import DemoCarousel from '../components/DemoCarousel'
+import Testimonials from '../components/Testimonials'
+import Pricing from '../components/Pricing'
 
-const LandingPage: React.FC = () => {
-  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
+interface LandingPageProps {
+  onWaitlistClick?: () => void
+}
 
+const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
   useEffect(() => {
     // Track landing page view
     trackUserAction('landing_page_view')
@@ -14,8 +18,10 @@ const LandingPage: React.FC = () => {
   }, [])
 
   const handleWaitlistClick = () => {
-    setIsWaitlistOpen(true)
-    trackWaitlistEvent('view')
+    trackUserAction('waitlist_click_landing')
+    if (onWaitlistClick) {
+      onWaitlistClick()
+    }
   }
 
   const features = [
@@ -54,8 +60,24 @@ const LandingPage: React.FC = () => {
   return (
     <div className='flex flex-col'>
       {/* Hero Section */}
-      <section className='bg-gradient-to-br from-primary/10 to-accent/10 py-20'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
+      <section className='relative bg-gradient-to-br from-primary/10 to-accent/10 py-20 overflow-hidden'>
+        {/* Animated Paper Elements */}
+        <div className='absolute inset-0 pointer-events-none'>
+          <div className='absolute top-10 left-10 opacity-20 animate-float'>
+            <FileText className='h-16 w-16 text-primary' />
+          </div>
+          <div className='absolute top-20 right-20 opacity-15 animate-float-delayed-1'>
+            <Sparkles className='h-12 w-12 text-accent' />
+          </div>
+          <div className='absolute bottom-20 left-20 opacity-10 animate-float-delayed-2'>
+            <FileText className='h-20 w-20 text-primary' />
+          </div>
+          <div className='absolute bottom-32 right-16 opacity-20 animate-float-delayed-3'>
+            <Sparkles className='h-8 w-8 text-accent' />
+          </div>
+        </div>
+
+        <div className='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <h1 className='text-4xl md:text-6xl font-bold text-dark mb-6'>
             Your thoughts deserve a
             <span className='text-gradient'> lightning-fast</span> home
@@ -78,11 +100,17 @@ const LandingPage: React.FC = () => {
               Watch Demo
             </button>
           </div>
+          
+          {/* Early Access Badge */}
+          <div className='mt-8 inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm text-gray-700 shadow-sm'>
+            <Sparkles className='h-4 w-4 mr-2 text-primary' />
+            Join 10,000+ creators on the waitlist
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className='py-20 bg-white'>
+      <section id='features' className='py-20 bg-white'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='text-center mb-16'>
             <h2 className='text-3xl md:text-4xl font-bold text-dark mb-4'>
@@ -97,7 +125,7 @@ const LandingPage: React.FC = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className='card hover:shadow-lg transition-shadow'
+                className='card hover:shadow-lg transition-all hover:-translate-y-1'
               >
                 <div className='text-primary mb-4'>{feature.icon}</div>
                 <h3 className='text-xl font-semibold text-dark mb-2'>
@@ -110,26 +138,34 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className='py-20 bg-gray-50'>
+      {/* Demo Carousel Section */}
+      <section id='demo'>
+        <DemoCarousel />
+      </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
+
+      {/* Pricing Section */}
+      <Pricing onWaitlistClick={handleWaitlistClick} />
+
+      {/* Final CTA Section */}
+      <section className='py-20 bg-gradient-to-r from-primary to-accent text-white'>
         <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h2 className='text-3xl md:text-4xl font-bold text-dark mb-4'>
+          <h2 className='text-3xl md:text-4xl font-bold mb-4'>
             Ready to transform your note-taking?
           </h2>
-          <p className='text-xl text-gray-600 mb-8'>
+          <p className='text-xl opacity-90 mb-8'>
             Join thousands of creators who are already on the waitlist
           </p>
-          <button onClick={handleWaitlistClick} className='btn-primary btn-lg'>
+          <button 
+            onClick={handleWaitlistClick} 
+            className='btn-secondary btn-lg bg-white text-primary hover:bg-gray-50'
+          >
             Get Early Access
           </button>
         </div>
       </section>
-
-      {/* Waitlist Modal */}
-      <WaitlistModal
-        isOpen={isWaitlistOpen}
-        onClose={() => setIsWaitlistOpen(false)}
-      />
     </div>
   )
 }
