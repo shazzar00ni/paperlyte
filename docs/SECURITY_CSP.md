@@ -17,6 +17,8 @@ The development server uses relaxed CSP directives to support Vite's Hot Module 
 
 **Note**: `'unsafe-eval'` and `'unsafe-inline'` are included only in development mode for Vite HMR functionality.
 
+**⚠️ SECURITY WARNING**: The development server with relaxed CSP should ONLY be run on trusted, isolated networks (localhost). Never expose the development server to untrusted networks or the internet. The development server is configured to bind to `localhost` only by default for security.
+
 ### Production CSP Recommendations
 
 For production deployments, use HTTP headers with stricter policies:
@@ -25,12 +27,32 @@ For production deployments, use HTTP headers with stricter policies:
 Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-{random}'; style-src 'self' 'nonce-{random}'; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
 ```
 
+## Development Server Security
+
+### Critical Security Practices
+
+1. **Network Isolation**: Run the development server only on localhost (127.0.0.1)
+2. **Never Expose Publicly**: Do not bind to 0.0.0.0 or expose to the internet
+3. **Trusted Networks Only**: Only access from trusted development machines
+4. **VPN/Firewall**: Use VPN or firewall rules if remote access is needed
+5. **Development Data**: Never use production data in development environments
+
+### Why Development CSP is Relaxed
+
+The development server uses `'unsafe-eval'` and `'unsafe-inline'` because:
+- Vite's Hot Module Replacement (HMR) requires dynamic script evaluation
+- Development tooling needs inline styles for fast refresh
+- WebSocket connections (ws:/wss:) enable live reload functionality
+
+These relaxations are **acceptable in development** when the server is properly isolated but would be **critical vulnerabilities in production**.
+
 ## Security Benefits
 
 1. **XSS Protection**: Prevents execution of malicious scripts
 2. **Data Injection Prevention**: Controls resource loading sources
 3. **Clickjacking Protection**: Prevents embedding in malicious frames
 4. **HTTPS Enforcement**: Ensures secure connections
+5. **Attack Surface Reduction**: Minimizes potential injection points
 
 ## Implementation Steps for Production
 

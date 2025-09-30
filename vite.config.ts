@@ -19,15 +19,19 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     open: true,
-    // Set CSP headers for development server
-    // Note: These relaxed directives are for development only
-    // Production should use stricter CSP via HTTP headers with nonces/hashes
+    // SECURITY: Development CSP includes unsafe directives for Vite HMR
+    // WARNING: Only run the development server on trusted, isolated networks (localhost)
+    // Never expose the development server to untrusted networks or the internet
+    // Production deployments must use stricter CSP via HTTP headers with nonces/hashes
+    // See docs/SECURITY_CSP.md for production configuration guidance
     headers: {
       'Content-Security-Policy':
         mode === 'development'
           ? "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;"
           : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https:;",
     },
+    // Bind to localhost only for security (do not use 0.0.0.0 in untrusted environments)
+    host: 'localhost',
   },
   build: {
     outDir: 'dist',
