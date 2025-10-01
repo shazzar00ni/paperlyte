@@ -37,6 +37,11 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+  },
   define: {
     // Make environment variables available at build time
     __POSTHOG_API_KEY__: JSON.stringify(process.env.VITE_POSTHOG_API_KEY),
