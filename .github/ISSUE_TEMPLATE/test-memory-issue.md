@@ -1,7 +1,7 @@
 ---
-title: "[BUG] Vitest experiencing memory issues preventing test execution"
-labels: ["bug", "testing", "high-priority"]
-assignees: ""
+title: '[BUG] Vitest experiencing memory issues preventing test execution'
+labels: ['bug', 'testing', 'high-priority']
+assignees: ''
 ---
 
 ## Problem Description
@@ -28,7 +28,7 @@ FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaS
 
 ## Current Test Setup
 
-- **Test files created**: 
+- **Test files created**:
   - `src/services/__tests__/dataService.test.ts`
   - `src/components/__tests__/WaitlistModal.test.tsx`
   - `src/test/basic.test.ts`
@@ -56,6 +56,7 @@ FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaS
 ## Additional Context
 
 Test infrastructure is properly set up with:
+
 - TypeScript support
 - React Testing Library
 - Mock setup for localStorage and crypto APIs

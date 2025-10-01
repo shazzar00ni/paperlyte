@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { dataService } from '../dataService'
-import type { Note, WaitlistEntry } from '../../types'
+import type { Note } from '../../types'
 
 describe('DataService', () => {
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('DataService', () => {
         content: 'This is a test note content',
         tags: ['test', 'example'],
         createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z'
+        updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
       const success = await dataService.saveNote(testNote)
@@ -40,7 +40,7 @@ describe('DataService', () => {
         content: 'Original content',
         tags: [],
         createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z'
+        updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
       await dataService.saveNote(originalNote)
@@ -49,7 +49,7 @@ describe('DataService', () => {
         ...originalNote,
         title: 'Updated Title',
         content: 'Updated content',
-        updatedAt: '2025-09-25T11:00:00.000Z'
+        updatedAt: '2025-09-25T11:00:00.000Z',
       }
 
       const success = await dataService.saveNote(updatedNote)
@@ -68,11 +68,11 @@ describe('DataService', () => {
         content: 'This will be deleted',
         tags: [],
         createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z'
+        updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
       await dataService.saveNote(testNote)
-      
+
       const success = await dataService.deleteNote('test-id')
       expect(success).toBe(true)
 
@@ -86,7 +86,7 @@ describe('DataService', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
-        interest: 'professional' as const
+        interest: 'professional' as const,
       }
 
       const result = await dataService.addToWaitlist(entry)
@@ -98,12 +98,12 @@ describe('DataService', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
-        interest: 'professional' as const
+        interest: 'professional' as const,
       }
 
       // Add first entry
       await dataService.addToWaitlist(entry)
-      
+
       // Try to add duplicate
       const result = await dataService.addToWaitlist(entry)
       expect(result.success).toBe(false)
@@ -114,12 +114,12 @@ describe('DataService', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
-        interest: 'student' as const
+        interest: 'student' as const,
       }
 
       await dataService.addToWaitlist(entry)
       const entries = await dataService.getWaitlistEntries()
-      
+
       expect(entries).toHaveLength(1)
       expect(entries[0].email).toBe('test@example.com')
       expect(entries[0].name).toBe('Test User')
@@ -142,7 +142,7 @@ describe('DataService', () => {
         content: 'This should fail to save',
         tags: [],
         createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z'
+        updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
       const success = await dataService.saveNote(testNote)
@@ -157,12 +157,13 @@ describe('DataService', () => {
         content: 'Test content',
         tags: [],
         createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z'
+        updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
       const waitlistEntry = {
         email: 'test@example.com',
-        name: 'Test User'
+        name: 'Test User',
+        interest: 'professional' as const,
       }
 
       await dataService.saveNote(testNote)
@@ -175,7 +176,7 @@ describe('DataService', () => {
       // Verify data is cleared
       const notes = await dataService.getNotes()
       const entries = await dataService.getWaitlistEntries()
-      
+
       expect(notes).toHaveLength(0)
       expect(entries).toHaveLength(0)
     })

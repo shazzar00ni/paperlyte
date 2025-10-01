@@ -38,7 +38,9 @@ beforeEach(() => {
 // Mock crypto.randomUUID (used in note creation)
 beforeEach(() => {
   const cryptoMock = {
-    randomUUID: vi.fn(() => 'mock-uuid-' + Math.random().toString(36).substring(2, 9))
+    randomUUID: vi.fn(
+      () => 'mock-uuid-' + Math.random().toString(36).substring(2, 9)
+    ),
   }
   vi.stubGlobal('crypto', cryptoMock)
 })

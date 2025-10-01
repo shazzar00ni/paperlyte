@@ -10,20 +10,24 @@ This guide helps you set up Paperlyte for local development.
 ## Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/shazzar00ni/paperlyte.git
    cd paperlyte
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
+
    Edit `.env` with your configuration (see [Environment Variables](#environment-variables) below).
 
 4. **Start development server**
@@ -78,7 +82,7 @@ VITE_ENABLE_PERFORMANCE_MONITORING=true
 paperlyte/
 ├── src/
 │   ├── components/      # Reusable UI components
-│   ├── pages/           # Route-level page components  
+│   ├── pages/           # Route-level page components
 │   ├── services/        # Data service abstraction layer
 │   ├── styles/          # Tailwind CSS with custom component classes
 │   ├── types/           # TypeScript type definitions
@@ -92,16 +96,19 @@ paperlyte/
 ## Key Architecture Decisions
 
 ### Data Storage Strategy
+
 - **Current**: localStorage for MVP phase
 - **Future**: API-based storage with sync (Q4 2025)
 - **Pattern**: Always use `dataService` abstraction layer
 
 ### Analytics & Monitoring
+
 - **PostHog** for user analytics and feature tracking
 - **Sentry** for error monitoring and performance
 - **Pattern**: Every user interaction and error is tracked
 
 ### Component Patterns
+
 - Functional components with hooks
 - Error boundaries for resilient UI
 - Loading states for all async operations
@@ -131,16 +138,19 @@ paperlyte/
 ### Common Issues
 
 **Build fails with TypeScript errors**
+
 - Run `npm run lint` to see detailed errors
 - Check that all imports have proper file extensions
 - Ensure all components have proper TypeScript interfaces
 
 **Environment variables not working**
+
 - Vite only exposes variables starting with `VITE_`
 - Restart dev server after changing `.env`
 - Check browser devtools for runtime values
 
 **Tests failing to run**
+
 - Currently experiencing memory issues with Vitest
 - Basic test setup is configured in `src/test/setup.ts`
 - Issue tracked for resolution
