@@ -1,7 +1,7 @@
 ---
-title: "[FEATURE] Replace mock data in AdminDashboard with real functionality"
-labels: ["enhancement", "admin", "medium-priority"]
-assignees: ""
+title: '[FEATURE] Replace mock data in AdminDashboard with real functionality'
+labels: ['enhancement', 'admin', 'medium-priority']
+assignees: ''
 ---
 
 ## Feature Description
@@ -16,12 +16,14 @@ The `AdminDashboard.tsx` component currently contains mock data comments and nee
 ## Proposed Solution
 
 ### Option 1: Implement Real Admin Features
+
 - **Waitlist Management**: Display and manage waitlist entries from `dataService`
 - **Analytics Dashboard**: Show real usage metrics from PostHog/analytics
 - **Note Statistics**: Display storage usage, note counts, etc.
 - **User Management**: Basic user administration (future scope)
 
 ### Option 2: Remove Admin Dashboard
+
 - Remove the admin route and component if not needed for MVP
 - Clean up navigation and routing references
 - Document removal in roadmap
@@ -35,12 +37,12 @@ If implementing real functionality:
 const AdminDashboard: React.FC = () => {
   const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([])
   const [noteStats, setNoteStats] = useState<NoteStats>({})
-  
+
   useEffect(() => {
     loadWaitlistData()
     loadNoteStatistics()
   }, [])
-  
+
   // Real data loading functions
 }
 ```
@@ -48,6 +50,7 @@ const AdminDashboard: React.FC = () => {
 ## User Stories
 
 **As an admin, I want to:**
+
 - View waitlist entries and their details
 - See usage statistics and analytics
 - Monitor application health and performance

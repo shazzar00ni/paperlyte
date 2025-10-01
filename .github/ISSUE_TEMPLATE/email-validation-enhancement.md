@@ -1,7 +1,7 @@
 ---
-title: "[ENHANCEMENT] Improve email validation in WaitlistModal"
-labels: ["enhancement", "validation", "medium-priority"]
-assignees: ""
+title: '[ENHANCEMENT] Improve email validation in WaitlistModal'
+labels: ['enhancement', 'validation', 'medium-priority']
+assignees: ''
 ---
 
 ## Feature Description
@@ -23,11 +23,14 @@ The current email validation in `WaitlistModal.tsx` uses a basic regex pattern t
 ## Proposed Solution
 
 ### Option 1: Enhanced Regex Pattern
+
 ```typescript
-const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+const emailRegex =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 ```
 
 ### Option 2: Validation Library
+
 Use a dedicated validation library like `validator.js` or `zod`:
 
 ```typescript
@@ -35,29 +38,30 @@ import validator from 'validator'
 
 const isValidEmail = validator.isEmail(formData.email, {
   allow_display_name: false,
-  require_tld: true
+  require_tld: true,
 })
 ```
 
 ### Option 3: HTML5 + Custom Validation
+
 ```typescript
 const validateEmail = (email: string): boolean => {
   // Use browser's built-in validation as first check
   const input = document.createElement('input')
   input.type = 'email'
   input.value = email
-  
+
   if (!input.validity.valid) return false
-  
+
   // Additional custom checks
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && 
-         email.length <= 254 // RFC 5321 limit
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 // RFC 5321 limit
 }
 ```
 
 ## User Stories
 
 **As a user filling out the waitlist form:**
+
 - I want clear feedback when my email format is invalid
 - I want to know immediately if there's an issue, not after submission
 - I expect common email formats to be accepted
@@ -77,11 +81,11 @@ const validateEmail = (email: string): boolean => {
 ```typescript
 // Valid emails
 ✅ user@domain.com
-✅ user.name@domain.co.uk  
+✅ user.name@domain.co.uk
 ✅ user+tag@domain.org
 ✅ user@subdomain.domain.com
 
-// Invalid emails  
+// Invalid emails
 ❌ user@domain
 ❌ @domain.com
 ❌ user@@domain.com

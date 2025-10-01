@@ -1,9 +1,11 @@
 # Paperlyte Copilot Instructions
 
 ## Project Overview
+
 Paperlyte is a privacy-focused note-taking application built with React 18, TypeScript, and Vite. This is currently an MVP using localStorage for data persistence, with plans to migrate to a full API backend in Q4 2025.
 
 ## Prime Directive
+
 Avoid working on more than one file at a time. Multiple simultaneous edits will cause corruption. Be chatting and teach about what you are doing while coding.
 
 ## LARGE FILE & COMPLEX CHANGE PROTOCOL
@@ -66,26 +68,32 @@ When refactoring large files:
 ## Paperlyte-Specific Patterns
 
 ### Architecture Principles
+
 - **Data Service Layer**: Use `src/services/dataService.ts` for all persistence operations. It abstracts localStorage (current) from future API calls
 - **Monitoring First**: Always wrap operations with `monitoring.addBreadcrumb()` and `monitoring.logError()` from `src/utils/monitoring.ts`
 - **Analytics Tracking**: Use `trackFeatureUsage()` and `trackNoteEvent()` from `src/utils/analytics.ts` for user interactions
 - **Type Safety**: All data models are in `src/types/index.ts` - use `Note`, `WaitlistEntry`, `User` interfaces consistently
 
 ### Component Conventions
+
 - **Error Boundaries**: Wrap all pages in `ErrorBoundary` component with custom fallback UI
 - **Async State**: Use loading states for all data operations (see `NoteEditor.tsx` pattern)
 - **Event Tracking**: Track page views with `trackFeatureUsage()` in component `useEffect`
 
 ### Build & Development
+
 - **Commands**: `npm run dev` (Vite dev server), `npm run build` (TypeScript + Vite build)
 - **Environment**: Uses Vite env vars (`VITE_POSTHOG_API_KEY`, `VITE_SENTRY_DSN`) defined in `vite.config.ts`
 - **Styling**: Tailwind CSS with custom component classes in `src/styles/index.css` (`.btn`, `.card`, etc.)
 
 ### Data Migration Strategy
+
 When adding features, consider the Q4 2025 API migration:
+
 - Keep `dataService` methods generic (return promises)
 - Don't directly use localStorage in components
 - Design for eventual real-time sync and conflict resolution
+
 ## General Requirements
 
 Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
@@ -109,19 +117,21 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Emphasize progressive enhancement with polyfills or bundlers (e.g., **Babel**, **Vite**) as needed.
 
 ## React/TypeScript Requirements
+
 - **Target Version**: React 18 with TypeScript 5.2+
 - **Patterns to Follow**:
   - Functional components with hooks (no class components)
   - Custom hooks for shared logic (see analytics/monitoring utilities)
   - Proper dependency arrays in `useEffect`
   - Type props with interfaces from `src/types/index.ts`
-- **State Management**: 
+- **State Management**:
   - Local state with `useState` for component state
   - No Redux/Zustand - keep state simple for MVP
 - **Async Operations**:
   - Always use `async/await` with try/catch blocks
   - Include loading states and error handling
   - Use `dataService` methods for persistence
+
 ## HTML/CSS Requirements
 
 - **HTML**:
@@ -150,6 +160,7 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 ### Code Examples & Patterns
 
 **Error Handling Pattern:**
+
 ```typescript
 try {
   const result = await dataService.saveNote(note)
@@ -159,12 +170,13 @@ try {
 } catch (error) {
   monitoring.logError(error as Error, {
     feature: 'note_editor',
-    action: 'save_note'
+    action: 'save_note',
   })
 }
 ```
 
 **Component Analytics Pattern:**
+
 ```typescript
 useEffect(() => {
   trackFeatureUsage('note_editor', 'view')
@@ -173,11 +185,13 @@ useEffect(() => {
 ```
 
 **Data Service Usage:**
+
 ```typescript
 // Always use dataService for persistence operations
 const notes = await dataService.getNotes()
 const success = await dataService.saveNote(updatedNote)
 ```
+
 ## JavaScript Requirements
 
 - **Minimum Compatibility**: ECMAScript 2020 (ES11) or higher
@@ -219,11 +233,12 @@ const success = await dataService.saveNote(updatedNote)
 - Carefully handle and validate JSON responses, incorrect HTTP status codes, etc.
 
 ## Paperlyte Project Structure
+
 ```
 paperlyte/
 ├── src/
 │   ├── components/       # Reusable UI components
-│   ├── pages/           # Route-level page components  
+│   ├── pages/           # Route-level page components
 │   ├── services/        # Data service abstraction layer
 │   ├── styles/          # Tailwind CSS with custom component classes
 │   ├── types/           # TypeScript type definitions
@@ -234,6 +249,7 @@ paperlyte/
 ```
 
 ### Key File Responsibilities
+
 - `src/App.tsx`: Router setup, error boundary, analytics/monitoring initialization
 - `src/services/dataService.ts`: Persistence abstraction (currently localStorage)
 - `src/utils/analytics.ts`: PostHog integration for user tracking
@@ -248,10 +264,12 @@ paperlyte/
 - Minimum docblock info: `param`, `return`, `throws`, `author`
 
 ## Data Persistence (Current: localStorage)
+
 - Use `dataService` methods exclusively for data operations
 - Current storage keys: `paperlyte_notes`, `paperlyte_waitlist_entries`
 - All data operations return promises for future API compatibility
 - Future: Will migrate to encrypted cloud storage with sync capabilities
+
 ## Security Considerations
 
 - Sanitize all user inputs thoroughly.
