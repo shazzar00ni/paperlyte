@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Save, Tag, Search, PlusCircle, Trash2 } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
 import ConfirmationModal from '../components/ConfirmationModal'
+import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
@@ -15,6 +16,8 @@ const NoteEditor: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Track editor page view
@@ -102,9 +105,13 @@ const NoteEditor: React.FC = () => {
     if (!currentNote) return
 
     setIsLoading(true)
+    setSaveSuccess(false)
     try {
       // Simulate save delay
       await new Promise(resolve => setTimeout(resolve, 500))
+
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 2000)
 
       trackNoteEvent('save', { noteId: currentNote.id })
       monitoring.addBreadcrumb('Note saved', 'user_action', {
@@ -182,6 +189,17 @@ const NoteEditor: React.FC = () => {
       )
   )
 
+  // Keyboard shortcuts (defined after functions to avoid hoisting issues)
+  useKeyboardShortcut('n', createNewNote, { ctrl: true })
+  useKeyboardShortcut('s', saveCurrentNote, { ctrl: true })
+  useKeyboardShortcut(
+    'f',
+    () => {
+      searchInputRef.current?.focus()
+    },
+    { ctrl: true }
+  )
+
   return (
     <div className='h-screen flex bg-background'>
       {/* Sidebar */}
@@ -191,14 +209,16 @@ const NoteEditor: React.FC = () => {
           <div className='relative'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
             <input
+              ref={searchInputRef}
               type='text'
-              placeholder='Search notes...'
+              placeholder='Search notes... (⌘F)'
               value={searchQuery}
               onChange={e => {
                 setSearchQuery(e.target.value)
                 trackFeatureUsage('search', 'query', { query: e.target.value })
               }}
               className='input pl-10 text-sm'
+              aria-label='Search notes'
             />
           </div>
         </div>
@@ -207,7 +227,9 @@ const NoteEditor: React.FC = () => {
         <div className='p-4'>
           <button
             onClick={createNewNote}
-            className='btn-primary btn-md w-full flex items-center justify-center space-x-2'
+            className='btn-primary btn-md w-full flex items-center justify-center space-x-2 transition-all hover:shadow-lg hover:scale-105'
+            title='Create new note (⌘N)'
+            aria-label='Create new note'
           >
             <PlusCircle className='h-4 w-4' />
             <span>New Note</span>
@@ -284,17 +306,29 @@ const NoteEditor: React.FC = () => {
                 placeholder='Note title...'
               />
               <div className='flex items-center space-x-2'>
-                <button className='btn-ghost btn-sm flex items-center space-x-1'>
+                <button
+                  className='btn-ghost btn-sm flex items-center space-x-1 transition-all hover:scale-105'
+                  title='Add tags'
+                  aria-label='Add tags to note'
+                >
                   <Tag className='h-4 w-4' />
                   <span>Tags</span>
                 </button>
                 <button
                   onClick={saveCurrentNote}
                   disabled={isLoading}
-                  className='btn-primary btn-sm flex items-center space-x-1'
+                  className={`btn-primary btn-sm flex items-center space-x-1 transition-all ${
+                    saveSuccess
+                      ? 'bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/50'
+                      : 'hover:shadow-lg'
+                  }`}
+                  title='Save note (⌘S)'
+                  aria-label='Save note'
                 >
                   <Save className='h-4 w-4' />
-                  <span>{isLoading ? 'Saving...' : 'Save'}</span>
+                  <span>
+                    {isLoading ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+                  </span>
                 </button>
               </div>
             </div>
