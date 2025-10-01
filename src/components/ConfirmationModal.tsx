@@ -24,7 +24,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   cancelText = 'Cancel',
   confirmVariant = 'danger',
   onConfirm,
-  isLoading = false
+  isLoading = false,
 }) => {
   // Generate stable IDs for accessibility
   const titleId = `confirmation-title-${React.useId()}`
@@ -58,58 +58,59 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     }
   }
 
-  const confirmButtonClass = confirmVariant === 'danger' 
-    ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500/50'
-    : 'btn-primary'
+  const confirmButtonClass =
+    confirmVariant === 'danger'
+      ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500/50'
+      : 'btn-primary'
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div 
-        className="modal-content max-w-sm" 
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
+    <div className='modal-overlay' onClick={handleClose}>
+      <div
+        className='modal-content max-w-sm'
+        onClick={e => e.stopPropagation()}
+        role='dialog'
+        aria-modal='true'
         aria-labelledby={titleId}
         aria-describedby={messageId}
       >
         {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <AlertTriangle className="h-6 w-6 text-amber-500" />
+        <div className='flex justify-between items-start mb-4'>
+          <div className='flex items-center space-x-3'>
+            <div className='flex-shrink-0'>
+              <AlertTriangle className='h-6 w-6 text-amber-500' />
             </div>
-            <h2 id={titleId} className="text-lg font-semibold text-dark">
+            <h2 id={titleId} className='text-lg font-semibold text-dark'>
               {title}
             </h2>
           </div>
           <button
-            type="button"
+            type='button'
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 p-1"
+            className='text-gray-400 hover:text-gray-600 p-1'
             disabled={isLoading}
-            aria-label="Close"
+            aria-label='Close'
           >
-            <X className="h-5 w-5" />
+            <X className='h-5 w-5' />
           </button>
         </div>
 
         {/* Message */}
-        <p id={messageId} className="text-gray-600 mb-6 ml-9">
+        <p id={messageId} className='text-gray-600 mb-6 ml-9'>
           {message}
         </p>
 
         {/* Actions */}
-        <div className="flex justify-end space-x-3">
+        <div className='flex justify-end space-x-3'>
           <button
-            type="button"
+            type='button'
             onClick={handleClose}
             disabled={isLoading}
-            className="btn-secondary btn-sm"
+            className='btn-secondary btn-sm'
           >
             {cancelText}
           </button>
           <button
-            type="button"
+            type='button'
             onClick={handleConfirm}
             disabled={isLoading}
             className={`btn btn-sm ${confirmButtonClass} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
