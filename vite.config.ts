@@ -54,10 +54,16 @@ export default defineConfig(({ mode }) => ({
     target: 'es2020',
     minify: 'esbuild',
   },
+  define: {
+    // Make environment variables available at build time
+    __POSTHOG_API_KEY__: JSON.stringify(process.env.VITE_POSTHOG_API_KEY),
+    __POSTHOG_HOST__: JSON.stringify(process.env.VITE_POSTHOG_HOST),
+    __SENTRY_DSN__: JSON.stringify(process.env.VITE_SENTRY_DSN),
+  },
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./tests/setup.ts', './src/test/setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
@@ -66,11 +72,5 @@ export default defineConfig(({ mode }) => ({
       branches: 50,
     },
     css: true,
-  },
-  define: {
-    // Make environment variables available at build time
-    __POSTHOG_API_KEY__: JSON.stringify(process.env.VITE_POSTHOG_API_KEY),
-    __POSTHOG_HOST__: JSON.stringify(process.env.VITE_POSTHOG_HOST),
-    __SENTRY_DSN__: JSON.stringify(process.env.VITE_SENTRY_DSN),
   },
 }))
