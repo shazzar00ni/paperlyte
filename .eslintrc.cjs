@@ -8,7 +8,16 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules'],
+  ignorePatterns: [
+    'dist',
+    '.eslintrc.cjs',
+    'node_modules',
+    '**/*.test.ts',
+    '**/*.test.tsx',
+    '**/*.spec.ts',
+    '**/*.spec.tsx',
+    'src/test/**',
+  ],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
   parserOptions: {
