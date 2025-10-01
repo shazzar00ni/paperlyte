@@ -57,7 +57,12 @@ const DemoCarousel: React.FC = () => {
 
   useEffect(() => {
     trackFeatureUsage('demo_carousel', 'view')
-    monitoring.addBreadcrumb('Demo carousel loaded', 'ui')
+    try {
+      monitoring.addBreadcrumb('Demo carousel loaded', 'ui')
+    } catch (error) {
+      // Silently fail if monitoring is unavailable
+      console.error('Failed to log carousel load to monitoring service:', error)
+    }
   }, [])
 
   useEffect(() => {
@@ -129,10 +134,15 @@ const DemoCarousel: React.FC = () => {
                 // Fallback to placeholder if image fails to load
                 const target = e.target as HTMLImageElement
                 target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjlGQUZCIi8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2QzYzRkYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRlbW8gSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo='
-                monitoring.addBreadcrumb('Demo carousel image load failed', 'error', {
-                  slideId: currentSlideData.id,
-                  imageSrc: currentSlideData.image
-                })
+                try {
+                  monitoring.addBreadcrumb('Demo carousel image load failed', 'error', {
+                    slideId: currentSlideData.id,
+                    imageSrc: currentSlideData.image
+                  })
+                } catch (error) {
+                  // Silently fail if monitoring is unavailable
+                  console.error('Failed to log image error to monitoring service:', error)
+                }
               }}
             />
             
