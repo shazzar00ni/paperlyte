@@ -24,16 +24,42 @@ beforeEach(() => {
   })
 })
 
-// Mock localStorage
-beforeEach(() => {
-  const localStorageMock = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
+// Setup localStorage mock with actual Map-based implementation
+class LocalStorageMock {
+  private store: Map<string, string>
+
+  constructor() {
+    this.store = new Map()
   }
-  vi.stubGlobal('localStorage', localStorageMock)
-})
+
+  getItem(key: string): string | null {
+    return this.store.get(key) || null
+  }
+
+  setItem(key: string, value: string): void {
+    this.store.set(key, value)
+  }
+
+  removeItem(key: string): void {
+    this.store.delete(key)
+  }
+
+  clear(): void {
+    this.store.clear()
+  }
+
+  get length(): number {
+    return this.store.size
+  }
+
+  key(index: number): string | null {
+    const keys = Array.from(this.store.keys())
+    return keys[index] || null
+  }
+}
+
+// Set up localStorage globally before any tests run
+global.localStorage = new LocalStorageMock() as Storage
 
 // Mock crypto.randomUUID (used in note creation)
 beforeEach(() => {
