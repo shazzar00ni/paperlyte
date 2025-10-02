@@ -48,10 +48,37 @@ class SyncEngine {
       )
       return true
     } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'sync_engine',
-        action: 'save_to_cloud',
-      })
+      const err = error as Error
+
+      // Check if error is quota exceeded
+      if (
+        err.name === 'QuotaExceededError' ||
+        err.message?.includes('quota') ||
+        err.message?.includes('storage')
+      ) {
+        monitoring.logError(err, {
+          feature: 'sync_engine',
+          action: 'save_to_cloud',
+          additionalData: {
+            errorType: 'quota_exceeded',
+            notesCount: notes.length,
+            message: 'LocalStorage quota exceeded. Consider clearing old data.',
+          },
+        })
+
+        // Add breadcrumb for quota issues to help with debugging
+        monitoring.addBreadcrumb(
+          'LocalStorage quota exceeded during sync',
+          'error',
+          { notesCount: notes.length }
+        )
+      } else {
+        monitoring.logError(err, {
+          feature: 'sync_engine',
+          action: 'save_to_cloud',
+        })
+      }
+
       return false
     }
   }
@@ -271,10 +298,29 @@ class SyncEngine {
                 JSON.stringify(conflicts)
               )
             } catch (error) {
-              monitoring.logError(error as Error, {
-                feature: 'sync_engine',
-                action: 'save_conflicts',
-              })
+              const err = error as Error
+
+              // Check if error is quota exceeded
+              if (
+                err.name === 'QuotaExceededError' ||
+                err.message?.includes('quota') ||
+                err.message?.includes('storage')
+              ) {
+                monitoring.logError(err, {
+                  feature: 'sync_engine',
+                  action: 'save_conflicts',
+                  additionalData: { errorType: 'quota_exceeded' },
+                })
+                errors.push({
+                  noteId: '',
+                  error: 'Storage quota exceeded while saving conflicts',
+                })
+              } else {
+                monitoring.logError(err, {
+                  feature: 'sync_engine',
+                  action: 'save_conflicts',
+                })
+              }
             }
           }
 
@@ -410,10 +456,30 @@ class SyncEngine {
             c => c.noteId !== conflictId
           )
 
-          localStorage.setItem(
-            `${this.storagePrefix}conflicts`,
-            JSON.stringify(updatedConflicts)
-          )
+          try {
+            localStorage.setItem(
+              `${this.storagePrefix}conflicts`,
+              JSON.stringify(updatedConflicts)
+            )
+          } catch (storageError) {
+            const err = storageError as Error
+
+            // Check if error is quota exceeded
+            if (
+              err.name === 'QuotaExceededError' ||
+              err.message?.includes('quota') ||
+              err.message?.includes('storage')
+            ) {
+              monitoring.logError(err, {
+                feature: 'sync_engine',
+                action: 'resolve_conflict_manually',
+                additionalData: { errorType: 'quota_exceeded' },
+              })
+              // Re-throw to handle in outer catch
+              throw new Error('Storage quota exceeded')
+            }
+            throw storageError
+          }
 
           // Save the selected note to cloud storage
           const cloudNotes = this.getCloudNotes()
