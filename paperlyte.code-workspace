@@ -6,16 +6,19 @@
     }
   ],
   "settings": {
-    "vitest.enable": true,
+    "vitest.enable": false,
     "vitest.commandLine": "npm run test",
-    "vitest.rootConfig": "./vite.config.ts",
+    "vitest.rootConfig": "vite.config.ts",
     "testing.automaticallyOpenPeekView": "never",
     "testing.openTesting": "neverOpen",
     "eslint.workingDirectories": [
       {
         "mode": "auto"
       }
-    ]
+    ],
+    // Note: Vitest extension disabled for GitHub VFS workspaces
+    // Enable locally when working with cloned repository
+    "vitest.disabledWorkspaceFolders": ["paperlyte"]
   },
   "extensions": {
     "recommendations": [

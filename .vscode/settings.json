@@ -47,5 +47,6 @@
   "vitest.commandLine": "npm run test",
   "vitest.rootConfig": "./vite.config.ts",
   "testing.automaticallyOpenPeekView": "never",
-  "testing.openTesting": "neverOpen"
+  "testing.openTesting": "neverOpen",
+  "testing.automaticallyOpenTestResults": "neverOpen"
 }

@@ -109,6 +109,40 @@ When adding features, consider the Q4 2025 API migration:
 - Don't directly use localStorage in components
 - Design for eventual real-time sync and conflict resolution
 
+## Routing Architecture (Future Implementation)
+
+### Planned Route Structure
+
+```typescript
+// Future App.tsx with routing
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+import NoteEditor from './pages/NoteEditor'
+import AdminDashboard from './pages/AdminDashboard'
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/editor" element={<NoteEditor />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+```
+
+### Route Protection Pattern
+
+```typescript
+// Future authentication wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth()
+  return user ? children : <Navigate to="/" />
+}
+```
+
 ## General Requirements
 
 Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
@@ -217,6 +251,37 @@ useKeyboardShortcut(['cmd+s', 'ctrl+s'], saveNote)
 useKeyboardShortcut(['cmd+k', 'ctrl+k'], () => searchInputRef.current?.focus())
 ```
 
+**API Migration Pattern (Q4 2025):**
+
+```typescript
+// Current localStorage implementation (dataService.ts)
+async saveNote(note: Note): Promise<boolean> {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const notes = this.getFromStorage<Note>('notes')
+      const existingIndex = notes.findIndex(n => n.id === note.id)
+      // localStorage logic...
+      resolve(success)
+    }, 0)
+  })
+}
+
+// Future API implementation (same interface)
+async saveNote(note: Note): Promise<boolean> {
+  try {
+    const response = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(note)
+    })
+    return response.ok
+  } catch (error) {
+    monitoring.logError(error as Error, { feature: 'api', action: 'save_note' })
+    return false
+  }
+}
+```
+
 ## JavaScript Requirements
 
 - **Minimum Compatibility**: ECMAScript 2020 (ES11) or higher
@@ -283,6 +348,82 @@ paperlyte/
 - `src/types/index.ts`: All TypeScript interfaces and types
 - `src/hooks/useKeyboardShortcut.ts`: Custom hook for keyboard navigation
 - `vite.config.ts`: Build configuration with path aliases and CSP headers
+
+## Testing Patterns
+
+### Component Testing with Vitest + Testing Library
+
+```typescript
+// Component test pattern (see WaitlistModal.test.tsx)
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+
+// Mock services and utilities
+vi.mock('../../services/dataService', () => ({
+  dataService: { addToWaitlist: vi.fn() }
+}))
+vi.mock('../../utils/analytics', () => ({
+  trackUserAction: vi.fn()
+}))
+
+describe('ComponentName', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should render when open', () => {
+    render(<ComponentName isOpen={true} onClose={mockOnClose} />)
+    expect(screen.getByText('Expected Text')).toBeInTheDocument()
+  })
+})
+```
+
+### Service Testing Pattern
+
+```typescript
+// Service test pattern (see dataService.test.ts)
+describe('DataService', () => {
+  beforeEach(() => {
+    localStorage.clear() // Clear localStorage before each test
+    vi.clearAllMocks()
+  })
+
+  it('should save and retrieve data', async () => {
+    const testData = { id: 'test', title: 'Test' }
+    const success = await dataService.saveNote(testData)
+    expect(success).toBe(true)
+
+    const retrieved = await dataService.getNotes()
+    expect(retrieved[0]).toEqual(testData)
+  })
+})
+```
+
+## Deployment Configuration
+
+### Netlify Configuration (`netlify.toml`)
+
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Node Version**: 18
+- **Environment Variables**: Set in Netlify dashboard (VITE_POSTHOG_API_KEY, VITE_SENTRY_DSN)
+- **Security Headers**: X-Frame-Options, CSP, XSS Protection
+- **SPA Redirect**: `/*` → `/index.html` (status 200)
+
+### Vercel Configuration (`vercel.json`)
+
+- **Framework**: Vite auto-detection
+- **Build/Dev Commands**: Standard npm scripts
+- **Security Headers**: Same as Netlify configuration
+- **Environment Variables**: VITE_APP_VERSION set in config
+
+### Key Deployment Considerations
+
+- Both platforms configured for **SPA routing** with fallback to index.html
+- **Consistent security headers** across deployments
+- **Environment variables** managed through platform dashboards
+- **Build optimization** with manual vendor chunk splitting in `vite.config.ts`
 
 ## Documentation Requirements
 
