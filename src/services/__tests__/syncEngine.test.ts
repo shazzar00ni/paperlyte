@@ -128,7 +128,7 @@ describe('SyncEngine', () => {
   })
 
   describe('Conflict Detection', () => {
-    it('should detect conflicts when both versions are modified', async () => {
+    it('should detect update conflicts when both versions are modified', async () => {
       // Simulate a note that was synced
       const baseNote: Note = {
         id: 'note-1',
@@ -199,6 +199,72 @@ describe('SyncEngine', () => {
       expect(result.success).toBe(true)
       expect(result.conflicts).toHaveLength(0)
       expect(result.syncedNotes).toContain('note-1')
+    })
+
+    it('should detect delete conflict when note is deleted remotely but updated locally', async () => {
+      const baseNote: Note = {
+        id: 'note-1',
+        title: 'Original',
+        content: 'Original',
+        tags: [],
+        createdAt: '2025-01-01T10:00:00.000Z',
+        updatedAt: '2025-01-01T10:00:00.000Z',
+        lastSyncedAt: '2025-01-01T10:00:00.000Z',
+      }
+
+      // First sync
+      await syncEngine.syncNotes([baseNote])
+
+      // Modify local
+      const localNote: Note = {
+        ...baseNote,
+        title: 'Local Version',
+        updatedAt: '2025-01-01T12:00:00.000Z',
+      }
+
+      // Simulate remote deletion by having empty cloud
+      localStorage.setItem('paperlyte_sync_cloud_notes', JSON.stringify([]))
+
+      const result = await syncEngine.syncNotes([localNote], 'manual')
+
+      expect(result.conflicts.length).toBeGreaterThan(0)
+      expect(result.conflicts[0].conflictType).toBe('delete')
+      expect(result.conflicts[0].noteId).toBe('note-1')
+    })
+
+    it('should detect delete conflict when note is deleted locally but updated remotely', async () => {
+      const baseNote: Note = {
+        id: 'note-1',
+        title: 'Original',
+        content: 'Original',
+        tags: [],
+        createdAt: '2025-01-01T10:00:00.000Z',
+        updatedAt: '2025-01-01T10:00:00.000Z',
+        lastSyncedAt: '2025-01-01T10:00:00.000Z',
+      }
+
+      // First sync
+      await syncEngine.syncNotes([baseNote])
+
+      // Modify remote
+      const remoteNote: Note = {
+        ...baseNote,
+        title: 'Remote Version',
+        updatedAt: '2025-01-01T12:00:00.000Z',
+      }
+
+      // Simulate remote update
+      localStorage.setItem(
+        'paperlyte_sync_cloud_notes',
+        JSON.stringify([remoteNote])
+      )
+
+      // Sync with empty local notes (simulating local deletion)
+      const result = await syncEngine.syncNotes([], 'manual')
+
+      expect(result.conflicts.length).toBeGreaterThan(0)
+      expect(result.conflicts[0].conflictType).toBe('delete')
+      expect(result.conflicts[0].noteId).toBe('note-1')
     })
   })
 
@@ -329,7 +395,7 @@ describe('SyncEngine', () => {
   })
 
   describe('Manual Conflict Resolution', () => {
-    it('should resolve conflict manually', async () => {
+    it('should resolve conflict manually and save selected note', async () => {
       const conflict: SyncConflict = {
         noteId: 'note-1',
         localNote: {
@@ -358,6 +424,12 @@ describe('SyncEngine', () => {
         JSON.stringify([conflict])
       )
 
+      // Store initial cloud state with remote note
+      localStorage.setItem(
+        'paperlyte_sync_cloud_notes',
+        JSON.stringify([conflict.remoteNote])
+      )
+
       // Update metadata with conflict count
       await syncEngine.setSyncEnabled(true)
       const metadataBefore = await syncEngine.getSyncMetadata()
@@ -380,6 +452,16 @@ describe('SyncEngine', () => {
       // Verify metadata was updated
       const metadata = await syncEngine.getSyncMetadata()
       expect(metadata.conflictCount).toBe(0)
+
+      // Verify the selected note was saved to cloud
+      const cloudNotes = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const savedNote = cloudNotes.find((n: Note) => n.id === 'note-1')
+      expect(savedNote).toBeDefined()
+      expect(savedNote.title).toBe('Local')
+      expect(savedNote.syncStatus).toBe('synced')
+      expect(savedNote.lastSyncedAt).toBeDefined()
     })
 
     it('should retrieve pending conflicts', async () => {

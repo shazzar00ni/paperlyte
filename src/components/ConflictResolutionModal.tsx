@@ -36,7 +36,7 @@ const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = ({
     })
 
     try {
-      onResolve(selectedVersion)
+      await onResolve(selectedVersion)
       monitoring.addBreadcrumb('Conflict resolved by user', 'sync', {
         noteId: conflict.noteId,
         selectedVersion,

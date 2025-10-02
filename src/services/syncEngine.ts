@@ -126,7 +126,10 @@ class SyncEngine {
     remoteNotes: Note[]
   ): SyncConflict[] {
     const conflicts: SyncConflict[] = []
+    const remoteNoteIds = new Set(remoteNotes.map(n => n.id))
+    const localNoteIds = new Set(localNotes.map(n => n.id))
 
+    // Check for update conflicts
     for (const localNote of localNotes) {
       const remoteNote = remoteNotes.find(n => n.id === localNote.id)
 
@@ -145,6 +148,52 @@ class SyncEngine {
             localNote,
             remoteNote,
             conflictType: 'update',
+            detectedAt: new Date().toISOString(),
+          })
+        }
+      }
+    }
+
+    // Check for delete conflicts: note deleted remotely but updated locally
+    for (const localNote of localNotes) {
+      if (!remoteNoteIds.has(localNote.id) && localNote.lastSyncedAt) {
+        const localUpdated = new Date(localNote.updatedAt).getTime()
+        const lastSynced = new Date(localNote.lastSyncedAt).getTime()
+
+        // Conflict if local was updated after last sync but remote was deleted
+        if (localUpdated > lastSynced) {
+          conflicts.push({
+            noteId: localNote.id,
+            localNote,
+            remoteNote: {
+              ...localNote,
+              content: '[DELETED]',
+              title: '[DELETED]',
+            },
+            conflictType: 'delete',
+            detectedAt: new Date().toISOString(),
+          })
+        }
+      }
+    }
+
+    // Check for delete conflicts: note deleted locally but updated remotely
+    for (const remoteNote of remoteNotes) {
+      if (!localNoteIds.has(remoteNote.id) && remoteNote.lastSyncedAt) {
+        const remoteUpdated = new Date(remoteNote.updatedAt).getTime()
+        const lastSynced = new Date(remoteNote.lastSyncedAt).getTime()
+
+        // Conflict if remote was updated after last sync but local was deleted
+        if (remoteUpdated > lastSynced) {
+          conflicts.push({
+            noteId: remoteNote.id,
+            localNote: {
+              ...remoteNote,
+              content: '[DELETED]',
+              title: '[DELETED]',
+            },
+            remoteNote,
+            conflictType: 'delete',
             detectedAt: new Date().toISOString(),
           })
         }
@@ -336,7 +385,7 @@ class SyncEngine {
    */
   async resolveConflictManually(
     conflictId: string,
-    _selectedNote: Note
+    selectedNote: Note
   ): Promise<boolean> {
     return new Promise(resolve => {
       setTimeout(async () => {
@@ -351,6 +400,26 @@ class SyncEngine {
             JSON.stringify(updatedConflicts)
           )
 
+          // Save the selected note to cloud storage
+          const cloudNotes = this.getCloudNotes()
+          const noteIndex = cloudNotes.findIndex(n => n.id === selectedNote.id)
+
+          const resolvedNote = {
+            ...selectedNote,
+            syncStatus: 'synced' as const,
+            lastSyncedAt: new Date().toISOString(),
+            localVersion: (selectedNote.localVersion || 0) + 1,
+            remoteVersion: (selectedNote.remoteVersion || 0) + 1,
+          }
+
+          if (noteIndex >= 0) {
+            cloudNotes[noteIndex] = resolvedNote
+          } else {
+            cloudNotes.push(resolvedNote)
+          }
+
+          this.saveToCloud(cloudNotes)
+
           // Update conflict count in metadata
           await this.updateSyncMetadata({
             conflictCount: updatedConflicts.length,
@@ -358,6 +427,7 @@ class SyncEngine {
 
           monitoring.addBreadcrumb('Conflict resolved manually', 'sync', {
             conflictId,
+            selectedVersion: selectedNote.title,
           })
 
           resolve(true)
