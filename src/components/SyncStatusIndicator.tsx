@@ -55,7 +55,7 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
     try {
       await loadSyncMetadata()
     } finally {
-      setTimeout(() => setIsRefreshing(false), 1000)
+      setIsRefreshing(false)
     }
   }
 
