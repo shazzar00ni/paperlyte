@@ -6,7 +6,7 @@ Paperlyte is a privacy-focused note-taking application built with React 18, Type
 
 ## Prime Directive
 
-Avoid working on more than one file at a time. Multiple simultaneous edits will cause corruption. Be chatting and teach about what you are doing while coding.
+**CRITICAL**: Use `multi_replace_string_in_file` for multiple independent edits - this is MORE EFFICIENT than sequential edits. Only use single-file editing for complex, dependent changes that require careful sequencing. Always explain what you're doing while coding.
 
 ## LARGE FILE & COMPLEX CHANGE PROTOCOL
 
@@ -67,24 +67,39 @@ When refactoring large files:
 
 ## Paperlyte-Specific Patterns
 
+### Current Application State (MVP)
+
+- **Single Page Application**: Currently runs as landing page only (`LandingPage.tsx`) - note editor exists but not routed
+- **No Authentication**: User management exists in types but not implemented yet
+- **localStorage Persistence**: All data stored locally with service abstraction for future API migration  
+- **Simulated Cloud Sync**: `syncEngine.ts` provides sync simulation using localStorage as "cloud" storage
+- **Waitlist Collection**: Primary user interaction is waitlist signup via modal
+
 ### Architecture Principles
 
-- **Data Service Layer**: Use `src/services/dataService.ts` for all persistence operations. It abstracts localStorage (current) from future API calls
+- **Data Service Layer**: Use `src/services/dataService.ts` for ALL persistence operations. It abstracts localStorage (current) from future API calls
+- **Sync Engine**: `src/services/syncEngine.ts` handles cloud sync simulation - designed for future real-time sync
 - **Monitoring First**: Always wrap operations with `monitoring.addBreadcrumb()` and `monitoring.logError()` from `src/utils/monitoring.ts`
-- **Analytics Tracking**: Use `trackFeatureUsage()` and `trackNoteEvent()` from `src/utils/analytics.ts` for user interactions
-- **Type Safety**: All data models are in `src/types/index.ts` - use `Note`, `WaitlistEntry`, `User` interfaces consistently
+- **Analytics Tracking**: Use `trackFeatureUsage()`, `trackNoteEvent()`, `trackWaitlistEvent()` from `src/utils/analytics.ts` for user interactions
+- **Type Safety**: All data models in `src/types/index.ts` - use `Note`, `WaitlistEntry`, `User`, `SyncConflict` interfaces consistently
 
 ### Component Conventions
 
 - **Error Boundaries**: Wrap all pages in `ErrorBoundary` component with custom fallback UI
-- **Async State**: Use loading states for all data operations (see `NoteEditor.tsx` pattern)
+- **Async State**: Use loading states for all data operations (see `NoteEditor.tsx` pattern with `isLoading`, `isDeleting`, `saveSuccess`)
 - **Event Tracking**: Track page views with `trackFeatureUsage()` in component `useEffect`
+- **Modal Pattern**: Use `ModalProps` interface for all modal components (`WaitlistModal`, `ConfirmationModal`)
 
 ### Build & Development
 
-- **Commands**: `npm run dev` (Vite dev server), `npm run build` (TypeScript + Vite build)
+- **Commands**: `npm run dev` (Vite dev server port 3000), `npm run build` (TypeScript + Vite), `npm run ci` (full pipeline)
+- **Testing**: `npm run test` (Vitest), `npm run test:coverage`, `npm run test:ui` (Vitest UI)
+- **Linting**: `npm run lint` (ESLint), `npm run format` (Prettier), automated via husky pre-commit
 - **Environment**: Uses Vite env vars (`VITE_POSTHOG_API_KEY`, `VITE_SENTRY_DSN`) defined in `vite.config.ts`
-- **Styling**: Tailwind CSS with custom component classes in `src/styles/index.css` (`.btn`, `.card`, etc.)
+- **Styling**: Tailwind CSS 4.x with custom utilities in `src/styles/index.css`
+- **Testing**: Vitest with jsdom, `@testing-library/react` for component testing
+- **CI/CD**: GitHub Actions with workflows for lint, test, security, performance audits
+- **Git Hooks**: Husky with commitlint for conventional commits, lint-staged for pre-commit checks
 
 ### Data Migration Strategy
 
@@ -192,6 +207,16 @@ const notes = await dataService.getNotes()
 const success = await dataService.saveNote(updatedNote)
 ```
 
+**Keyboard Shortcuts Pattern:**
+
+```typescript
+import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut'
+
+// In component
+useKeyboardShortcut(['cmd+s', 'ctrl+s'], saveNote)
+useKeyboardShortcut(['cmd+k', 'ctrl+k'], () => searchInputRef.current?.focus())
+```
+
 ## JavaScript Requirements
 
 - **Minimum Compatibility**: ECMAScript 2020 (ES11) or higher
@@ -252,9 +277,12 @@ paperlyte/
 
 - `src/App.tsx`: Router setup, error boundary, analytics/monitoring initialization
 - `src/services/dataService.ts`: Persistence abstraction (currently localStorage)
+- `src/services/syncEngine.ts`: Cloud synchronization and conflict resolution engine
 - `src/utils/analytics.ts`: PostHog integration for user tracking
 - `src/utils/monitoring.ts`: Sentry integration for error reporting
 - `src/types/index.ts`: All TypeScript interfaces and types
+- `src/hooks/useKeyboardShortcut.ts`: Custom hook for keyboard navigation
+- `vite.config.ts`: Build configuration with path aliases and CSP headers
 
 ## Documentation Requirements
 
