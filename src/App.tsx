@@ -12,6 +12,10 @@ function App() {
     setIsWaitlistOpen(true)
   }
 
+  const handleWaitlistClose = () => {
+    setIsWaitlistOpen(false)
+  }
+
   return (
     <div className='App min-h-screen flex flex-col'>
       <Header onWaitlistClick={handleWaitlistClick} />
@@ -23,7 +27,7 @@ function App() {
       {/* Global Waitlist Modal */}
       <WaitlistModal
         isOpen={isWaitlistOpen}
-        onClose={() => setIsWaitlistOpen(false)}
+        onClose={handleWaitlistClose}
       />
     </div>
   )

@@ -37,7 +37,7 @@ const Pricing: React.FC<PricingProps> = ({ onWaitlistClick }) => {
       ],
       highlighted: false,
       icon: <Zap className='h-6 w-6' />,
-      buttonText: 'Get Started',
+      buttonText: 'Join Waitlist',
       comingSoon: true
     },
     {
@@ -89,8 +89,8 @@ const Pricing: React.FC<PricingProps> = ({ onWaitlistClick }) => {
   const handlePricingClick = (tierId: string) => {
     trackUserAction('pricing_click', { tier: tierId })
     if (tierId === 'team') {
-      // Open contact form or redirect to sales
-      window.open('mailto:sales@paperlyte.com?subject=Team Plan Inquiry', '_blank')
+      // Use location.href for better compatibility
+      window.location.href = 'mailto:sales@paperlyte.com?subject=Team Plan Inquiry'
     } else {
       onWaitlistClick()
     }

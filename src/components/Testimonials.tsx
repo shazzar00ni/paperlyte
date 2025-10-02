@@ -28,7 +28,7 @@ const Testimonials: React.FC = () => {
       role: 'Writer & Researcher',
       company: 'Freelance',
       content: 'Finally, a note-taking app that gets out of my way. Clean, fast, and powerful. Perfect for my writing workflow.',
-      rating: 5,
+      rating: 4,
       avatar: '/api/placeholder/64/64'
     },
     {
@@ -46,7 +46,7 @@ const Testimonials: React.FC = () => {
       role: 'Student',
       company: 'MIT',
       content: 'Paperlyte helps me stay organized with my coursework. The tagging system is intuitive and the search is incredibly fast.',
-      rating: 5,
+      rating: 4,
       avatar: '/api/placeholder/64/64'
     },
     {

@@ -29,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({ onWaitlistClick }) => {
         <div className='flex justify-between items-center h-16'>
           {/* Logo */}
           <button
+            type='button'
             onClick={handleLogoClick}
             className='flex items-center space-x-2 font-bold text-xl text-dark hover:opacity-80 transition-opacity'
           >

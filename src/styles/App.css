@@ -112,11 +112,11 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .App-header {
-    animation: float 6s ease-in-out infinite;
+    animation: float-header 6s ease-in-out infinite;
   }
 }
 
-@keyframes float {
+@keyframes float-header {
   0%,
   100% {
     transform: translateY(0px);

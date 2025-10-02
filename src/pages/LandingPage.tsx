@@ -21,6 +21,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
     trackUserAction('waitlist_click_landing')
     if (onWaitlistClick) {
       onWaitlistClick()
+    } else if (process.env.NODE_ENV === 'development') {
+      console.warn('onWaitlistClick prop is not provided to LandingPage')
+    }
+  }
+
+  const handleWatchDemo = () => {
+    trackUserAction('demo_request')
+    // Scroll to demo section
+    const demoSection = document.getElementById('demo')
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -94,7 +105,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
               Join the Waitlist
             </button>
             <button
-              onClick={() => trackUserAction('demo_request')}
+              onClick={handleWatchDemo}
               className='btn-secondary btn-lg'
             >
               Watch Demo
