@@ -1,0 +1,36 @@
+{
+  "folders": [
+    {
+      "name": "Paperlyte",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "vitest.enable": true,
+    "vitest.commandLine": "npm run test",
+    "vitest.rootConfig": "./vite.config.ts",
+    "testing.automaticallyOpenPeekView": "never",
+    "testing.openTesting": "neverOpen",
+    "eslint.workingDirectories": [
+      {
+        "mode": "auto"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      "ms-vscode.vscode-typescript-next",
+      "usernamehw.errorlens",
+      "christian-kohler.path-intellisense",
+      "ms-vscode.vscode-json",
+      "redhat.vscode-yaml",
+      "github.copilot",
+      "github.copilot-chat",
+      "vitest.explorer"
+    ],
+    "unwantedRecommendations": ["ms-vscode.vscode-typescript"]
+  }
+}

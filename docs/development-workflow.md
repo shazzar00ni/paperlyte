@@ -306,12 +306,26 @@ npm run deps:check
 npm run deps:update
 ```
 
+### VS Code Extension Issues
+
+**Vitest Extension Error:** When working with remote repositories, the Vitest extension may show path resolution errors. 
+
+**Solution:** Use terminal commands instead:
+```bash
+npm run test      # Watch mode
+npm run test:ci   # Single run  
+npm run test:ui   # Browser UI
+```
+
+See [docs/vscode-troubleshooting.md](./vscode-troubleshooting.md) for detailed solutions.
+
 ### Getting Help
 
 1. Check existing GitHub issues
 2. Review workflow logs in Actions tab
 3. Run `npm run ci` locally to replicate CI environment
-4. Contact team via GitHub discussions
+4. Check VS Code troubleshooting guide for extension issues
+5. Contact team via GitHub discussions
 
 ## 📈 Metrics & Monitoring
 
