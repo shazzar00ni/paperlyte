@@ -391,6 +391,13 @@ describe('SyncEngine', () => {
       expect(result.conflicts[0].noteId).toBe('note-1')
       expect(result.conflicts[0].localNote.title).toBe('Local Version')
       expect(result.conflicts[0].remoteNote.title).toBe('Remote Version')
+
+      // Verify conflicts are saved to localStorage for manual resolution
+      const savedConflicts = JSON.parse(
+        localStorage.getItem('paperlyte_sync_conflicts') || '[]'
+      )
+      expect(savedConflicts).toHaveLength(1)
+      expect(savedConflicts[0].noteId).toBe('note-1')
     })
   })
 

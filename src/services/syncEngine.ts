@@ -263,6 +263,21 @@ class SyncEngine {
           const syncedNotes: string[] = []
           const errors: Array<{ noteId: string; error: string }> = []
 
+          // Save conflicts to localStorage when using manual strategy
+          if (strategy === 'manual' && conflicts.length > 0) {
+            try {
+              localStorage.setItem(
+                `${this.storagePrefix}conflicts`,
+                JSON.stringify(conflicts)
+              )
+            } catch (error) {
+              monitoring.logError(error as Error, {
+                feature: 'sync_engine',
+                action: 'save_conflicts',
+              })
+            }
+          }
+
           // Build merged notes collection
           const mergedNotes = new Map<string, Note>()
 
