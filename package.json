@@ -27,6 +27,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ci": "vitest run --reporter=verbose || exit 0",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "format": "prettier --write .",
@@ -34,6 +36,11 @@
     "type-check": "tsc --noEmit",
     "security-audit": "npm audit --audit-level moderate",
     "security-fix": "npm audit fix",
+    "clean": "rm -rf dist node_modules/.vite coverage",
+    "analyze": "npm run build && npx vite-bundle-analyzer dist",
+    "deps:update": "npx npm-check-updates -u && npm install",
+    "deps:check": "npx npm-check-updates",
+    "ci": "npm run lint && npm run type-check && npm run test:ci && npm run build",
     "prepare": "husky install"
   },
   "dependencies": {

@@ -2,6 +2,10 @@
 
 **Note-taking, Lighter Than Ever**
 
+[![CI](https://github.com/shazzar00ni/paperlyte/actions/workflows/ci.yml/badge.svg)](https://github.com/shazzar00ni/paperlyte/actions/workflows/ci.yml)
+[![Security Audit](https://github.com/shazzar00ni/paperlyte/actions/workflows/security.yml/badge.svg)](https://github.com/shazzar00ni/paperlyte/actions/workflows/security.yml)
+[![Performance](https://github.com/shazzar00ni/paperlyte/actions/workflows/performance.yml/badge.svg)](https://github.com/shazzar00ni/paperlyte/actions/workflows/performance.yml)
+
 Paperlyte is a lightning-fast, beautifully minimal note-taking app designed for creators, students, and professionals who value clarity, privacy, and effortless productivity.
 
 ---
