@@ -18,7 +18,10 @@
     ],
     // Note: Vitest extension disabled for GitHub VFS workspaces
     // Enable locally when working with cloned repository
-    "vitest.disabledWorkspaceFolders": ["paperlyte"]
+    "vitest.disabledWorkspaceFolders": [
+      "paperlyte"
+    ],
+    "testing.automaticallyOpenTestResults": "neverOpen"
   },
   "extensions": {
     "recommendations": [
