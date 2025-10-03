@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { CheckCircle, Zap, Shield, Smartphone, Search, Tag, FileText, Sparkles } from 'lucide-react'
 import { trackUserAction } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
@@ -11,6 +11,8 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
+  const demoSectionRef = useRef<HTMLElement>(null)
+
   useEffect(() => {
     // Track landing page view
     trackUserAction('landing_page_view')
@@ -28,10 +30,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
 
   const handleWatchDemo = () => {
     trackUserAction('demo_request')
-    // Scroll to demo section
-    const demoSection = document.getElementById('demo')
-    if (demoSection) {
-      demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Scroll to demo section using React ref
+    if (demoSectionRef.current) {
+      demoSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -151,7 +152,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
       </section>
 
       {/* Demo Carousel Section */}
-      <section id='demo'>
+      <section ref={demoSectionRef} id='demo'>
         <DemoCarousel />
       </section>
 
