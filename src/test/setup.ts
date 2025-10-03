@@ -61,12 +61,28 @@ class LocalStorageMock {
 // Set up localStorage globally before any tests run
 global.localStorage = new LocalStorageMock() as Storage
 
-// Mock crypto.randomUUID (used in note creation)
+// Mock crypto API (used in note creation and authentication)
 beforeEach(() => {
   const cryptoMock = {
     randomUUID: vi.fn(
       () => 'mock-uuid-' + Math.random().toString(36).substring(2, 9)
     ),
+    subtle: {
+      digest: vi.fn(async (algorithm: string, data: BufferSource) => {
+        // Simple hash simulation for testing
+        const text = new TextDecoder().decode(data as Uint8Array)
+        let hash = 0
+        for (let i = 0; i < text.length; i++) {
+          const char = text.charCodeAt(i)
+          hash = (hash << 5) - hash + char
+          hash = hash & hash // Convert to 32bit integer
+        }
+        const hashArray = new Array(32).fill(0).map((_, i) => {
+          return (Math.abs(hash) + i) % 256
+        })
+        return new Uint8Array(hashArray).buffer
+      }),
+    },
   }
   vi.stubGlobal('crypto', cryptoMock)
 })
