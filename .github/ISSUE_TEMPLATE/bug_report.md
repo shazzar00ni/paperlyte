@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us improve Paperlyte
+name: Bug Report
+about: Report a bug to help us improve Paperlyte
 title: '[BUG] '
-labels: 'bug'
+labels: ['bug']
 assignees: ''
 ---
 
@@ -31,14 +31,20 @@ If applicable, add screenshots to help explain your problem.
 
 ## Environment
 
-- **OS**: [e.g. macOS 13.0, Windows 11, Ubuntu 22.04]
-- **Browser**: [e.g. Chrome 118, Firefox 119, Safari 17]
-- **Device**: [e.g. iPhone 15, Desktop, iPad]
-- **Paperlyte Version**: [e.g. 0.1.0]
+- Browser: [e.g. Chrome, Firefox, Safari]
+- Version: [e.g. 120.0]
+- OS: [e.g. macOS, Windows, Linux]
+- Device: [e.g. Desktop, Mobile, Tablet]
 
 ## Additional Context
 
 Add any other context about the problem here.
+
+## Notes Storage Context
+
+- Are you using localStorage or have an account?
+- How many notes do you have stored?
+- Any specific note content that triggers the issue?
 
 ## Possible Solution
 

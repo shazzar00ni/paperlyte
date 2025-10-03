@@ -2,6 +2,10 @@
 
 **Note-taking, Lighter Than Ever**
 
+[![CI](https://github.com/shazzar00ni/paperlyte/actions/workflows/ci.yml/badge.svg)](https://github.com/shazzar00ni/paperlyte/actions/workflows/ci.yml)
+[![Security Audit](https://github.com/shazzar00ni/paperlyte/actions/workflows/security.yml/badge.svg)](https://github.com/shazzar00ni/paperlyte/actions/workflows/security.yml)
+[![Performance](https://github.com/shazzar00ni/paperlyte/actions/workflows/performance.yml/badge.svg)](https://github.com/shazzar00ni/paperlyte/actions/workflows/performance.yml)
+
 Paperlyte is a lightning-fast, beautifully minimal note-taking app designed for creators, students, and professionals who value clarity, privacy, and effortless productivity.
 
 ---
@@ -79,21 +83,17 @@ paperlyte/
 
 ## 🚦 Getting Started
 
-### Prerequisites
-
-- Node.js 16+ and npm
-
-### Installation
+### Quick Start
 
 ```bash
 git clone https://github.com/shazzar00ni/paperlyte.git
 cd paperlyte
 npm install
-
-# Copy environment variables
-cp .env.example .env.local
-# Edit .env.local with your analytics keys (optional for development)
+cp .env.example .env
+npm run dev
 ```
+
+**For detailed setup instructions, see [SETUP.md](SETUP.md)**
 
 ### Run Locally
 

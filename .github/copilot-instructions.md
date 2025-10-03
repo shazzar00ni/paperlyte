@@ -1,10 +1,12 @@
-# COPILOT EDITS OPERATIONAL GUIDELINES
+# Paperlyte Copilot Instructions
 
-## PRIME DIRECTIVE
+## Project Overview
 
-Avoid working on more than one file at a time.
-Multiple simultaneous edits to a file will cause corruption.
-Be chatting and teach about what you are doing while coding.
+Paperlyte is a privacy-focused note-taking application built with React 18, TypeScript, and Vite. This is currently an MVP using localStorage for data persistence, with plans to migrate to a full API backend in Q4 2025.
+
+## Prime Directive
+
+**CRITICAL**: Use `multi_replace_string_in_file` for multiple independent edits - this is MORE EFFICIENT than sequential edits. Only use single-file editing for complex, dependent changes that require careful sequencing. Always explain what you're doing while coding.
 
 ## LARGE FILE & COMPLEX CHANGE PROTOCOL
 
@@ -63,6 +65,84 @@ When refactoring large files:
 - Prioritize changes that are logically complete units
 - Always provide clear stopping points
 
+## Paperlyte-Specific Patterns
+
+### Current Application State (MVP)
+
+- **Single Page Application**: Currently runs as landing page only (`LandingPage.tsx`) - note editor exists but not routed
+- **No Authentication**: User management exists in types but not implemented yet
+- **localStorage Persistence**: All data stored locally with service abstraction for future API migration  
+- **Simulated Cloud Sync**: `syncEngine.ts` provides sync simulation using localStorage as "cloud" storage
+- **Waitlist Collection**: Primary user interaction is waitlist signup via modal
+
+### Architecture Principles
+
+- **Data Service Layer**: Use `src/services/dataService.ts` for ALL persistence operations. It abstracts localStorage (current) from future API calls
+- **Sync Engine**: `src/services/syncEngine.ts` handles cloud sync simulation - designed for future real-time sync
+- **Monitoring First**: Always wrap operations with `monitoring.addBreadcrumb()` and `monitoring.logError()` from `src/utils/monitoring.ts`
+- **Analytics Tracking**: Use `trackFeatureUsage()`, `trackNoteEvent()`, `trackWaitlistEvent()` from `src/utils/analytics.ts` for user interactions
+- **Type Safety**: All data models in `src/types/index.ts` - use `Note`, `WaitlistEntry`, `User`, `SyncConflict` interfaces consistently
+
+### Component Conventions
+
+- **Error Boundaries**: Wrap all pages in `ErrorBoundary` component with custom fallback UI
+- **Async State**: Use loading states for all data operations (see `NoteEditor.tsx` pattern with `isLoading`, `isDeleting`, `saveSuccess`)
+- **Event Tracking**: Track page views with `trackFeatureUsage()` in component `useEffect`
+- **Modal Pattern**: Use `ModalProps` interface for all modal components (`WaitlistModal`, `ConfirmationModal`)
+
+### Build & Development
+
+- **Commands**: `npm run dev` (Vite dev server port 3000), `npm run build` (TypeScript + Vite), `npm run ci` (full pipeline)
+- **Testing**: `npm run test` (Vitest), `npm run test:coverage`, `npm run test:ui` (Vitest UI)
+- **Linting**: `npm run lint` (ESLint), `npm run format` (Prettier), automated via husky pre-commit
+- **Environment**: Uses Vite env vars (`VITE_POSTHOG_API_KEY`, `VITE_SENTRY_DSN`) defined in `vite.config.ts`
+- **Styling**: Tailwind CSS 4.x with custom utilities in `src/styles/index.css`
+- **Testing**: Vitest with jsdom, `@testing-library/react` for component testing
+- **CI/CD**: GitHub Actions with workflows for lint, test, security, performance audits
+- **Git Hooks**: Husky with commitlint for conventional commits, lint-staged for pre-commit checks
+
+### Data Migration Strategy
+
+When adding features, consider the Q4 2025 API migration:
+
+- Keep `dataService` methods generic (return promises)
+- Don't directly use localStorage in components
+- Design for eventual real-time sync and conflict resolution
+
+## Routing Architecture (Future Implementation)
+
+### Planned Route Structure
+
+```typescript
+// Future App.tsx with routing
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+import NoteEditor from './pages/NoteEditor'
+import AdminDashboard from './pages/AdminDashboard'
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/editor" element={<NoteEditor />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+```
+
+### Route Protection Pattern
+
+```typescript
+// Future authentication wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth()
+  return user ? children : <Navigate to="/" />
+}
+```
+
 ## General Requirements
 
 Use modern technologies as described below for all code suggestions. Prioritize clean, maintainable code with appropriate comments.
@@ -85,31 +165,21 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Firefox, Chrome, Edge, Safari (macOS/iOS)
 - Emphasize progressive enhancement with polyfills or bundlers (e.g., **Babel**, **Vite**) as needed.
 
-## PHP Requirements
+## React/TypeScript Requirements
 
-- **Target Version**: PHP 8.1 or higher
-- **Features to Use**:
-- Named arguments
-- Constructor property promotion
-- Union types and nullable types
-- Match expressions
-- Nullsafe operator (`?->`)
-- Attributes instead of annotations
-- Typed properties with appropriate type declarations
-- Return type declarations
-- Enumerations (`enum`)
-- Readonly properties
-- Emphasize strict property typing in all generated code.
-- **Coding Standards**:
-- Follow PSR-12 coding standards
-- Use strict typing with `declare(strict_types=1);`
-- Prefer composition over inheritance
-- Use dependency injection
-- **Static Analysis:**
-- Include PHPDoc blocks compatible with PHPStan or Psalm for static analysis
-- **Error Handling:**
-- Use exceptions consistently for error handling and avoid suppressing errors.
-- Provide meaningful, clear exception messages and proper exception types.
+- **Target Version**: React 18 with TypeScript 5.2+
+- **Patterns to Follow**:
+  - Functional components with hooks (no class components)
+  - Custom hooks for shared logic (see analytics/monitoring utilities)
+  - Proper dependency arrays in `useEffect`
+  - Type props with interfaces from `src/types/index.ts`
+- **State Management**:
+  - Local state with `useState` for component state
+  - No Redux/Zustand - keep state simple for MVP
+- **Async Operations**:
+  - Always use `async/await` with try/catch blocks
+  - Include loading states and error handling
+  - Use `dataService` methods for persistence
 
 ## HTML/CSS Requirements
 
@@ -135,6 +205,82 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Include dark mode support with `prefers-color-scheme`
 - Prioritize modern, performant fonts and variable fonts for smaller file sizes
 - Use modern units (`rem`, `vh`, `vw`) instead of traditional pixels (`px`) for better responsiveness
+
+### Code Examples & Patterns
+
+**Error Handling Pattern:**
+
+```typescript
+try {
+  const result = await dataService.saveNote(note)
+  if (result) {
+    // Success path
+  }
+} catch (error) {
+  monitoring.logError(error as Error, {
+    feature: 'note_editor',
+    action: 'save_note',
+  })
+}
+```
+
+**Component Analytics Pattern:**
+
+```typescript
+useEffect(() => {
+  trackFeatureUsage('note_editor', 'view')
+  monitoring.addBreadcrumb('Note editor loaded', 'navigation')
+}, [])
+```
+
+**Data Service Usage:**
+
+```typescript
+// Always use dataService for persistence operations
+const notes = await dataService.getNotes()
+const success = await dataService.saveNote(updatedNote)
+```
+
+**Keyboard Shortcuts Pattern:**
+
+```typescript
+import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut'
+
+// In component
+useKeyboardShortcut(['cmd+s', 'ctrl+s'], saveNote)
+useKeyboardShortcut(['cmd+k', 'ctrl+k'], () => searchInputRef.current?.focus())
+```
+
+**API Migration Pattern (Q4 2025):**
+
+```typescript
+// Current localStorage implementation (dataService.ts)
+async saveNote(note: Note): Promise<boolean> {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const notes = this.getFromStorage<Note>('notes')
+      const existingIndex = notes.findIndex(n => n.id === note.id)
+      // localStorage logic...
+      resolve(success)
+    }, 0)
+  })
+}
+
+// Future API implementation (same interface)
+async saveNote(note: Note): Promise<boolean> {
+  try {
+    const response = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(note)
+    })
+    return response.ok
+  } catch (error) {
+    monitoring.logError(error as Error, { feature: 'api', action: 'save_note' })
+    return false
+  }
+}
+```
 
 ## JavaScript Requirements
 
@@ -176,31 +322,108 @@ Use modern technologies as described below for all code suggestions. Prioritize 
 - Consider a central error handler function or global event (e.g., `window.addEventListener('unhandledrejection')`) to consolidate reporting.
 - Carefully handle and validate JSON responses, incorrect HTTP status codes, etc.
 
-## Folder Structure
+## Paperlyte Project Structure
 
-Follow this structured directory layout:
+```
+paperlyte/
+├── src/
+│   ├── components/       # Reusable UI components
+│   ├── pages/           # Route-level page components
+│   ├── services/        # Data service abstraction layer
+│   ├── styles/          # Tailwind CSS with custom component classes
+│   ├── types/           # TypeScript type definitions
+│   └── utils/           # Analytics and monitoring utilities
+├── simple-scribbles/    # Documentation and planning
+├── docs/                # Additional project documentation
+└── [config files]       # Vite, Tailwind, TypeScript configs
+```
 
-    project-root/
-    ├── api/                  # API handlers and routes
-    ├── config/               # Configuration files and environment variables
-    ├── data/                 # Databases, JSON files, and other storage
-    ├── public/               # Publicly accessible files (served by web server)
-    │   ├── assets/
-    │   │   ├── css/
-    │   │   ├── js/
-    │   │   ├── images/
-    │   │   ├── fonts/
-    │   └── index.html
-    ├── src/                  # Application source code
-    │   ├── controllers/
-    │   ├── models/
-    │   ├── views/
-    │   └── utilities/
-    ├── tests/                # Unit and integration tests
-    ├── docs/                 # Documentation (Markdown files)
-    ├── logs/                 # Server and application logs
-    ├── scripts/              # Scripts for deployment, setup, etc.
-    └── temp/                 # Temporary/cache files
+### Key File Responsibilities
+
+- `src/App.tsx`: Router setup, error boundary, analytics/monitoring initialization
+- `src/services/dataService.ts`: Persistence abstraction (currently localStorage)
+- `src/services/syncEngine.ts`: Cloud synchronization and conflict resolution engine
+- `src/utils/analytics.ts`: PostHog integration for user tracking
+- `src/utils/monitoring.ts`: Sentry integration for error reporting
+- `src/types/index.ts`: All TypeScript interfaces and types
+- `src/hooks/useKeyboardShortcut.ts`: Custom hook for keyboard navigation
+- `vite.config.ts`: Build configuration with path aliases and CSP headers
+
+## Testing Patterns
+
+### Component Testing with Vitest + Testing Library
+
+```typescript
+// Component test pattern (see WaitlistModal.test.tsx)
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+
+// Mock services and utilities
+vi.mock('../../services/dataService', () => ({
+  dataService: { addToWaitlist: vi.fn() }
+}))
+vi.mock('../../utils/analytics', () => ({
+  trackUserAction: vi.fn()
+}))
+
+describe('ComponentName', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should render when open', () => {
+    render(<ComponentName isOpen={true} onClose={mockOnClose} />)
+    expect(screen.getByText('Expected Text')).toBeInTheDocument()
+  })
+})
+```
+
+### Service Testing Pattern
+
+```typescript
+// Service test pattern (see dataService.test.ts)
+describe('DataService', () => {
+  beforeEach(() => {
+    localStorage.clear() // Clear localStorage before each test
+    vi.clearAllMocks()
+  })
+
+  it('should save and retrieve data', async () => {
+    const testData = { id: 'test', title: 'Test' }
+    const success = await dataService.saveNote(testData)
+    expect(success).toBe(true)
+
+    const retrieved = await dataService.getNotes()
+    expect(retrieved[0]).toEqual(testData)
+  })
+})
+```
+
+## Deployment Configuration
+
+### Netlify Configuration (`netlify.toml`)
+
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Node Version**: 18
+- **Environment Variables**: Set in Netlify dashboard (VITE_POSTHOG_API_KEY, VITE_SENTRY_DSN)
+- **Security Headers**: X-Frame-Options, CSP, XSS Protection
+- **SPA Redirect**: `/*` → `/index.html` (status 200)
+
+### Vercel Configuration (`vercel.json`)
+
+- **Framework**: Vite auto-detection
+- **Build/Dev Commands**: Standard npm scripts
+- **Security Headers**: Same as Netlify configuration
+- **Environment Variables**: VITE_APP_VERSION set in config
+
+### Key Deployment Considerations
+
+- Both platforms configured for **SPA routing** with fallback to index.html
+- **Consistent security headers** across deployments
+- **Environment variables** managed through platform dashboards
+- **Build optimization** with manual vendor chunk splitting in `vite.config.ts`
 
 ## Documentation Requirements
 
@@ -209,9 +432,12 @@ Follow this structured directory layout:
 - Maintain concise Markdown documentation.
 - Minimum docblock info: `param`, `return`, `throws`, `author`
 
-## Database Requirements (SQLite 3.46+)
+## Data Persistence (Current: localStorage)
 
-- Leverage JSON columns, generated columns, strict mode, foreign keys, check constraints, and transactions.
+- Use `dataService` methods exclusively for data operations
+- Current storage keys: `paperlyte_notes`, `paperlyte_waitlist_entries`
+- All data operations return promises for future API compatibility
+- Future: Will migrate to encrypted cloud storage with sync capabilities
 
 ## Security Considerations
 

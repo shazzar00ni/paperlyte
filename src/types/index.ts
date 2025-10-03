@@ -18,6 +18,10 @@ export interface Note {
   createdAt: string
   updatedAt: string
   userId?: string
+  syncStatus?: SyncStatus
+  lastSyncedAt?: string
+  remoteVersion?: number
+  localVersion?: number
 }
 
 export interface WaitlistEntry {
@@ -42,3 +46,33 @@ export interface AppSettings {
   autoSave: boolean
   showLineNumbers: boolean
 }
+
+/**
+ * Sync-related types
+ */
+
+export type SyncStatus = 'synced' | 'syncing' | 'conflict' | 'error' | 'pending'
+
+export interface SyncConflict {
+  noteId: string
+  localNote: Note
+  remoteNote: Note
+  conflictType: 'update' | 'delete'
+  detectedAt: string
+}
+
+export interface SyncResult {
+  success: boolean
+  syncedNotes: string[]
+  conflicts: SyncConflict[]
+  errors: Array<{ noteId: string; error: string }>
+}
+
+export interface SyncMetadata {
+  lastSyncTime: string | null
+  syncEnabled: boolean
+  pendingSyncCount: number
+  conflictCount: number
+}
+
+export type ConflictResolutionStrategy = 'local' | 'remote' | 'manual'

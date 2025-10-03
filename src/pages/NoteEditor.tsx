@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { Save, Tag, Search, PlusCircle } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Save, Tag, Search, PlusCircle, Trash2 } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
+import ConfirmationModal from '../components/ConfirmationModal'
+import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
@@ -11,6 +13,11 @@ const NoteEditor: React.FC = () => {
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Track editor page view
@@ -98,9 +105,13 @@ const NoteEditor: React.FC = () => {
     if (!currentNote) return
 
     setIsLoading(true)
+    setSaveSuccess(false)
     try {
       // Simulate save delay
       await new Promise(resolve => setTimeout(resolve, 500))
+
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 2000)
 
       trackNoteEvent('save', { noteId: currentNote.id })
       monitoring.addBreadcrumb('Note saved', 'user_action', {
@@ -117,6 +128,58 @@ const NoteEditor: React.FC = () => {
     }
   }
 
+  const handleDeleteNote = (note: Note, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent note selection when clicking delete
+    setNoteToDelete(note)
+    setIsDeleteModalOpen(true)
+  }
+
+  const confirmDeleteNote = async () => {
+    if (!noteToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const success = await dataService.deleteNote(noteToDelete.id)
+      if (success) {
+        const updatedNotes = notes.filter(note => note.id !== noteToDelete.id)
+        setNotes(updatedNotes)
+
+        // If we deleted the current note, select the first remaining note or clear selection
+        if (currentNote?.id === noteToDelete.id) {
+          setCurrentNote(updatedNotes.length > 0 ? updatedNotes[0] : null)
+        }
+
+        trackNoteEvent('delete', { noteId: noteToDelete.id })
+        monitoring.addBreadcrumb('Note deleted', 'user_action', {
+          noteId: noteToDelete.id,
+        })
+
+        // Close modal and reset state
+        setIsDeleteModalOpen(false)
+        setNoteToDelete(null)
+      } else {
+        monitoring.logError(new Error('Failed to delete note'), {
+          feature: 'note_editor',
+          action: 'delete_note_failed',
+          additionalData: { noteId: noteToDelete.id },
+        })
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'note_editor',
+        action: 'delete_note',
+        additionalData: { noteId: noteToDelete.id },
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const cancelDeleteNote = () => {
+    setIsDeleteModalOpen(false)
+    setNoteToDelete(null)
+  }
+
   const filteredNotes = notes.filter(
     note =>
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -124,6 +187,17 @@ const NoteEditor: React.FC = () => {
       note.tags.some(tag =>
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       )
+  )
+
+  // Keyboard shortcuts (defined after functions to avoid hoisting issues)
+  useKeyboardShortcut('n', createNewNote, { ctrl: true })
+  useKeyboardShortcut('s', saveCurrentNote, { ctrl: true })
+  useKeyboardShortcut(
+    'f',
+    () => {
+      searchInputRef.current?.focus()
+    },
+    { ctrl: true }
   )
 
   return (
@@ -135,14 +209,16 @@ const NoteEditor: React.FC = () => {
           <div className='relative'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
             <input
+              ref={searchInputRef}
               type='text'
-              placeholder='Search notes...'
+              placeholder='Search notes... (⌘F)'
               value={searchQuery}
               onChange={e => {
                 setSearchQuery(e.target.value)
                 trackFeatureUsage('search', 'query', { query: e.target.value })
               }}
               className='input pl-10 text-sm'
+              aria-label='Search notes'
             />
           </div>
         </div>
@@ -151,7 +227,9 @@ const NoteEditor: React.FC = () => {
         <div className='p-4'>
           <button
             onClick={createNewNote}
-            className='btn-primary btn-md w-full flex items-center justify-center space-x-2'
+            className='btn-primary btn-md w-full flex items-center justify-center space-x-2 transition-all hover:shadow-lg hover:scale-105'
+            title='Create new note (⌘N)'
+            aria-label='Create new note'
           >
             <PlusCircle className='h-4 w-4' />
             <span>New Note</span>
@@ -169,30 +247,45 @@ const NoteEditor: React.FC = () => {
                   noteId: note.id,
                 })
               }}
-              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors group ${
                 currentNote?.id === note.id
                   ? 'bg-primary/5 border-l-4 border-l-primary'
                   : ''
               }`}
             >
-              <h3 className='font-medium text-dark truncate'>{note.title}</h3>
-              <p className='text-sm text-gray-600 mt-1 line-clamp-2'>
-                {note.content || 'No content yet...'}
-              </p>
-              <div className='flex items-center justify-between mt-2'>
-                <div className='flex flex-wrap gap-1'>
-                  {note.tags.slice(0, 2).map((tag, index) => (
-                    <span
-                      key={index}
-                      className='px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded'
-                    >
-                      {tag}
+              <div className='flex items-start justify-between'>
+                <div className='flex-1 min-w-0'>
+                  <h3 className='font-medium text-dark truncate'>
+                    {note.title}
+                  </h3>
+                  <p className='text-sm text-gray-600 mt-1 line-clamp-2'>
+                    {note.content || 'No content yet...'}
+                  </p>
+                  <div className='flex items-center justify-between mt-2'>
+                    <div className='flex flex-wrap gap-1'>
+                      {note.tags.slice(0, 2).map((tag, index) => (
+                        <span
+                          key={index}
+                          className='px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded'
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <span className='text-xs text-gray-400'>
+                      {new Date(note.updatedAt).toLocaleDateString()}
                     </span>
-                  ))}
+                  </div>
                 </div>
-                <span className='text-xs text-gray-400'>
-                  {new Date(note.updatedAt).toLocaleDateString()}
-                </span>
+                <button
+                  onClick={e => handleDeleteNote(note, e)}
+                  disabled={isDeleteModalOpen || isDeleting}
+                  className='ml-2 p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 focus:text-red-600 focus:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed'
+                  title='Delete note'
+                  aria-label={`Delete note "${note.title}"`}
+                >
+                  <Trash2 className='h-4 w-4' />
+                </button>
               </div>
             </div>
           ))}
@@ -213,17 +306,29 @@ const NoteEditor: React.FC = () => {
                 placeholder='Note title...'
               />
               <div className='flex items-center space-x-2'>
-                <button className='btn-ghost btn-sm flex items-center space-x-1'>
+                <button
+                  className='btn-ghost btn-sm flex items-center space-x-1 transition-all hover:scale-105'
+                  title='Add tags'
+                  aria-label='Add tags to note'
+                >
                   <Tag className='h-4 w-4' />
                   <span>Tags</span>
                 </button>
                 <button
                   onClick={saveCurrentNote}
                   disabled={isLoading}
-                  className='btn-primary btn-sm flex items-center space-x-1'
+                  className={`btn-primary btn-sm flex items-center space-x-1 transition-all ${
+                    saveSuccess
+                      ? 'bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/50'
+                      : 'hover:shadow-lg'
+                  }`}
+                  title='Save note (⌘S)'
+                  aria-label='Save note'
                 >
                   <Save className='h-4 w-4' />
-                  <span>{isLoading ? 'Saving...' : 'Save'}</span>
+                  <span>
+                    {isLoading ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -249,6 +354,19 @@ const NoteEditor: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={cancelDeleteNote}
+        title='Delete Note'
+        message={`Are you sure you want to delete "${noteToDelete?.title}"? This action cannot be undone.`}
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmVariant='danger'
+        onConfirm={confirmDeleteNote}
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

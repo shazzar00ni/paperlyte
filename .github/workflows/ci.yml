@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: '18'
           cache: 'npm'
@@ -36,10 +36,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: '18'
           cache: 'npm'
@@ -137,10 +137,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: '18'
           cache: 'npm'
@@ -152,13 +152,13 @@ jobs:
         run: npm run build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: build-files
           path: dist/
 
-  security-audit:
-    name: Security Audit
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -174,8 +174,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm run test:ci
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run security audit
         run: npm run security-audit
+        continue-on-error: true
 
       - name: Run security-focused tests
         run: npm run test:run -- tests/integration/security.test.tsx

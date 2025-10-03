@@ -1,0 +1,181 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+env:
+  NODE_VERSION: "18"
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate deployment requirements
+        run: |
+          # Check required secrets
+          if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
+            echo "❌ Error: NETLIFY_AUTH_TOKEN is required for deployment"
+            exit 1
+          fi
+          if [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "❌ Error: NETLIFY_STAGING_SITE_ID is required for staging deployment"
+            exit 1
+          fi
+
+          # Check optional secrets (warn but don't fail)
+          if [ -z "$VITE_POSTHOG_API_KEY" ]; then
+            echo "⚠️  Warning: VITE_POSTHOG_API_KEY_STAGING not set - analytics will be disabled"
+          else
+            echo "✅ PostHog analytics configured for staging"
+          fi
+          if [ -z "$VITE_SENTRY_DSN" ]; then
+            echo "⚠️  Warning: VITE_SENTRY_DSN_STAGING not set - error monitoring will be disabled"  
+          else
+            echo "✅ Sentry monitoring configured for staging"
+          fi
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID }}
+          VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY_STAGING }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_STAGING }}
+
+      - name: Build for staging
+        run: npm run build
+        env:
+          VITE_ENVIRONMENT: "staging"
+          VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY_STAGING }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_STAGING }}
+
+      - name: Deploy to Netlify (Staging)
+        id: deploy
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: "./dist"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Staging Deploy - ${{ github.sha }} - ${{ github.event.head_commit.message }}"
+          alias: staging-${{ github.sha }}
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID }}
+
+      - name: Post deployment status
+        if: always()
+        run: |
+          if [ "${{ steps.deploy.outcome }}" = "success" ]; then
+            echo "✅ Staging deployment successful"
+            echo "📍 Deployment URL: ${{ steps.deploy.outputs.deploy-url }}"
+          else
+            echo "❌ Staging deployment failed"
+            exit 1
+          fi
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate environment variables
+        run: |
+          if [ -z "$VITE_POSTHOG_API_KEY" ]; then
+            echo "Error: VITE_POSTHOG_API_KEY not set for production"
+            exit 1
+          fi
+          if [ -z "$VITE_SENTRY_DSN" ]; then
+            echo "Error: VITE_SENTRY_DSN not set for production"
+            exit 1
+          fi
+          echo "All required environment variables are set"
+        env:
+          VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY_PROD }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
+
+      - name: Build for production
+        run: npm run build
+        env:
+          VITE_ENVIRONMENT: "production"
+          VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY_PROD }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
+
+      - name: Deploy to Netlify (Production)
+        id: deploy
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: "./dist"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Production Release - ${{ github.event.release.tag_name }} - ${{ github.event.release.name }}"
+          production-deploy: true
+          enable-commit-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PROD_SITE_ID }}
+
+      - name: Post production deployment status
+        if: always()
+        run: |
+          if [ "${{ steps.deploy.outcome }}" = "success" ]; then
+            echo "🚀 Production deployment successful!"
+            echo "📍 Production URL: ${{ steps.deploy.outputs.deploy-url }}"
+            echo "🏷️  Release: ${{ github.event.release.tag_name }}"
+          else
+            echo "💥 Production deployment failed!"
+            echo "Please check logs and consider rollback if necessary"
+            exit 1
+          fi
+
+      - name: Create deployment summary
+        if: success()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🚀 Production Deployment Successful
+
+          **Release:** ${{ github.event.release.tag_name }}
+          **Deployment URL:** ${{ steps.deploy.outputs.deploy-url }}
+          **Commit SHA:** ${{ github.sha }}
+          **Deployed at:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+          ### Next Steps
+          - Monitor application performance
+          - Check error rates in Sentry
+          - Verify analytics in PostHog
+          - Update team on deployment status
+          EOF
