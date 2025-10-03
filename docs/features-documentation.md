@@ -82,11 +82,11 @@ The formatting toolbar provides one-click access to common formatting options:
 
 ### Keyboard Formatting
 
-| Format | Windows/Linux | Mac | Result |
-|--------|---------------|-----|---------|
-| Bold | `Ctrl+B` | `Cmd+B` | **Bold text** |
-| Italic | `Ctrl+I` | `Cmd+I` | *Italic text* |
-| Underline | `Ctrl+U` | `Cmd+U` | <u>Underlined text</u> |
+| Format    | Windows/Linux | Mac     | Result                 |
+| --------- | ------------- | ------- | ---------------------- |
+| Bold      | `Ctrl+B`      | `Cmd+B` | **Bold text**          |
+| Italic    | `Ctrl+I`      | `Cmd+I` | _Italic text_          |
+| Underline | `Ctrl+U`      | `Cmd+U` | <u>Underlined text</u> |
 
 ### Markdown Support
 
@@ -96,11 +96,13 @@ _[📸 Screenshot needed: Markdown syntax examples]_
 
 ```markdown
 # Heading 1
+
 ## Heading 2
+
 ### Heading 3
 
 **Bold text**
-*Italic text*
+_Italic text_
 ~~Strikethrough~~
 
 - Bullet point 1
@@ -173,12 +175,12 @@ _[📸 Screenshot needed: Save status indicator]_
 
 ### Save Status Indicators
 
-| Status | Meaning |
-|--------|---------|
-| ✅ Saved | All changes are saved |
-| ⏳ Saving... | Auto-save in progress |
-| ❌ Error | Save failed (try manual save) |
-| 📝 Editing | Unsaved changes exist |
+| Status       | Meaning                       |
+| ------------ | ----------------------------- |
+| ✅ Saved     | All changes are saved         |
+| ⏳ Saving... | Auto-save in progress         |
+| ❌ Error     | Save failed (try manual save) |
+| 📝 Editing   | Unsaved changes exist         |
 
 ---
 
@@ -290,7 +292,7 @@ _[📸 Screenshot needed: Data privacy illustration]_
 Future features will include:
 
 - **Export All Notes:** Download all notes as files
-- **Import Notes:** Restore from backup files  
+- **Import Notes:** Restore from backup files
 - **Sync Options:** Optional cloud sync for multi-device use
 - **Migration Tools:** Move between browsers or devices
 
@@ -378,7 +380,7 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 **Power User Techniques:**
 
 - Master all keyboard shortcuts for speed
-- Use descriptive titles for easy searching  
+- Use descriptive titles for easy searching
 - Keep frequently-used notes at the top by editing them regularly
 - Use formatting strategically to improve readability
 
@@ -398,6 +400,7 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 **Problem:** Formatting toolbar not working
 
 **Solutions:**
+
 1. Refresh the page to reset the editor
 2. Try using keyboard shortcuts instead
 3. Check browser compatibility
@@ -406,6 +409,7 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 **Problem:** Markdown not rendering
 
 **Solutions:**
+
 1. Check syntax is correct
 2. Try typing the markdown fresh
 3. Use toolbar for formatting instead
@@ -416,6 +420,7 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 **Problem:** Search not finding notes
 
 **Solutions:**
+
 1. Check spelling of search terms
 2. Try searching for partial words
 3. Clear any filters that might be active
@@ -426,6 +431,7 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 **Problem:** Notes not saving
 
 **Solutions:**
+
 1. Check browser storage permissions
 2. Try manual save with Ctrl+S / Cmd+S
 3. Ensure browser has enough storage space

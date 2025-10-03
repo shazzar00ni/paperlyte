@@ -1,9 +1,9 @@
+import { Briefcase, Mail, User, X } from 'lucide-react'
 import React, { useState } from 'react'
-import { X, Mail, User, Briefcase } from 'lucide-react'
-import { trackWaitlistEvent } from '../utils/analytics'
-import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import type { ModalProps } from '../types'
+import { trackWaitlistEvent } from '../utils/analytics'
+import { monitoring } from '../utils/monitoring'
 
 interface WaitlistFormData {
   email: string
@@ -99,6 +99,7 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
             onClick={handleClose}
             className='text-gray-400 hover:text-gray-600 p-1'
             disabled={isSubmitting}
+            aria-label='Close modal'
           >
             <X className='h-6 w-6' />
           </button>

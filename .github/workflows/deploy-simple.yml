@@ -1,115 +1,115 @@
 name: Deploy (Simple)
 
 on:
-    push:
-        branches: [main]
-    release:
-        types: [published]
+  push:
+    branches: [main]
+  release:
+    types: [published]
 
 env:
-    NODE_VERSION: "18"
+  NODE_VERSION: '18'
 
 jobs:
-    build-and-deploy:
-        name: Build and Deploy
-        runs-on: ubuntu-latest
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: "npm"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Determine environment
-              id: env
-              run: |
-                  if [ "${{ github.event_name }}" = "release" ]; then
-                    echo "environment=production" >> $GITHUB_OUTPUT
-                    echo "site_id_key=NETLIFY_PROD_SITE_ID" >> $GITHUB_OUTPUT
-                    echo "posthog_key=VITE_POSTHOG_API_KEY_PROD" >> $GITHUB_OUTPUT
-                    echo "sentry_key=VITE_SENTRY_DSN_PROD" >> $GITHUB_OUTPUT
-                  else
-                    echo "environment=staging" >> $GITHUB_OUTPUT
-                    echo "site_id_key=NETLIFY_STAGING_SITE_ID" >> $GITHUB_OUTPUT
-                    echo "posthog_key=VITE_POSTHOG_API_KEY_STAGING" >> $GITHUB_OUTPUT
-                    echo "sentry_key=VITE_SENTRY_DSN_STAGING" >> $GITHUB_OUTPUT
-                  fi
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "site_id_key=NETLIFY_PROD_SITE_ID" >> $GITHUB_OUTPUT
+            echo "posthog_key=VITE_POSTHOG_API_KEY_PROD" >> $GITHUB_OUTPUT
+            echo "sentry_key=VITE_SENTRY_DSN_PROD" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "site_id_key=NETLIFY_STAGING_SITE_ID" >> $GITHUB_OUTPUT
+            echo "posthog_key=VITE_POSTHOG_API_KEY_STAGING" >> $GITHUB_OUTPUT
+            echo "sentry_key=VITE_SENTRY_DSN_STAGING" >> $GITHUB_OUTPUT
+          fi
 
-            - name: Build application
-              run: npm run build
-              env:
-                  VITE_ENVIRONMENT: ${{ steps.env.outputs.environment }}
-                  # Use secrets with fallback to empty string if not set
-                  VITE_POSTHOG_API_KEY: ${{ secrets[steps.env.outputs.posthog_key] || '' }}
-                  VITE_SENTRY_DSN: ${{ secrets[steps.env.outputs.sentry_key] || '' }}
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_ENVIRONMENT: ${{ steps.env.outputs.environment }}
+          # Use secrets with fallback to empty string if not set
+          VITE_POSTHOG_API_KEY: ${{ secrets[steps.env.outputs.posthog_key] || '' }}
+          VITE_SENTRY_DSN: ${{ secrets[steps.env.outputs.sentry_key] || '' }}
 
-            - name: Check deployment readiness
-              run: |
-                  echo "🔍 Checking deployment configuration..."
+      - name: Check deployment readiness
+        run: |
+          echo "🔍 Checking deployment configuration..."
 
-                  # Check if Netlify secrets are configured
-                  if [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ]; then
-                    echo "❌ NETLIFY_AUTH_TOKEN not configured"
-                    echo "Please add this secret to enable automatic deployment"
-                    echo "See docs/deployment-setup.md for instructions"
-                    exit 1
-                  fi
+          # Check if Netlify secrets are configured
+          if [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ]; then
+            echo "❌ NETLIFY_AUTH_TOKEN not configured"
+            echo "Please add this secret to enable automatic deployment"
+            echo "See docs/deployment-setup.md for instructions"
+            exit 1
+          fi
 
-                  site_id_secret="${{ secrets[steps.env.outputs.site_id_key] }}"
-                  if [ -z "$site_id_secret" ]; then
-                    echo "❌ ${{ steps.env.outputs.site_id_key }} not configured"
-                    echo "Please add this secret to enable automatic deployment"
-                    exit 1
-                  fi
+          site_id_secret="${{ secrets[steps.env.outputs.site_id_key] }}"
+          if [ -z "$site_id_secret" ]; then
+            echo "❌ ${{ steps.env.outputs.site_id_key }} not configured"
+            echo "Please add this secret to enable automatic deployment"
+            exit 1
+          fi
 
-                  echo "✅ Netlify configuration ready"
+          echo "✅ Netlify configuration ready"
 
-                  # Check optional secrets
-                  if [ -z "${{ secrets[steps.env.outputs.posthog_key] }}" ]; then
-                    echo "⚠️  PostHog analytics not configured (optional)"
-                  else
-                    echo "✅ PostHog analytics configured"
-                  fi
+          # Check optional secrets
+          if [ -z "${{ secrets[steps.env.outputs.posthog_key] }}" ]; then
+            echo "⚠️  PostHog analytics not configured (optional)"
+          else
+            echo "✅ PostHog analytics configured"
+          fi
 
-                  if [ -z "${{ secrets[steps.env.outputs.sentry_key] }}" ]; then
-                    echo "⚠️  Sentry monitoring not configured (optional)"
-                  else
-                    echo "✅ Sentry monitoring configured"
-                  fi
+          if [ -z "${{ secrets[steps.env.outputs.sentry_key] }}" ]; then
+            echo "⚠️  Sentry monitoring not configured (optional)"
+          else
+            echo "✅ Sentry monitoring configured"
+          fi
 
-            - name: Deploy to Netlify
-              uses: nwtgck/actions-netlify@v2.1
-              with:
-                  publish-dir: "./dist"
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  deploy-message: |
-                      ${{ steps.env.outputs.environment == 'production' && format('🚀 Production Release - {0}', github.event.release.tag_name) || format('📦 Staging Deploy - {0}', github.sha) }}
-                  production-deploy: ${{ steps.env.outputs.environment == 'production' }}
-                  alias: ${{ steps.env.outputs.environment == 'production' && '' || format('staging-{0}', github.sha) }}
-              env:
-                  NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-                  NETLIFY_SITE_ID: ${{ secrets[steps.env.outputs.site_id_key] }}
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: './dist'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: |
+            ${{ steps.env.outputs.environment == 'production' && format('🚀 Production Release - {0}', github.event.release.tag_name) || format('📦 Staging Deploy - {0}', github.sha) }}
+          production-deploy: ${{ steps.env.outputs.environment == 'production' }}
+          alias: ${{ steps.env.outputs.environment == 'production' && '' || format('staging-{0}', github.sha) }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets[steps.env.outputs.site_id_key] }}
 
-            - name: Deployment summary
-              run: |
-                  echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-                  echo "" >> $GITHUB_STEP_SUMMARY
-                  echo "**Environment:** ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
-                  echo "**Status:** ✅ Successful" >> $GITHUB_STEP_SUMMARY
-                  echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Successful" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
-                  if [ "${{ steps.env.outputs.environment }}" = "production" ]; then
-                    echo "**Release:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
-                  fi
+          if [ "${{ steps.env.outputs.environment }}" = "production" ]; then
+            echo "**Release:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          fi
 
-                  echo "" >> $GITHUB_STEP_SUMMARY
-                  echo "### 🔗 Useful Links" >> $GITHUB_STEP_SUMMARY
-                  echo "- [Netlify Dashboard](https://app.netlify.com/)" >> $GITHUB_STEP_SUMMARY
-                  echo "- [Deployment Setup Guide](./docs/deployment-setup.md)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Useful Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [Netlify Dashboard](https://app.netlify.com/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Deployment Setup Guide](./docs/deployment-setup.md)" >> $GITHUB_STEP_SUMMARY

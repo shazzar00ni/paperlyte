@@ -136,15 +136,16 @@ Clean, portable format compatible with most apps:
 ```markdown
 # My Important Note
 
-*Created: October 1, 2025*
-*Updated: October 3, 2025*
-*Tags: work, project-alpha*
+_Created: October 1, 2025_
+_Updated: October 3, 2025_
+_Tags: work, project-alpha_
 
 ---
 
 Note content with **formatting** preserved as Markdown.
 
 Lists work too:
+
 - Item 1
 - Item 2
 
@@ -177,14 +178,17 @@ Headings become regular text.
 ### Recommended Backup Schedule
 
 **Daily Users:**
+
 - Weekly full backup to local device
 - Monthly backup to external storage (USB, cloud)
 
 **Casual Users:**
+
 - Monthly full backup
 - Before major browser updates
 
 **Professional Users:**
+
 - Daily automated backup (when feature available)
 - Weekly backup to multiple locations
 - Before important presentations or deadlines
@@ -192,6 +196,7 @@ Headings become regular text.
 ### Automated Backup (Coming Soon)
 
 **Browser Extension Features:**
+
 - Scheduled daily/weekly backups
 - Automatic backup before browser updates
 - Cloud storage integration (Google Drive, Dropbox)
@@ -245,6 +250,7 @@ Headings become regular text.
 ### Batch Operations
 
 **Processing Multiple Files:**
+
 - Import entire folders of markdown files
 - Batch convert between formats
 - Merge multiple Paperlyte backups
@@ -253,22 +259,24 @@ Headings become regular text.
 ### API Integration (Developer Feature)
 
 **Automated Backup:**
+
 ```javascript
 // Example API usage for automated backup
 const backup = await paperlyte.api.export.all({
   format: 'json',
-  includeMetadata: true
-});
+  includeMetadata: true,
+})
 
 // Save to your preferred storage
-await saveToCloud(backup);
+await saveToCloud(backup)
 ```
 
 **Scheduled Import:**
+
 ```javascript
 // Import from external source
-const externalData = await fetchFromAPI();
-await paperlyte.api.import.fromJSON(externalData);
+const externalData = await fetchFromAPI()
+await paperlyte.api.import.fromJSON(externalData)
 ```
 
 ### Custom Export Scripts
@@ -276,6 +284,7 @@ await paperlyte.api.import.fromJSON(externalData);
 For advanced users who want to process their data:
 
 **Export for Analysis:**
+
 - Export with custom metadata
 - Include usage statistics
 - Generate reports from note data
@@ -287,12 +296,14 @@ For advanced users who want to process their data:
 ### Export Security
 
 **What's Included:**
+
 - Note titles and content
 - Creation and modification dates
 - Formatting and structure
 - Tags and organization data
 
 **What's NOT Included:**
+
 - No user identification data
 - No tracking information
 - No browser-specific data
@@ -301,12 +312,14 @@ For advanced users who want to process their data:
 ### Import Security
 
 **File Validation:**
+
 - All imported files are scanned for malicious content
 - HTML/JavaScript is sanitized
 - File size limits prevent abuse
 - Format validation ensures data integrity
 
 **Privacy Protection:**
+
 - Import process happens locally in your browser
 - No data sent to external servers during import
 - Imported files are not stored on Paperlyte servers
@@ -320,6 +333,7 @@ For advanced users who want to process their data:
 **Problem:** Export file is empty or corrupted
 
 **Solutions:**
+
 1. Try exporting in a different format
 2. Export smaller batches instead of all notes
 3. Check browser storage permissions
@@ -328,6 +342,7 @@ For advanced users who want to process their data:
 **Problem:** Export taking too long
 
 **Solutions:**
+
 1. Close other browser tabs to free memory
 2. Export in smaller batches
 3. Try a different format (JSON is fastest)
@@ -338,6 +353,7 @@ For advanced users who want to process their data:
 **Problem:** Import fails or stops partway
 
 **Solutions:**
+
 1. Check file format is supported
 2. Verify file isn't corrupted (try opening in text editor)
 3. Try importing smaller batches
@@ -346,6 +362,7 @@ For advanced users who want to process their data:
 **Problem:** Imported notes look wrong
 
 **Solutions:**
+
 1. Check the source format was mapped correctly
 2. Try importing as plain text first
 3. Manually fix formatting after import
@@ -354,11 +371,13 @@ For advanced users who want to process their data:
 ### Format Compatibility
 
 **Markdown Import Issues:**
+
 - Check for non-standard markdown syntax
 - Verify file encoding (should be UTF-8)
 - Remove or escape special characters
 
 **JSON Import Issues:**
+
 - Validate JSON syntax using online validator
 - Check for missing required fields
 - Ensure proper date format
@@ -376,6 +395,7 @@ For advanced users who want to process their data:
 ### When Contacting Support
 
 Include this information:
+
 1. Browser and version
 2. File format you're trying to import/export
 3. Error messages (if any)
@@ -389,18 +409,21 @@ Include this information:
 ### Planned Enhancements
 
 **Advanced Export Options:**
+
 - Custom export templates
 - Filtered exports by tags or content
 - Scheduled automated backups
 - Cloud storage integration
 
 **Enhanced Import Features:**
+
 - Real-time sync between devices
 - Collaborative import/sharing
 - Import from web clipper browser extension
 - Integration with popular productivity tools
 
 **Migration Tools:**
+
 - One-click migration from major note apps
 - Guided migration wizard
 - Data validation and cleanup tools
@@ -408,6 +431,6 @@ Include this information:
 
 ---
 
-**Remember:** Your data is valuable. Regular backups ensure you never lose your important notes. Start with a simple weekly backup routine and adjust based on how much you rely on Paperlyte for your daily work.**
+**Remember:** Your data is valuable. Regular backups ensure you never lose your important notes. Start with a simple weekly backup routine and adjust based on how much you rely on Paperlyte for your daily work.\*\*
 
 _Last updated: October 2025 | Feature implementation target: Q4 2025_

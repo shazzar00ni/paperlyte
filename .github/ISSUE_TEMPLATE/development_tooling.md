@@ -35,9 +35,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -119,18 +119,21 @@ jobs:
 ### Phase 1: Core CI/CD (Week 1)
 
 #### Day 1-2: GitHub Actions Setup
+
 - [ ] Create `.github/workflows/` directory
 - [ ] Implement basic CI workflow
 - [ ] Set up automated testing
 - [ ] Configure build verification
 
 #### Day 3-4: Quality Assurance
+
 - [ ] Add ESLint enforcement
 - [ ] Implement TypeScript checking
 - [ ] Set up test coverage reporting
 - [ ] Configure bundle size monitoring
 
 #### Day 5: Deployment Automation
+
 - [ ] Create staging deployment workflow
 - [ ] Set up production deployment
 - [ ] Configure environment variables
@@ -139,18 +142,21 @@ jobs:
 ### Phase 2: Development Experience (Week 2)
 
 #### Day 1-2: Pre-commit Hooks
+
 - [ ] Install and configure Husky
 - [ ] Set up lint-staged
 - [ ] Implement commit message linting
 - [ ] Add pre-push validations
 
 #### Day 3-4: Developer Tools
+
 - [ ] Enhance package.json scripts
 - [ ] Create development utilities
 - [ ] Set up debugging configuration
 - [ ] Add performance monitoring tools
 
 #### Day 5: Documentation
+
 - [ ] Update development guides
 - [ ] Create workflow documentation
 - [ ] Add troubleshooting guides
@@ -159,6 +165,7 @@ jobs:
 ## 📊 Success Metrics
 
 ### Automation Goals
+
 - [ ] **100% automated testing** on pull requests
 - [ ] **Zero manual deployment steps** for staging
 - [ ] **<5 minute CI/CD pipeline** execution time
@@ -166,6 +173,7 @@ jobs:
 - [ ] **Automated security scanning** on all commits
 
 ### Developer Experience
+
 - [ ] **Consistent code formatting** across team
 - [ ] **Immediate feedback** on code quality issues
 - [ ] **Simplified onboarding** for new developers
@@ -176,6 +184,7 @@ jobs:
 ### GitHub Actions Workflows
 
 #### Continuous Integration
+
 ```yaml
 # .github/workflows/ci.yml
 name: Continuous Integration
@@ -194,55 +203,55 @@ jobs:
   lint-and-test:
     name: Lint, Type Check, and Test
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run ESLint
         run: npm run lint
-        
+
       - name: Type check
         run: npm run type-check
-        
+
       - name: Run tests
         run: npm run test:coverage
-        
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         if: always()
-        
+
   build:
     name: Build Application
     runs-on: ubuntu-latest
     needs: lint-and-test
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build application
         run: npm run build
-        
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -264,13 +273,8 @@ npx lint-staged
 // package.json
 {
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md,yml,yaml}": ["prettier --write"]
   }
 }
 ```
@@ -278,6 +282,7 @@ npx lint-staged
 ## 📋 Detailed Implementation Checklist
 
 ### GitHub Actions Setup
+
 - [ ] Create workflow directory structure
 - [ ] Implement CI workflow with comprehensive testing
 - [ ] Add code quality checks and security scanning
@@ -286,6 +291,7 @@ npx lint-staged
 - [ ] Add workflow status badges to README
 
 ### Development Scripts
+
 - [ ] Enhance package.json with comprehensive script set
 - [ ] Add bundle analysis and performance monitoring
 - [ ] Create development utility scripts
@@ -293,6 +299,7 @@ npx lint-staged
 - [ ] Add debugging and profiling tools
 
 ### Pre-commit Hooks
+
 - [ ] Install and configure Husky for Git hooks
 - [ ] Set up lint-staged for efficient file processing
 - [ ] Implement commitlint for conventional commit messages
@@ -300,6 +307,7 @@ npx lint-staged
 - [ ] Configure skip mechanisms for emergency commits
 
 ### Quality Assurance
+
 - [ ] Set up automated dependency vulnerability scanning
 - [ ] Implement license compliance checking
 - [ ] Add performance regression detection
@@ -307,6 +315,7 @@ npx lint-staged
 - [ ] Set up bundle size monitoring and alerts
 
 ### Documentation
+
 - [ ] Create comprehensive workflow documentation
 - [ ] Add troubleshooting guides for common CI/CD issues
 - [ ] Document deployment processes and rollback procedures
@@ -316,18 +325,21 @@ npx lint-staged
 ## 🚀 Expected Benefits
 
 ### Development Velocity
+
 - **Faster feedback loops** with automated testing
 - **Reduced manual errors** through automation
 - **Consistent code quality** across the team
 - **Streamlined deployment process**
 
 ### Code Quality
+
 - **Automated code reviews** for style and standards
 - **Early bug detection** through comprehensive testing
 - **Security vulnerability prevention**
 - **Performance regression detection**
 
 ### Team Collaboration
+
 - **Standardized development workflow**
 - **Clear contribution guidelines**
 - **Automated project management integration**

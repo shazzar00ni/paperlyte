@@ -4,7 +4,7 @@ Required social media and sharing images for Paperlyte launch.
 
 > **Priority:** P1 (Required for proper social sharing)  
 > **Status:** 🔄 Ready for Creation  
-> **Dependencies:** Main screenshots and branding assets  
+> **Dependencies:** Main screenshots and branding assets
 
 ---
 
@@ -13,12 +13,14 @@ Required social media and sharing images for Paperlyte launch.
 ### Primary Open Graph Image (og-image.png)
 
 **Specifications:**
+
 - **Size:** 1200x630px (1.91:1 ratio)
 - **Format:** PNG (with JPG fallback)
 - **File size:** Under 8MB (ideally under 1MB)
 - **Content:** Main Paperlyte interface with hero text overlay
 
 **Design Requirements:**
+
 - [ ] Feature main Paperlyte interface screenshot
 - [ ] Include tagline: "Finally, note-taking that feels effortless"
 - [ ] Paperlyte logo prominently displayed
@@ -27,6 +29,7 @@ Required social media and sharing images for Paperlyte launch.
 - [ ] High contrast for accessibility
 
 **Text Overlay Content:**
+
 ```
 PAPERLYTE
 Finally, note-taking that feels effortless
@@ -49,12 +52,14 @@ Lightning-fast • Privacy-first • No signup required
 ### Twitter Large Image Card (twitter-card.png)
 
 **Specifications:**
+
 - **Size:** 1200x628px (1.91:1 ratio)
 - **Format:** PNG or JPG
 - **File size:** Under 5MB
 - **Content:** Similar to OG image but optimized for Twitter
 
 **Design Considerations:**
+
 - [ ] Twitter's image cropping (safe area consideration)
 - [ ] Mobile-first design (most Twitter users on mobile)
 - [ ] Clear, bold text that works in Twitter's dark mode
@@ -63,6 +68,7 @@ Lightning-fast • Privacy-first • No signup required
 ### Twitter Summary Card (twitter-summary.png)
 
 **Specifications:**
+
 - **Size:** 300x157px (1.91:1 ratio)
 - **Format:** PNG or JPG
 - **Content:** Simplified version of main card
@@ -74,27 +80,32 @@ Lightning-fast • Privacy-first • No signup required
 ### Profile/Avatar Images
 
 **Twitter Profile (400x400px):**
+
 - [ ] Paperlyte logo on brand background
 - [ ] Clear, simple design that works at small sizes
 - [ ] Consistent with overall brand identity
 
 **LinkedIn Profile (300x300px):**
+
 - [ ] Professional version of logo
 - [ ] High contrast for business context
 
 **Facebook Profile (180x180px):**
+
 - [ ] Logo variant optimized for circular crop
 - [ ] Consider Facebook's automatic cropping
 
 ### Cover/Banner Images
 
 **Twitter Header (1500x500px):**
+
 - [ ] Brand message: "Note-taking, Lighter Than Ever"
 - [ ] Website URL prominently displayed
 - [ ] Clean, minimal design matching app aesthetic
 - [ ] Call-to-action: "Try now at paperlyte.com"
 
 **LinkedIn Banner (1584x396px):**
+
 - [ ] Professional messaging focused on productivity
 - [ ] "Lightning-fast note-taking for modern productivity"
 - [ ] Subtle product screenshots or interface elements
@@ -106,17 +117,20 @@ Lightning-fast • Privacy-first • No signup required
 ### Brand Consistency
 
 **Color Palette:**
+
 - Primary: Use Paperlyte's brand colors from design system
 - Background: Clean whites, light grays
 - Accent: Consistent with application UI
 - Text: High contrast for readability
 
 **Typography:**
+
 - Use brand fonts (fallback to system fonts if needed)
 - Consistent hierarchy across all images
 - Readable at small sizes (minimum 14px equivalent)
 
 **Logo Usage:**
+
 - Always use high-resolution logo
 - Maintain proper spacing and proportions
 - Consistent placement across all images
@@ -124,11 +138,13 @@ Lightning-fast • Privacy-first • No signup required
 ### Content Guidelines
 
 **Messaging Hierarchy:**
+
 1. **Primary:** "Finally, note-taking that feels effortless"
 2. **Secondary:** Key benefits (fast, private, simple)
 3. **Tertiary:** Call-to-action or website URL
 
 **Visual Elements:**
+
 - Screenshots of actual Paperlyte interface
 - Minimal, clean design aesthetic
 - Focus on the product, not decorative elements
@@ -202,12 +218,15 @@ Current implementation in `index.html`:
 ### Testing URLs
 
 **Facebook Sharing Debugger:**
+
 - https://developers.facebook.com/tools/debug/
 
 **Twitter Card Validator:**
+
 - https://cards-dev.twitter.com/validator
 
 **LinkedIn Post Inspector:**
+
 - https://www.linkedin.com/post-inspector/
 
 ---
@@ -217,13 +236,15 @@ Current implementation in `index.html`:
 ### Facebook/Meta Platforms
 
 **Image Requirements:**
+
 - Minimum: 600x315px
-- Recommended: 1200x630px  
+- Recommended: 1200x630px
 - Aspect ratio: 1.91:1
 - Format: JPG or PNG
 - File size: Under 8MB
 
 **Best Practices:**
+
 - Avoid text overlay exceeding 20% of image
 - Use high-quality images
 - Ensure important content is in center 1200x630 area
@@ -231,12 +252,14 @@ Current implementation in `index.html`:
 ### Twitter
 
 **Large Image Card:**
+
 - Size: 1200x628px minimum
-- Aspect ratio: 1.91:1  
+- Aspect ratio: 1.91:1
 - File size: Under 5MB
 - Format: JPG, PNG, WebP, GIF
 
 **Summary Card:**
+
 - Size: 300x157px minimum
 - Aspect ratio: 1.91:1
 - Best for simple logo/icon presentations
@@ -244,12 +267,14 @@ Current implementation in `index.html`:
 ### LinkedIn
 
 **Shared Content Image:**
+
 - Size: 1200x627px
 - Aspect ratio: 1.91:1
 - Format: JPG or PNG
 - Focus on professional, clean design
 
 **Company Page Cover:**
+
 - Size: 1128x191px
 - Focus on brand messaging and professionalism
 
@@ -260,16 +285,19 @@ Current implementation in `index.html`:
 ### Message Variants
 
 **Speed-Focused:**
+
 - "Start writing in under 3 seconds"
 - "The fastest note app ever built"
 - "Lightning-fast note-taking"
 
 **Privacy-Focused:**
+
 - "Your notes stay completely private"
 - "No tracking, no accounts, no surveillance"
 - "Privacy-first note-taking"
 
 **Simplicity-Focused:**
+
 - "Note-taking without the bloat"
 - "Just you and your ideas"
 - "Beautifully minimal note-taking"
@@ -277,16 +305,19 @@ Current implementation in `index.html`:
 ### Visual Variants
 
 **Interface-Heavy:**
+
 - Large screenshot of Paperlyte interface
 - Minimal text overlay
 - Focus on clean, modern design
 
 **Text-Heavy:**
+
 - Bold typography with key benefits
 - Smaller interface elements
 - Strong call-to-action
 
 **Hybrid:**
+
 - Balanced text and interface
 - Key features highlighted
 - Professional presentation
@@ -296,23 +327,27 @@ Current implementation in `index.html`:
 ## 📅 Production Timeline
 
 ### Week 1: Design & Planning
+
 - [ ] Finalize messaging and content strategy
 - [ ] Create design templates and style guide
 - [ ] Gather all necessary screenshots and assets
 
 ### Week 2: Asset Creation
+
 - [ ] Design primary Open Graph image
 - [ ] Create Twitter card variations
 - [ ] Develop profile and cover images
 - [ ] Generate alternative versions
 
 ### Week 3: Testing & Optimization
+
 - [ ] Test all images across platforms
 - [ ] Optimize file sizes and formats
 - [ ] Create fallback versions
 - [ ] Implement in website code
 
 ### Week 4: Launch Preparation
+
 - [ ] Final quality assurance
 - [ ] Upload to production servers
 - [ ] Test sharing across all platforms
@@ -344,6 +379,7 @@ paperlyte_social_profile_avatar_400x400.png
 ---
 
 **Next Steps:**
+
 1. Create primary Open Graph image with main interface
 2. Develop Twitter card with mobile-optimized messaging
 3. Test sharing functionality across platforms
