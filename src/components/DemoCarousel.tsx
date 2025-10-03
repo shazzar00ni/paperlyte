@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
 import { trackUserAction } from '../utils/analytics'
+import { monitoring } from '../utils/monitoring'
 import DemoVideoModal from './DemoVideoModal'
 
 interface DemoSlide {
@@ -9,6 +10,15 @@ interface DemoSlide {
   description: string
   image: string
   alt: string
+}
+
+// Generate SVG placeholder images for demo
+const generatePlaceholderSVG = (title: string, color: string) => {
+  const svg = `<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="600" height="400" fill="${color}"/>
+    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
+  </svg>`
+  return `data:image/svg+xml;base64,${btoa(svg)}`
 }
 
 const DemoCarousel: React.FC = () => {
@@ -22,7 +32,7 @@ const DemoCarousel: React.FC = () => {
       title: 'Lightning-Fast Note Creation',
       description:
         'Start writing immediately with our instant-load editor. No delays, no distractions.',
-      image: '/api/placeholder/600/400',
+      image: generatePlaceholderSVG('✏️ Editor Demo', '#6C63FF'),
       alt: 'Paperlyte note creation interface',
     },
     {
@@ -30,7 +40,7 @@ const DemoCarousel: React.FC = () => {
       title: 'Rich Text & Markdown Support',
       description:
         'Format your notes beautifully with markdown support and rich text editing.',
-      image: '/api/placeholder/600/400',
+      image: generatePlaceholderSVG('✨ Formatting Demo', '#4F46E5'),
       alt: 'Rich text formatting in Paperlyte',
     },
     {
@@ -38,7 +48,7 @@ const DemoCarousel: React.FC = () => {
       title: 'Smart Organization',
       description:
         'Tag, search, and organize your notes effortlessly with our intelligent system.',
-      image: '/api/placeholder/600/400',
+      image: generatePlaceholderSVG('🔍 Search Demo', '#7C3AED'),
       alt: 'Note organization and tagging system',
     },
     {
@@ -46,10 +56,14 @@ const DemoCarousel: React.FC = () => {
       title: 'Sync Across All Devices',
       description:
         'Access your notes anywhere - web, mobile, tablet. Always in sync.',
-      image: '/api/placeholder/600/400',
+      image: generatePlaceholderSVG('🔄 Sync Demo', '#059669'),
       alt: 'Cross-device synchronization',
     },
   ]
+
+  useEffect(() => {
+    monitoring.addBreadcrumb('Demo carousel loaded', 'ui')
+  }, [])
 
   useEffect(() => {
     if (isAutoPlaying) {

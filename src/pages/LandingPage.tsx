@@ -38,33 +38,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
   const features = [
     {
       icon: <Zap className='h-6 w-6' />,
-      title: 'Lightning Fast',
-      description: 'Ideas saved instantly—never lose your spark.',
+      title: 'Launches Instantly',
+      description: 'Start writing in under 3 seconds—faster than any other note app.',
     },
     {
       icon: <Shield className='h-6 w-6' />,
-      title: 'Private & Secure',
-      description: 'End-to-end encrypted, ad-free experience.',
+      title: 'Your Data Stays Yours',
+      description: 'Notes stored locally on your device—no cloud, no tracking, complete privacy.',
     },
     {
       icon: <Smartphone className='h-6 w-6' />,
       title: 'Works Everywhere',
-      description: 'Web, tablet, and mobile—sync across all devices.',
+      description: 'Beautiful on desktop, tablet, and mobile—no app download required.',
     },
     {
       icon: <Search className='h-6 w-6' />,
-      title: 'Smart Search',
-      description: 'Find anything instantly with powerful search.',
+      title: 'Find Anything in Milliseconds',
+      description: 'Search through all your notes instantly as you type—no waiting.',
     },
     {
       icon: <Tag className='h-6 w-6' />,
-      title: 'Organize Effortlessly',
-      description: 'Tag, group, and organize your thoughts.',
+      title: 'Never Lose Your Work',
+      description: 'Auto-saves as you type with visual confirmation—write worry-free.',
     },
     {
       icon: <CheckCircle className='h-6 w-6' />,
-      title: 'Minimal by Design',
-      description: 'Only the tools that matter, nothing more.',
+      title: 'Zero Learning Curve',
+      description: 'Just start typing—rich formatting with keyboard shortcuts that feel natural.',
     },
   ]
 
@@ -90,25 +90,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWaitlistClick }) => {
 
         <div className='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <h1 className='text-4xl md:text-6xl font-bold text-dark mb-6'>
-            Your thoughts deserve a
-            <span className='text-gradient'> lightning-fast</span> home
+            Finally, note-taking that feels
+            <span className='text-gradient'> effortless</span>
           </h1>
           <p className='text-xl text-gray-600 mb-8 max-w-3xl mx-auto'>
-            Paperlyte is the distraction-free note-taking app that saves your
-            ideas instantly. Write, draw, organize—all in one serene canvas.
+            Paperlyte is the lightning-fast, beautifully minimal note app that
+            gets out of your way. No accounts, no complexity, no bloat—just you
+            and your ideas.
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
             <button
               onClick={handleWaitlistClick}
               className='btn-primary btn-lg animation-glow'
             >
-              Join the Waitlist
+              Start Writing Now
             </button>
             <button
               onClick={handleWatchDemo}
               className='btn-secondary btn-lg'
             >
-              Watch Demo
+              See 30-Second Demo
             </button>
           </div>
           
