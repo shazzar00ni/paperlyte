@@ -178,4 +178,4 @@ jobs:
         run: npm run security-audit
 
       - name: Run security-focused tests
-        run: npm run test:run -- tests/integration/security.test.ts
+        run: npm run test:run -- tests/integration/security.test.tsx
