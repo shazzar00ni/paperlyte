@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            urlPattern: /^https:\/\/.*\.posthog\.com\/.*/i,
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)*posthog\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'analytics-cache',
