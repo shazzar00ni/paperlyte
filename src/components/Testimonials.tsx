@@ -11,6 +11,32 @@ interface Testimonial {
   avatar: string
 }
 
+// Generate avatar placeholder SVG
+const generateAvatarPlaceholder = (name: string): string => {
+  const initials = name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+  
+  // Generate a consistent color based on the name
+  const colors = [
+    '#6366F1', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6'
+  ]
+  const colorIndex = name.charCodeAt(0) % colors.length
+  const bgColor = colors[colorIndex]
+  
+  const svg = `<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="${bgColor}"/>
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-family="sans-serif" font-size="24" font-weight="600">${initials}</text>
+  </svg>`
+  
+  const bytes = new TextEncoder().encode(svg)
+  const binary = Array.from(bytes, byte => String.fromCharCode(byte)).join('')
+  return `data:image/svg+xml;base64,${btoa(binary)}`
+}
+
 const Testimonials: React.FC = () => {
   const testimonials: Testimonial[] = [
     {
@@ -20,7 +46,7 @@ const Testimonials: React.FC = () => {
       company: 'TechFlow',
       content: 'Paperlyte has completely transformed how I capture and organize my thoughts. The speed is incredible - I never lose an idea again.',
       rating: 5,
-      avatar: '/api/placeholder/64/64'
+      avatar: generateAvatarPlaceholder('Sarah Chen')
     },
     {
       id: '2',
@@ -29,7 +55,7 @@ const Testimonials: React.FC = () => {
       company: 'Freelance',
       content: 'Finally, a note-taking app that gets out of my way. Clean, fast, and powerful. Perfect for my writing workflow.',
       rating: 4,
-      avatar: '/api/placeholder/64/64'
+      avatar: generateAvatarPlaceholder('Marcus Johnson')
     },
     {
       id: '3',
@@ -38,7 +64,7 @@ const Testimonials: React.FC = () => {
       company: 'DesignLab',
       content: 'The minimal design and lightning-fast performance make this my go-to app for brainstorming and project planning.',
       rating: 5,
-      avatar: '/api/placeholder/64/64'
+      avatar: generateAvatarPlaceholder('Elena Rodriguez')
     },
     {
       id: '4',
@@ -47,7 +73,7 @@ const Testimonials: React.FC = () => {
       company: 'MIT',
       content: 'Paperlyte helps me stay organized with my coursework. The tagging system is intuitive and the search is incredibly fast.',
       rating: 4,
-      avatar: '/api/placeholder/64/64'
+      avatar: generateAvatarPlaceholder('David Park')
     },
     {
       id: '5',
@@ -56,7 +82,7 @@ const Testimonials: React.FC = () => {
       company: 'YouTube',
       content: 'I use Paperlyte for all my video scripts and content ideas. The distraction-free environment is exactly what I needed.',
       rating: 5,
-      avatar: '/api/placeholder/64/64'
+      avatar: generateAvatarPlaceholder('Priya Sharma')
     },
     {
       id: '6',
@@ -65,7 +91,7 @@ const Testimonials: React.FC = () => {
       company: 'StartupXYZ',
       content: 'As a developer, I appreciate the clean architecture and fast performance. Great for technical notes and documentation.',
       rating: 5,
-      avatar: '/api/placeholder/64/64'
+      avatar: generateAvatarPlaceholder('Alex Thompson')
     }
   ]
 

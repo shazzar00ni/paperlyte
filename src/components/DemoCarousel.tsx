@@ -71,10 +71,10 @@ const DemoCarousel: React.FC = () => {
 
   useEffect(() => {
     if (isAutoPlaying) {
-      const interval = setInterval(() => {
+      const intervalId = setInterval(() => {
         setCurrentSlide(prev => (prev + 1) % demoSlides.length)
       }, 4000)
-      return () => clearInterval(interval)
+      return () => clearInterval(intervalId)
     }
   }, [isAutoPlaying, demoSlides.length])
 
