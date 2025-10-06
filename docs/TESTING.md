@@ -4,6 +4,33 @@
 
 Paperlyte uses a comprehensive testing pipeline with multiple test types to ensure code quality, security, and reliability.
 
+## Test Setup Architecture
+
+### Global Test Configuration
+
+All tests use a centralized setup file at `src/test-setup.ts` that provides:
+
+- **React Testing Library Integration**: Automatic cleanup after each test
+- **localStorage Mock**: Map-based implementation for reliable data persistence testing
+- **crypto.randomUUID Mock**: Consistent UUID generation across tests
+- **window.matchMedia Mock**: Support for CSS media query testing
+- **PostHog Analytics Mock**: Prevents actual analytics calls during testing
+- **Sentry Monitoring Mock**: Captures error tracking calls without sending data
+
+### Automatic Cleanup
+
+Tests automatically clean up after themselves:
+
+```typescript
+afterEach(() => {
+  cleanup() // React Testing Library cleanup
+  localStorage.clear() // Clear test data
+  vi.clearAllMocks() // Reset all mocks
+})
+```
+
+This ensures test isolation and prevents memory leaks.
+
 ## Test Types
 
 ### 1. Unit Tests
@@ -27,6 +54,7 @@ npm run test:coverage
 ```
 
 #### Key Features:
+
 - **Component Testing**: React components with user interactions
 - **Service Layer Testing**: Data persistence and business logic
 - **Utility Testing**: Analytics, monitoring, and helper functions
@@ -44,6 +72,7 @@ npm run test:run -- tests/integration
 ```
 
 #### Test Coverage:
+
 - **Note Management Workflow**: Create, edit, save, delete operations
 - **Search and Organization**: Search functionality and filtering
 - **Data Persistence**: localStorage and session management
@@ -67,6 +96,7 @@ npm run test:e2e:debug
 ```
 
 #### Test Scenarios:
+
 - **Landing Page**: User interactions and waitlist functionality
 - **Note Editor**: Text editing, formatting, and persistence
 - **Cross-browser Testing**: Chromium, Firefox, WebKit
@@ -84,6 +114,19 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
+    // Memory optimization settings
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true, // Run tests in a single fork to reduce memory usage
+      },
+    },
+    // Test execution settings
+    testTimeout: 10000, // 10 seconds per test
+    hookTimeout: 10000, // 10 seconds for hooks
+    teardownTimeout: 10000, // 10 seconds for teardown
+    // Isolate tests to prevent memory leaks
+    isolate: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -99,6 +142,22 @@ export default defineConfig({
   },
 })
 ```
+
+### Memory Optimization
+
+All test scripts automatically run with increased Node.js memory allocation:
+
+```json
+{
+  "scripts": {
+    "test": "NODE_OPTIONS='--max-old-space-size=4096' vitest",
+    "test:ci": "NODE_OPTIONS='--max-old-space-size=4096' vitest run --reporter=verbose",
+    "test:coverage": "NODE_OPTIONS='--max-old-space-size=4096' vitest run --coverage"
+  }
+}
+```
+
+This ensures tests have 4GB of heap space available, preventing "JavaScript heap out of memory" errors.
 
 ### Playwright Configuration (`playwright.config.ts`)
 
@@ -136,11 +195,11 @@ describe('MyComponent', () => {
   it('should handle user interactions', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
-    
+
     render(<MyComponent onSubmit={onSubmit} />)
-    
+
     await user.click(screen.getByRole('button', { name: /submit/i }))
-    
+
     expect(onSubmit).toHaveBeenCalled()
   })
 })
@@ -153,9 +212,9 @@ import { test, expect } from '@playwright/test'
 
 test('should complete user workflow', async ({ page }) => {
   await page.goto('/')
-  
+
   await page.getByRole('button', { name: /get started/i }).click()
-  
+
   await expect(page).toHaveURL('/dashboard')
 })
 ```
@@ -168,7 +227,7 @@ test('should complete user workflow', async ({ page }) => {
 it('should sanitize malicious input', () => {
   const maliciousInput = '<script>alert("xss")</script>'
   const sanitized = sanitizeContent(maliciousInput)
-  
+
   expect(sanitized).not.toContain('<script>')
 })
 ```
@@ -178,10 +237,10 @@ it('should sanitize malicious input', () => {
 ```typescript
 it('should validate email format', async () => {
   const user = userEvent.setup()
-  
+
   await user.type(emailInput, 'invalid-email')
   await user.click(submitButton)
-  
+
   expect(screen.getByText(/invalid email/i)).toBeVisible()
 })
 ```
@@ -191,6 +250,7 @@ it('should validate email format', async () => {
 ### GitHub Actions Workflows
 
 #### Main CI Pipeline (`.github/workflows/ci.yml`)
+
 - Linting and formatting
 - Type checking
 - Unit tests
@@ -200,6 +260,7 @@ it('should validate email format', async () => {
 - Build verification
 
 #### Comprehensive Test Suite (`.github/workflows/test.yml`)
+
 - Cross-platform testing (Ubuntu, Windows, macOS)
 - Multiple Node.js versions (18, 20)
 - Browser matrix testing (Chromium, Firefox, WebKit)
@@ -215,6 +276,7 @@ it('should validate email format', async () => {
 ### PR Checks
 
 All pull requests must pass:
+
 - [ ] Unit tests (all passing)
 - [ ] Integration tests (all passing)
 - [ ] E2E tests (all passing)
@@ -232,8 +294,9 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 **Format:** `<type>[optional scope]: <description>`
 
 **Valid types:**
+
 - `feat:` - New features
-- `fix:` - Bug fixes  
+- `fix:` - Bug fixes
 - `docs:` - Documentation changes
 - `style:` - Code style changes (formatting, etc.)
 - `refactor:` - Code refactoring
@@ -244,6 +307,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 - `chore:` - Other maintenance tasks
 
 **Examples:**
+
 ```
 feat: add user authentication
 fix: resolve memory leak in editor
@@ -256,6 +320,7 @@ test: add integration tests for search
 ### Lighthouse Metrics
 
 Monitored metrics with thresholds:
+
 - **Performance Score**: ≥80
 - **Accessibility Score**: ≥90
 - **Best Practices Score**: ≥80
@@ -272,7 +337,7 @@ test('should load within performance budget', async ({ page }) => {
   const startTime = Date.now()
   await page.goto('/')
   const loadTime = Date.now() - startTime
-  
+
   expect(loadTime).toBeLessThan(2000)
 })
 ```
@@ -352,12 +417,111 @@ export const createMockNote = (overrides = {}): Note => ({
 
 ## Troubleshooting
 
+### Memory Issues
+
+#### Symptoms
+
+- "JavaScript heap out of memory" errors
+- Test process termination
+- Inconsistent test execution
+- Tests failing randomly
+
+#### Solutions
+
+**1. Increase Node.js Memory Limit**
+
+The project already includes memory optimization in test scripts. If you still encounter issues:
+
+```bash
+# Manually set memory limit (8GB)
+export NODE_OPTIONS="--max-old-space-size=8192"
+npm run test
+```
+
+**2. Run Tests in Single Fork Mode**
+
+The vitest config is already optimized to use single fork mode, which reduces memory usage at the cost of speed:
+
+```typescript
+pool: 'forks',
+poolOptions: {
+  forks: {
+    singleFork: true, // Prevents parallel execution memory spike
+  },
+},
+```
+
+**3. Isolate Tests**
+
+If specific tests cause memory issues, run them individually:
+
+```bash
+npm run test:run -- path/to/specific.test.ts
+```
+
+**4. Clear Node Cache**
+
+```bash
+npm run clean
+rm -rf node_modules/.vite
+npm install
+```
+
+**5. Monitor Memory Usage**
+
+Check current Node.js memory limit:
+
+```bash
+node -e "console.log(require('v8').getHeapStatistics().heap_size_limit / 1024 / 1024 + ' MB')"
+```
+
+### Test Setup Issues
+
+#### localStorage Mock Not Working
+
+The test setup includes a comprehensive localStorage mock. If tests fail due to localStorage issues:
+
+```typescript
+// In your test file
+beforeEach(() => {
+  localStorage.clear() // Automatically available
+})
+```
+
+#### Crypto Mock Issues
+
+The global crypto mock is set up in `src/test-setup.ts`. If you need a specific UUID:
+
+```typescript
+import { vi } from 'vitest'
+
+beforeEach(() => {
+  vi.stubGlobal('crypto', {
+    randomUUID: vi.fn(() => 'specific-test-uuid'),
+  })
+})
+```
+
 ### Common Issues
 
 **Flaky Tests**: Use `waitFor` and proper async handling
-**Timeout Issues**: Increase timeout for slow operations
-**Mock Problems**: Ensure mocks are properly reset between tests
+**Timeout Issues**: Increase timeout for slow operations (default is 10s)
+**Mock Problems**: Ensure mocks are properly reset between tests (done automatically)
 **Browser Issues**: Check Playwright browser installation
+
+### VS Code Vitest Extension
+
+When working with remote repositories, the Vitest extension may show path resolution errors.
+
+**Solution**: Use terminal commands instead:
+
+```bash
+npm run test      # Watch mode
+npm run test:ci   # Single run
+npm run test:ui   # Browser UI
+```
+
+See [docs/vscode-troubleshooting.md](./vscode-troubleshooting.md) for detailed solutions.
 
 ### Getting Help
 
