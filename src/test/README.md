@@ -4,8 +4,9 @@ This directory contains shared test utilities and infrastructure for the Paperly
 
 ## Files
 
-### `setup.ts`
+### `../test-setup.ts`
 
+Comprehensive test setup file (located at `src/test-setup.ts`) that provides:
 Comprehensive test setup file that provides:
 
 - **React Testing Library Integration**: Automatic cleanup after each test
