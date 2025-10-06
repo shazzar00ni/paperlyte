@@ -62,10 +62,11 @@ class LocalStorageMock {
 global.localStorage = new LocalStorageMock() as Storage
 
 // Mock crypto.randomUUID (used in note creation)
+let mockUuidCounter = 1;
 beforeEach(() => {
   const cryptoMock = {
     randomUUID: vi.fn(
-      () => 'mock-uuid-' + Math.random().toString(36).substring(2, 9)
+      () => 'mock-uuid-' + (mockUuidCounter++)
     ),
   }
   vi.stubGlobal('crypto', cryptoMock)
