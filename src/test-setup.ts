@@ -8,16 +8,45 @@ Object.defineProperty(global, 'crypto', {
   },
 })
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+// Mock localStorage with functional implementation
+class LocalStorageMock {
+  private store: Record<string, string> = {}
+
+  getItem(key: string): string | null {
+    return this.store[key] || null
+  }
+
+  setItem(key: string, value: string): void {
+    this.store[key] = value
+  }
+
+  removeItem(key: string): void {
+    delete this.store[key]
+  }
+
+  clear(): void {
+    this.store = {}
+  }
+
+  get length(): number {
+    return Object.keys(this.store).length
+  }
+
+  key(index: number): string | null {
+    const keys = Object.keys(this.store)
+    return keys[index] || null
+  }
 }
 
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
+  value: new LocalStorageMock(),
+  writable: true,
+})
+
+// Mock IndexedDB as not available (use localStorage fallback in tests)
+Object.defineProperty(window, 'indexedDB', {
+  value: undefined,
+  writable: true,
 })
 
 // Mock PostHog analytics globally
@@ -57,5 +86,5 @@ vi.mock('@sentry/react', () => ({
 // Reset mocks before each test
 beforeEach(() => {
   vi.clearAllMocks()
-  localStorageMock.getItem.mockReturnValue(null)
+  window.localStorage.clear()
 })
