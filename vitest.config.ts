@@ -8,20 +8,36 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
+    // Memory optimization settings
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true, // Run tests in a single fork to reduce memory usage
+      },
+    },
+    // Test execution settings
+    testTimeout: 10000, // 10 seconds per test
+    hookTimeout: 10000, // 10 seconds for hooks
+    teardownTimeout: 10000, // 10 seconds for teardown
+    // Isolate tests to prevent memory leaks
+    isolate: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
         'src/test-setup.ts',
+        'src/test/**',
         'src/**/*.d.ts',
         'src/**/*.test.{ts,tsx}',
         'src/**/*.spec.{ts,tsx}',
         'dist/',
         'coverage/',
         'playwright/',
+        'tests/',
         '**/*.config.{ts,js}',
         'vite.config.ts',
+        'vitest.config.ts',
         'postcss.config.js',
         'tailwind.config.js',
       ],
