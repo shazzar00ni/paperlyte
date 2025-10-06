@@ -12,7 +12,7 @@ export default defineConfig({
     pool: 'forks',
     poolOptions: {
       forks: {
-        singleFork: true, // Run tests in a single fork to reduce memory usage
+        // singleFork: true, // Removed to allow parallel test execution
       },
     },
     // Test execution settings
