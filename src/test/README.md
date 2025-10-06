@@ -16,7 +16,7 @@ Comprehensive test setup file that provides:
 - **PostHog Analytics Mock**: Prevents actual analytics calls
 - **Sentry Monitoring Mock**: Captures error tracking without sending data
 
-This file is **referenced** by the main test setup but is kept here as documentation and potential future utilities.
+This directory is reserved for future test utilities and helpers. The main test setup is located at `src/test-setup.ts`.
 
 ## Usage
 
