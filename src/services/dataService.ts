@@ -54,11 +54,11 @@ class DataService {
    * - PUT /api/notes/:id
    * - DELETE /api/notes/:id
    */
-  getNotes(): Note[] {
-    return this.getFromStorage<Note>('notes')
+  async getNotes(): Promise<Note[]> {
+    return Promise.resolve(this.getFromStorage<Note>('notes'))
   }
 
-  saveNote(note: Note): boolean {
+  async saveNote(note: Note): Promise<boolean> {
     const notes = this.getFromStorage<Note>('notes')
     const existingIndex = notes.findIndex(n => n.id === note.id)
 
@@ -68,13 +68,13 @@ class DataService {
       notes.unshift(note) // Add new notes to the beginning
     }
 
-    return this.saveToStorage('notes', notes)
+    return Promise.resolve(this.saveToStorage('notes', notes))
   }
 
-  deleteNote(noteId: string): boolean {
+  async deleteNote(noteId: string): Promise<boolean> {
     const notes = this.getFromStorage<Note>('notes')
     const filteredNotes = notes.filter(note => note.id !== noteId)
-    return this.saveToStorage('notes', filteredNotes)
+    return Promise.resolve(this.saveToStorage('notes', filteredNotes))
   }
 
   /**
