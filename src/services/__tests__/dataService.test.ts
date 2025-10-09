@@ -107,7 +107,7 @@ describe('DataService', () => {
       // Try to add duplicate
       const result = dataService.addToWaitlist(entry)
       expect(result.success).toBe(false)
-      expect(result.error).toBe("You're already on the waitlist!")
+      expect(result.error).toBe('Email already registered')
     })
 
     it('should retrieve waitlist entries', () => {
