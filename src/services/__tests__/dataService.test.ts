@@ -10,12 +10,12 @@ describe('DataService', () => {
   })
 
   describe('Notes Operations', () => {
-    it('should return empty array when no notes exist', async () => {
-      const notes = await dataService.getNotes()
+    it('should return empty array when no notes exist', () => {
+      const notes = dataService.getNotes()
       expect(notes).toEqual([])
     })
 
-    it('should save and retrieve a note', async () => {
+    it('should save and retrieve a note', () => {
       const testNote: Note = {
         id: 'test-id',
         title: 'Test Note',
@@ -25,15 +25,15 @@ describe('DataService', () => {
         updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
-      const success = await dataService.saveNote(testNote)
+      const success = dataService.saveNote(testNote)
       expect(success).toBe(true)
 
-      const notes = await dataService.getNotes()
+      const notes = dataService.getNotes()
       expect(notes).toHaveLength(1)
       expect(notes[0]).toEqual(testNote)
     })
 
-    it('should update an existing note', async () => {
+    it('should update an existing note', () => {
       const originalNote: Note = {
         id: 'test-id',
         title: 'Original Title',
@@ -43,7 +43,7 @@ describe('DataService', () => {
         updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
-      await dataService.saveNote(originalNote)
+      dataService.saveNote(originalNote)
 
       const updatedNote: Note = {
         ...originalNote,
@@ -52,16 +52,16 @@ describe('DataService', () => {
         updatedAt: '2025-09-25T11:00:00.000Z',
       }
 
-      const success = await dataService.saveNote(updatedNote)
+      const success = dataService.saveNote(updatedNote)
       expect(success).toBe(true)
 
-      const notes = await dataService.getNotes()
+      const notes = dataService.getNotes()
       expect(notes).toHaveLength(1)
       expect(notes[0].title).toBe('Updated Title')
       expect(notes[0].content).toBe('Updated content')
     })
 
-    it('should delete a note', async () => {
+    it('should delete a note', () => {
       const testNote: Note = {
         id: 'test-id',
         title: 'Test Note',
@@ -71,30 +71,30 @@ describe('DataService', () => {
         updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
-      await dataService.saveNote(testNote)
+      dataService.saveNote(testNote)
 
-      const success = await dataService.deleteNote('test-id')
+      const success = dataService.deleteNote('test-id')
       expect(success).toBe(true)
 
-      const notes = await dataService.getNotes()
+      const notes = dataService.getNotes()
       expect(notes).toHaveLength(0)
     })
   })
 
   describe('Waitlist Operations', () => {
-    it('should add entry to waitlist', async () => {
+    it('should add entry to waitlist', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
         interest: 'professional' as const,
       }
 
-      const result = await dataService.addToWaitlist(entry)
+      const result = dataService.addToWaitlist(entry)
       expect(result.success).toBe(true)
       expect(result.error).toBeUndefined()
     })
 
-    it('should prevent duplicate email entries', async () => {
+    it('should prevent duplicate email entries', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
@@ -102,23 +102,23 @@ describe('DataService', () => {
       }
 
       // Add first entry
-      await dataService.addToWaitlist(entry)
+      dataService.addToWaitlist(entry)
 
       // Try to add duplicate
-      const result = await dataService.addToWaitlist(entry)
+      const result = dataService.addToWaitlist(entry)
       expect(result.success).toBe(false)
       expect(result.error).toBe('Email already registered')
     })
 
-    it('should retrieve waitlist entries', async () => {
+    it('should retrieve waitlist entries', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
         interest: 'student' as const,
       }
 
-      await dataService.addToWaitlist(entry)
-      const entries = await dataService.getWaitlistEntries()
+      dataService.addToWaitlist(entry)
+      const entries = dataService.getWaitlistEntries()
 
       expect(entries).toHaveLength(1)
       expect(entries[0].email).toBe('test@example.com')
@@ -130,7 +130,7 @@ describe('DataService', () => {
   })
 
   describe('Storage Operations', () => {
-    it('should handle localStorage errors gracefully', async () => {
+    it('should handle localStorage errors gracefully', () => {
       // Mock localStorage to throw an error
       vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new Error('Storage quota exceeded')
@@ -145,11 +145,11 @@ describe('DataService', () => {
         updatedAt: '2025-09-25T10:00:00.000Z',
       }
 
-      const success = await dataService.saveNote(testNote)
+      const success = dataService.saveNote(testNote)
       expect(success).toBe(false)
     })
 
-    it('should clear all data', async () => {
+    it('should clear all data', () => {
       // Add some test data
       const testNote: Note = {
         id: 'test-id',
@@ -166,16 +166,15 @@ describe('DataService', () => {
         interest: 'professional' as const,
       }
 
-      await dataService.saveNote(testNote)
-      await dataService.addToWaitlist(waitlistEntry)
+      dataService.saveNote(testNote)
+      dataService.addToWaitlist(waitlistEntry)
 
       // Clear all data
-      const success = await dataService.clearAllData()
-      expect(success).toBe(true)
+      dataService.clearAllData()
 
       // Verify data is cleared
-      const notes = await dataService.getNotes()
-      const entries = await dataService.getWaitlistEntries()
+      const notes = dataService.getNotes()
+      const entries = dataService.getWaitlistEntries()
 
       expect(notes).toHaveLength(0)
       expect(entries).toHaveLength(0)
