@@ -61,13 +61,17 @@ class LocalStorageMock {
 // Set up localStorage globally before any tests run
 global.localStorage = new LocalStorageMock() as Storage
 
+// Mock IndexedDB as not available (use localStorage fallback in tests)
+Object.defineProperty(window, 'indexedDB', {
+  value: undefined,
+  writable: true,
+})
+
 // Mock crypto.randomUUID (used in note creation)
-let mockUuidCounter = 1;
+let mockUuidCounter = 1
 beforeEach(() => {
   const cryptoMock = {
-    randomUUID: vi.fn(
-      () => 'mock-uuid-' + (mockUuidCounter++)
-    ),
+    randomUUID: vi.fn(() => 'mock-uuid-' + mockUuidCounter++),
   }
   vi.stubGlobal('crypto', cryptoMock)
 })
