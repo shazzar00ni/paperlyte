@@ -25,6 +25,13 @@ export default defineConfig(({ mode }) => ({
         "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
     },
   },
+  preview: {
+    port: 4173,
+    headers: {
+      'Content-Security-Policy':
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
+    },
+  },
   build: {
     outDir: 'dist',
     // Only enable sourcemaps in development mode for security
