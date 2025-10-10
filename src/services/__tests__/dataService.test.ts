@@ -82,19 +82,19 @@ describe('DataService', () => {
   })
 
   describe('Waitlist Operations', () => {
-    it('should add entry to waitlist', async () => {
+    it('should add entry to waitlist', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
         interest: 'professional' as const,
       }
 
-      const result = await dataService.addToWaitlist(entry)
+      const result = dataService.addToWaitlist(entry)
       expect(result.success).toBe(true)
       expect(result.error).toBeUndefined()
     })
 
-    it('should prevent duplicate email entries', async () => {
+    it('should prevent duplicate email entries', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
@@ -102,23 +102,23 @@ describe('DataService', () => {
       }
 
       // Add first entry
-      await dataService.addToWaitlist(entry)
+      dataService.addToWaitlist(entry)
 
       // Try to add duplicate
-      const result = await dataService.addToWaitlist(entry)
+      const result = dataService.addToWaitlist(entry)
       expect(result.success).toBe(false)
       expect(result.error).toBe("You're already on the waitlist!")
     })
 
-    it('should retrieve waitlist entries', async () => {
+    it('should retrieve waitlist entries', () => {
       const entry = {
         email: 'test@example.com',
         name: 'Test User',
         interest: 'student' as const,
       }
 
-      await dataService.addToWaitlist(entry)
-      const entries = await dataService.getWaitlistEntries()
+      dataService.addToWaitlist(entry)
+      const entries = dataService.getWaitlistEntries()
 
       expect(entries).toHaveLength(1)
       expect(entries[0].email).toBe('test@example.com')
@@ -171,18 +171,45 @@ describe('DataService', () => {
       }
 
       await dataService.saveNote(testNote)
-      await dataService.addToWaitlist(waitlistEntry)
+      dataService.addToWaitlist(waitlistEntry)
 
       // Clear all data
-      const success = await dataService.clearAllData()
-      expect(success).toBe(true)
+      dataService.clearAllData()
 
       // Verify data is cleared
       const notes = await dataService.getNotes()
-      const entries = await dataService.getWaitlistEntries()
+      const entries = dataService.getWaitlistEntries()
 
       expect(notes).toHaveLength(0)
       expect(entries).toHaveLength(0)
+    })
+
+    it('should export all data', async () => {
+      // Add some test data
+      const testNote: Note = {
+        id: 'test-id',
+        title: 'Test Note',
+        content: 'Test content',
+        tags: [],
+        createdAt: '2025-09-25T10:00:00.000Z',
+        updatedAt: '2025-09-25T10:00:00.000Z',
+      }
+
+      const waitlistEntry = {
+        email: 'test@example.com',
+        name: 'Test User',
+        interest: 'professional' as const,
+      }
+
+      await dataService.saveNote(testNote)
+      dataService.addToWaitlist(waitlistEntry)
+
+      const exportedData = await dataService.exportData()
+
+      expect(exportedData.notes).toHaveLength(1)
+      expect(exportedData.waitlist).toHaveLength(1)
+      expect(exportedData.notes[0].id).toBe('test-id')
+      expect(exportedData.waitlist[0].email).toBe('test@example.com')
     })
   })
 })

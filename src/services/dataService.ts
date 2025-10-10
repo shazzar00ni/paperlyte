@@ -109,110 +109,26 @@ class DataService {
    * - DELETE /api/notes/:id
    */
   async getNotes(): Promise<Note[]> {
-    await this.initialize()
-
-    try {
-      if (this.useIndexedDB) {
-        const notes = await indexedDB.getAll<Note>(STORE_NAMES.NOTES)
-        // Sort by updatedAt descending (newest first)
-        return notes.sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        )
-      } else {
-        // Fallback to localStorage
-        return this.getFromStorage<Note>('notes')
-      }
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'get_notes',
-      })
-      // Fallback to localStorage on error
-      return this.getFromStorage<Note>('notes')
-    }
+    return Promise.resolve(this.getFromStorage<Note>('notes'))
   }
 
   async saveNote(note: Note): Promise<boolean> {
-    await this.initialize()
+    const notes = this.getFromStorage<Note>('notes')
+    const existingIndex = notes.findIndex(n => n.id === note.id)
 
-    try {
-      if (this.useIndexedDB) {
-        await indexedDB.put(STORE_NAMES.NOTES, note)
-        monitoring.addBreadcrumb('Note saved to IndexedDB', 'info', {
-          noteId: note.id,
-        })
-        return true
-      } else {
-        // Fallback to localStorage
-        const notes = this.getFromStorage<Note>('notes')
-        const existingIndex = notes.findIndex(n => n.id === note.id)
-
-        if (existingIndex >= 0) {
-          notes[existingIndex] = note
-        } else {
-          notes.unshift(note) // Add new notes to the beginning
-        }
-
-        return this.saveToStorage('notes', notes)
-      }
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'save_note',
-        additionalData: { noteId: note.id },
-      })
-
-      // Try localStorage fallback
-      try {
-        const notes = this.getFromStorage<Note>('notes')
-        const existingIndex = notes.findIndex(n => n.id === note.id)
-
-        if (existingIndex >= 0) {
-          notes[existingIndex] = note
-        } else {
-          notes.unshift(note)
-        }
-
-        return this.saveToStorage('notes', notes)
-      } catch {
-        return false
-      }
+    if (existingIndex >= 0) {
+      notes[existingIndex] = note
+    } else {
+      notes.unshift(note) // Add new notes to the beginning
     }
+
+    return Promise.resolve(this.saveToStorage('notes', notes))
   }
 
   async deleteNote(noteId: string): Promise<boolean> {
-    await this.initialize()
-
-    try {
-      if (this.useIndexedDB) {
-        await indexedDB.delete(STORE_NAMES.NOTES, noteId)
-        monitoring.addBreadcrumb('Note deleted from IndexedDB', 'info', {
-          noteId,
-        })
-        return true
-      } else {
-        // Fallback to localStorage
-        const notes = this.getFromStorage<Note>('notes')
-        const filteredNotes = notes.filter(note => note.id !== noteId)
-        return this.saveToStorage('notes', filteredNotes)
-      }
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'delete_note',
-        additionalData: { noteId },
-      })
-
-      // Try localStorage fallback
-      try {
-        const notes = this.getFromStorage<Note>('notes')
-        const filteredNotes = notes.filter(note => note.id !== noteId)
-        return this.saveToStorage('notes', filteredNotes)
-      } catch {
-        return false
-      }
-    }
+    const notes = this.getFromStorage<Note>('notes')
+    const filteredNotes = notes.filter(note => note.id !== noteId)
+    return Promise.resolve(this.saveToStorage('notes', filteredNotes))
   }
 
   /**
@@ -222,59 +138,33 @@ class DataService {
    * - POST /api/waitlist
    * - GET /api/waitlist (admin only)
    */
-  async addToWaitlist(
+  addToWaitlist(
     entry: Omit<WaitlistEntry, 'id' | 'createdAt'>
-  ): Promise<{ success: boolean; error?: string }> {
-    await this.initialize()
-
+  ): { success: boolean; error?: string } {
     try {
+      const existingEntries = this.getFromStorage<WaitlistEntry>('waitlist')
+
       // Check for duplicate email
-      if (this.useIndexedDB) {
-        const existingEntries = await indexedDB.getAll<WaitlistEntry>(
-          STORE_NAMES.WAITLIST
-        )
-
-        if (existingEntries.some(e => e.email === entry.email)) {
-          return {
-            success: false,
-            error: "You're already on the waitlist!",
-          }
+      if (existingEntries.some(e => e.email === entry.email)) {
+        return {
+          success: false,
+          error: "You're already on the waitlist!",
         }
+      }
 
-        const newEntry: WaitlistEntry = {
-          id: crypto.randomUUID(),
-          ...entry,
-          createdAt: new Date().toISOString(),
-        }
+      const newEntry: WaitlistEntry = {
+        id: crypto.randomUUID(),
+        ...entry,
+        createdAt: new Date().toISOString(),
+      }
 
-        await indexedDB.put(STORE_NAMES.WAITLIST, newEntry)
-        monitoring.addBreadcrumb('Waitlist entry added to IndexedDB', 'info')
+      existingEntries.push(newEntry)
+      const success = this.saveToStorage('waitlist', existingEntries)
+
+      if (success) {
         return { success: true }
       } else {
-        // Fallback to localStorage
-        const existingEntries = this.getFromStorage<WaitlistEntry>('waitlist')
-
-        if (existingEntries.some(e => e.email === entry.email)) {
-          return {
-            success: false,
-            error: "You're already on the waitlist!",
-          }
-        }
-
-        const newEntry: WaitlistEntry = {
-          id: crypto.randomUUID(),
-          ...entry,
-          createdAt: new Date().toISOString(),
-        }
-
-        existingEntries.push(newEntry)
-        const success = this.saveToStorage('waitlist', existingEntries)
-
-        if (success) {
-          return { success: true }
-        } else {
-          return { success: false, error: 'Failed to save to waitlist' }
-        }
+        return { success: false, error: 'Failed to save to waitlist' }
       }
     } catch (error) {
       monitoring.logError(error as Error, {
@@ -285,131 +175,54 @@ class DataService {
     }
   }
 
-  async getWaitlistEntries(): Promise<WaitlistEntry[]> {
-    await this.initialize()
-
-    try {
-      if (this.useIndexedDB) {
-        const entries = await indexedDB.getAll<WaitlistEntry>(
-          STORE_NAMES.WAITLIST
-        )
-        // Sort by createdAt descending (newest first)
-        return entries.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      } else {
-        // Fallback to localStorage
-        return this.getFromStorage<WaitlistEntry>('waitlist')
-      }
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'get_waitlist_entries',
-      })
-      // Fallback to localStorage on error
-      return this.getFromStorage<WaitlistEntry>('waitlist')
-    }
+  getWaitlistEntries(): WaitlistEntry[] {
+    return this.getFromStorage<WaitlistEntry>('waitlist')
   }
 
   /**
    * Data export for admin dashboard
    */
   async exportData(): Promise<{ notes: Note[]; waitlist: WaitlistEntry[] }> {
-    const [notes, waitlist] = await Promise.all([
-      this.getNotes(),
-      this.getWaitlistEntries(),
-    ])
-
+    const notes = await this.getNotes()
+    const waitlist = this.getWaitlistEntries()
     return { notes, waitlist }
   }
 
   /**
    * Clear all data (for testing/development)
    */
-  async clearAllData(): Promise<boolean> {
-    await this.initialize()
-
-    try {
-      if (this.useIndexedDB) {
-        await indexedDB.clear(STORE_NAMES.NOTES)
-        await indexedDB.clear(STORE_NAMES.WAITLIST)
-        monitoring.addBreadcrumb('All data cleared from IndexedDB', 'info')
-      } else {
-        // Fallback to localStorage
-        localStorage.removeItem(`${this.storagePrefix}notes`)
-        localStorage.removeItem(`${this.storagePrefix}waitlist`)
-      }
-      return true
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'clear_all_data',
-      })
-      return false
-    }
+  clearAllData(): void {
+    localStorage.removeItem(`${this.storagePrefix}notes`)
+    localStorage.removeItem(`${this.storagePrefix}waitlist`)
   }
 
   /**
    * Check data storage health
    */
-  async getStorageInfo(): Promise<{
+  getStorageInfo(): {
     notesCount: number
     waitlistCount: number
     storageUsed: number
     storageQuota: number
-  }> {
-    await this.initialize()
+  } {
+    const notes = this.getFromStorage<Note>('notes')
+    const waitlist = this.getFromStorage<WaitlistEntry>('waitlist')
 
-    try {
-      if (this.useIndexedDB) {
-        const [notesCount, waitlistCount, storageEstimate] = await Promise.all([
-          indexedDB.count(STORE_NAMES.NOTES),
-          indexedDB.count(STORE_NAMES.WAITLIST),
-          indexedDB.getStorageEstimate(),
-        ])
+    // Estimate storage usage
+    const notesData =
+      localStorage.getItem(`${this.storagePrefix}notes`) || ''
+    const waitlistData =
+      localStorage.getItem(`${this.storagePrefix}waitlist`) || ''
+    const storageUsed = new Blob([notesData + waitlistData]).size
 
-        return {
-          notesCount,
-          waitlistCount,
-          storageUsed: storageEstimate.usage,
-          storageQuota: storageEstimate.quota,
-        }
-      } else {
-        // Fallback to localStorage
-        const notes = this.getFromStorage<Note>('notes')
-        const waitlist = this.getFromStorage<WaitlistEntry>('waitlist')
+    // Typical localStorage quota is 5-10MB, but we can't reliably detect it
+    const storageQuota = 5 * 1024 * 1024 // 5MB assumption
 
-        // Estimate storage usage
-        const notesData =
-          localStorage.getItem(`${this.storagePrefix}notes`) || ''
-        const waitlistData =
-          localStorage.getItem(`${this.storagePrefix}waitlist`) || ''
-        const storageUsed = new Blob([notesData + waitlistData]).size
-
-        // Typical localStorage quota is 5-10MB
-        const storageQuota = 5 * 1024 * 1024
-
-        return {
-          notesCount: notes.length,
-          waitlistCount: waitlist.length,
-          storageUsed,
-          storageQuota,
-        }
-      }
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'get_storage_info',
-      })
-
-      // Return fallback values on error
-      return {
-        notesCount: 0,
-        waitlistCount: 0,
-        storageUsed: 0,
-        storageQuota: 0,
-      }
+    return {
+      notesCount: notes.length,
+      waitlistCount: waitlist.length,
+      storageUsed,
+      storageQuota,
     }
   }
 }
