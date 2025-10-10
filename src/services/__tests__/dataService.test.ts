@@ -179,5 +179,33 @@ describe('DataService', () => {
       expect(notes).toHaveLength(0)
       expect(entries).toHaveLength(0)
     })
+
+    it('should export all data', async () => {
+      // Add some test data
+      const testNote: Note = {
+        id: 'test-id',
+        title: 'Test Note',
+        content: 'Test content',
+        tags: [],
+        createdAt: '2025-09-25T10:00:00.000Z',
+        updatedAt: '2025-09-25T10:00:00.000Z',
+      }
+
+      const waitlistEntry = {
+        email: 'test@example.com',
+        name: 'Test User',
+        interest: 'professional' as const,
+      }
+
+      await dataService.saveNote(testNote)
+      dataService.addToWaitlist(waitlistEntry)
+
+      const exportedData = await dataService.exportData()
+
+      expect(exportedData.notes).toHaveLength(1)
+      expect(exportedData.waitlist).toHaveLength(1)
+      expect(exportedData.notes[0].id).toBe('test-id')
+      expect(exportedData.waitlist[0].email).toBe('test@example.com')
+    })
   })
 })

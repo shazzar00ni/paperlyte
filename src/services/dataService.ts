@@ -128,8 +128,8 @@ class DataService {
   /**
    * Data export for admin dashboard
    */
-  exportData(): { notes: Note[]; waitlist: WaitlistEntry[] } {
-    const notes = this.getNotes()
+  async exportData(): Promise<{ notes: Note[]; waitlist: WaitlistEntry[] }> {
+    const notes = await this.getNotes()
     const waitlist = this.getWaitlistEntries()
     return { notes, waitlist }
   }
