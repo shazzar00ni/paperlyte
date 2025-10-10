@@ -1,21 +1,75 @@
 import type { Note, WaitlistEntry } from '../types'
 import { monitoring } from '../utils/monitoring'
+import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
+import {
+  migrateToIndexedDB,
+  isIndexedDBAvailable,
+} from '../utils/dataMigration'
 
 /**
  * Data Service - Abstraction layer for data persistence
  *
- * CURRENT IMPLEMENTATION: localStorage (MVP phase)
+ * CURRENT IMPLEMENTATION: IndexedDB (offline-first)
  * FUTURE MIGRATION: Will be replaced with API calls in Q4 2025
  *
- * This abstraction layer ensures easy migration from localStorage to API
+ * This abstraction layer ensures easy migration from IndexedDB to API
  * without changing component code.
+ *
+ * Features:
+ * - IndexedDB for large data storage
+ * - Automatic localStorage migration
+ * - Offline-first behavior
+ * - Fallback to localStorage if IndexedDB unavailable
  */
 
 class DataService {
   private storagePrefix = 'paperlyte_'
+  private useIndexedDB: boolean = false
+  private migrationCompleted: boolean = false
 
   /**
-   * Generic storage operations
+   * Initialize the data service and run migration if needed
+   */
+  async initialize(): Promise<void> {
+    try {
+      // Check if IndexedDB is available
+      this.useIndexedDB = isIndexedDBAvailable()
+
+      if (this.useIndexedDB) {
+        // Initialize IndexedDB
+        await indexedDB.init()
+
+        // Run migration from localStorage if not already done
+        if (!this.migrationCompleted) {
+          const result = await migrateToIndexedDB()
+          this.migrationCompleted = result.success
+
+          if (result.notesCount > 0 || result.waitlistCount > 0) {
+            monitoring.addBreadcrumb('Data migrated to IndexedDB', 'info', {
+              notesCount: result.notesCount,
+              waitlistCount: result.waitlistCount,
+              errors: result.errors,
+            })
+          }
+        }
+      } else {
+        monitoring.addBreadcrumb(
+          'IndexedDB not available, using localStorage fallback',
+          'warning'
+        )
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'initialize',
+      })
+      // Fall back to localStorage
+      this.useIndexedDB = false
+    }
+  }
+
+  /**
+   * Generic storage operations (localStorage fallback)
    */
   private getFromStorage<T>(key: string): T[] {
     try {

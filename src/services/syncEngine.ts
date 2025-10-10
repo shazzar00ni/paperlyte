@@ -6,11 +6,13 @@ import type {
   ConflictResolutionStrategy,
 } from '../types'
 import { monitoring } from '../utils/monitoring'
+import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
+import { isIndexedDBAvailable } from '../utils/dataMigration'
 
 /**
  * Sync Engine - Manages cloud synchronization and conflict resolution
  *
- * CURRENT IMPLEMENTATION: Simulated cloud sync for MVP
+ * CURRENT IMPLEMENTATION: Simulated cloud sync for MVP using IndexedDB
  * FUTURE: Will integrate with actual cloud API
  *
  * Features:
@@ -18,19 +20,35 @@ import { monitoring } from '../utils/monitoring'
  * - Automatic conflict detection
  * - Last-write-wins and manual conflict resolution
  * - Offline-first architecture
+ * - IndexedDB for metadata and conflict storage
  */
 
 class SyncEngine {
   private storagePrefix = 'paperlyte_sync_'
   private syncInProgress = false
+  private useIndexedDB: boolean = false
+
+  constructor() {
+    this.useIndexedDB = isIndexedDBAvailable()
+  }
 
   /**
    * Simulate cloud storage for MVP (will be replaced with API calls)
    */
-  private getCloudNotes(): Note[] {
+  private async getCloudNotes(): Promise<Note[]> {
     try {
-      const data = localStorage.getItem(`${this.storagePrefix}cloud_notes`)
-      return data ? JSON.parse(data) : []
+      if (this.useIndexedDB) {
+        await indexedDB.init()
+        const metadata = await indexedDB.get<{ key: string; value: Note[] }>(
+          STORE_NAMES.METADATA,
+          'cloud_notes'
+        )
+        return metadata?.value || []
+      } else {
+        // Fallback to localStorage
+        const data = localStorage.getItem(`${this.storagePrefix}cloud_notes`)
+        return data ? JSON.parse(data) : []
+      }
     } catch (error) {
       monitoring.logError(error as Error, {
         feature: 'sync_engine',
@@ -40,13 +58,23 @@ class SyncEngine {
     }
   }
 
-  private saveToCloud(notes: Note[]): boolean {
+  private async saveToCloud(notes: Note[]): Promise<boolean> {
     try {
-      localStorage.setItem(
-        `${this.storagePrefix}cloud_notes`,
-        JSON.stringify(notes)
-      )
-      return true
+      if (this.useIndexedDB) {
+        await indexedDB.init()
+        await indexedDB.put(STORE_NAMES.METADATA, {
+          key: 'cloud_notes',
+          value: notes,
+        })
+        return true
+      } else {
+        // Fallback to localStorage
+        localStorage.setItem(
+          `${this.storagePrefix}cloud_notes`,
+          JSON.stringify(notes)
+        )
+        return true
+      }
     } catch (error) {
       const err = error as Error
 
@@ -62,15 +90,16 @@ class SyncEngine {
           additionalData: {
             errorType: 'quota_exceeded',
             notesCount: notes.length,
-            message: 'LocalStorage quota exceeded. Consider clearing old data.',
+            message: 'Storage quota exceeded. Consider clearing old data.',
           },
         })
 
-        // Add breadcrumb for quota issues to help with debugging
         monitoring.addBreadcrumb(
-          'LocalStorage quota exceeded during sync',
+          'Storage quota exceeded during sync',
           'error',
-          { notesCount: notes.length }
+          {
+            notesCount: notes.length,
+          }
         )
       } else {
         monitoring.logError(err, {
@@ -87,35 +116,48 @@ class SyncEngine {
    * Get sync metadata
    */
   async getSyncMetadata(): Promise<SyncMetadata> {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        try {
-          const metadataStr = localStorage.getItem(
-            `${this.storagePrefix}metadata`
-          )
-          const metadata = metadataStr
-            ? JSON.parse(metadataStr)
-            : {
-                lastSyncTime: null,
-                syncEnabled: true,
-                pendingSyncCount: 0,
-                conflictCount: 0,
-              }
-          resolve(metadata)
-        } catch (error) {
-          monitoring.logError(error as Error, {
-            feature: 'sync_engine',
-            action: 'get_sync_metadata',
-          })
-          resolve({
+    try {
+      if (this.useIndexedDB) {
+        await indexedDB.init()
+        const metadata = await indexedDB.get<{
+          key: string
+          value: SyncMetadata
+        }>(STORE_NAMES.METADATA, 'sync_metadata')
+
+        return (
+          metadata?.value || {
             lastSyncTime: null,
             syncEnabled: true,
             pendingSyncCount: 0,
             conflictCount: 0,
-          })
-        }
-      }, 0)
-    })
+          }
+        )
+      } else {
+        // Fallback to localStorage
+        const metadataStr = localStorage.getItem(
+          `${this.storagePrefix}metadata`
+        )
+        return metadataStr
+          ? JSON.parse(metadataStr)
+          : {
+              lastSyncTime: null,
+              syncEnabled: true,
+              pendingSyncCount: 0,
+              conflictCount: 0,
+            }
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_engine',
+        action: 'get_sync_metadata',
+      })
+      return {
+        lastSyncTime: null,
+        syncEnabled: true,
+        pendingSyncCount: 0,
+        conflictCount: 0,
+      }
+    }
   }
 
   /**
@@ -124,25 +166,29 @@ class SyncEngine {
   private async updateSyncMetadata(
     metadata: Partial<SyncMetadata>
   ): Promise<void> {
-    return new Promise(resolve => {
-      setTimeout(async () => {
-        try {
-          const current = await this.getSyncMetadata()
-          const updated = { ...current, ...metadata }
-          localStorage.setItem(
-            `${this.storagePrefix}metadata`,
-            JSON.stringify(updated)
-          )
-          resolve()
-        } catch (error) {
-          monitoring.logError(error as Error, {
-            feature: 'sync_engine',
-            action: 'update_sync_metadata',
-          })
-          resolve()
-        }
-      }, 0)
-    })
+    try {
+      const current = await this.getSyncMetadata()
+      const updated = { ...current, ...metadata }
+
+      if (this.useIndexedDB) {
+        await indexedDB.init()
+        await indexedDB.put(STORE_NAMES.METADATA, {
+          key: 'sync_metadata',
+          value: updated,
+        })
+      } else {
+        // Fallback to localStorage
+        localStorage.setItem(
+          `${this.storagePrefix}metadata`,
+          JSON.stringify(updated)
+        )
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_engine',
+        action: 'update_sync_metadata',
+      })
+    }
   }
 
   /**
@@ -285,18 +331,26 @@ class SyncEngine {
     return new Promise(resolve => {
       setTimeout(async () => {
         try {
-          const remoteNotes = this.getCloudNotes()
+          const remoteNotes = await this.getCloudNotes()
           const conflicts = this.detectConflicts(localNotes, remoteNotes)
           const syncedNotes: string[] = []
           const errors: Array<{ noteId: string; error: string }> = []
 
-          // Save conflicts to localStorage when using manual strategy
+          // Save conflicts when using manual strategy
           if (strategy === 'manual' && conflicts.length > 0) {
             try {
-              localStorage.setItem(
-                `${this.storagePrefix}conflicts`,
-                JSON.stringify(conflicts)
-              )
+              if (this.useIndexedDB) {
+                await indexedDB.init()
+                await indexedDB.put(STORE_NAMES.METADATA, {
+                  key: 'sync_conflicts',
+                  value: conflicts,
+                })
+              } else {
+                localStorage.setItem(
+                  `${this.storagePrefix}conflicts`,
+                  JSON.stringify(conflicts)
+                )
+              }
             } catch (error) {
               const err = error as Error
 
@@ -377,7 +431,9 @@ class SyncEngine {
           }
 
           // Save merged notes to cloud
-          const success = this.saveToCloud(Array.from(mergedNotes.values()))
+          const success = await this.saveToCloud(
+            Array.from(mergedNotes.values())
+          )
 
           if (success) {
             await this.updateSyncMetadata({
@@ -425,20 +481,25 @@ class SyncEngine {
    * Get pending conflicts
    */
   async getPendingConflicts(): Promise<SyncConflict[]> {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        try {
-          const data = localStorage.getItem(`${this.storagePrefix}conflicts`)
-          resolve(data ? JSON.parse(data) : [])
-        } catch (error) {
-          monitoring.logError(error as Error, {
-            feature: 'sync_engine',
-            action: 'get_pending_conflicts',
-          })
-          resolve([])
-        }
-      }, 0)
-    })
+    try {
+      if (this.useIndexedDB) {
+        await indexedDB.init()
+        const metadata = await indexedDB.get<{
+          key: string
+          value: SyncConflict[]
+        }>(STORE_NAMES.METADATA, 'sync_conflicts')
+        return metadata?.value || []
+      } else {
+        const data = localStorage.getItem(`${this.storagePrefix}conflicts`)
+        return data ? JSON.parse(data) : []
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_engine',
+        action: 'get_pending_conflicts',
+      })
+      return []
+    }
   }
 
   /**
@@ -457,10 +518,18 @@ class SyncEngine {
           )
 
           try {
-            localStorage.setItem(
-              `${this.storagePrefix}conflicts`,
-              JSON.stringify(updatedConflicts)
-            )
+            if (this.useIndexedDB) {
+              await indexedDB.init()
+              await indexedDB.put(STORE_NAMES.METADATA, {
+                key: 'sync_conflicts',
+                value: updatedConflicts,
+              })
+            } else {
+              localStorage.setItem(
+                `${this.storagePrefix}conflicts`,
+                JSON.stringify(updatedConflicts)
+              )
+            }
           } catch (storageError) {
             const err = storageError as Error
 
@@ -482,7 +551,7 @@ class SyncEngine {
           }
 
           // Save the selected note to cloud storage
-          const cloudNotes = this.getCloudNotes()
+          const cloudNotes = await this.getCloudNotes()
           const noteIndex = cloudNotes.findIndex(n => n.id === selectedNote.id)
 
           const resolvedNote = {
@@ -499,7 +568,7 @@ class SyncEngine {
             cloudNotes.push(resolvedNote)
           }
 
-          this.saveToCloud(cloudNotes)
+          await this.saveToCloud(cloudNotes)
 
           // Update conflict count in metadata
           await this.updateSyncMetadata({

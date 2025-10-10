@@ -107,7 +107,7 @@ describe('DataService', () => {
       // Try to add duplicate
       const result = dataService.addToWaitlist(entry)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Email already registered')
+      expect(result.error).toBe("You're already on the waitlist!")
     })
 
     it('should retrieve waitlist entries', () => {
@@ -131,8 +131,9 @@ describe('DataService', () => {
 
   describe('Storage Operations', () => {
     it('should handle localStorage errors gracefully', async () => {
-      // Mock localStorage to throw an error
-      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      // Mock localStorage.setItem to throw an error
+      const originalSetItem = localStorage.setItem
+      localStorage.setItem = vi.fn(() => {
         throw new Error('Storage quota exceeded')
       })
 
@@ -147,6 +148,9 @@ describe('DataService', () => {
 
       const success = await dataService.saveNote(testNote)
       expect(success).toBe(false)
+
+      // Restore original function
+      localStorage.setItem = originalSetItem
     })
 
     it('should clear all data', async () => {
