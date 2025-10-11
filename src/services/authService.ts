@@ -16,8 +16,23 @@ import { monitoring } from '../utils/monitoring'
 /**
  * Authentication Service - Abstraction layer for authentication
  *
+ * ⚠️ SECURITY WARNING - MVP SIMULATION ONLY ⚠️
+ *
  * CURRENT IMPLEMENTATION: localStorage simulation (MVP phase)
  * FUTURE MIGRATION: Will be replaced with API calls in Q4 2025
+ *
+ * ⚠️ KNOWN SECURITY LIMITATIONS (NOT FOR PRODUCTION):
+ * 1. Password hashes stored in localStorage are vulnerable to XSS attacks
+ * 2. SHA-256 with hardcoded salt is vulnerable to rainbow table attacks
+ * 3. No secure HTTP-only cookie storage for tokens
+ * 4. Client-side password hashing provides no real security
+ *
+ * PRODUCTION REQUIREMENTS:
+ * - Server-side authentication with bcrypt/Argon2 (unique salts per user)
+ * - HTTP-only, Secure, SameSite=Strict cookies for token storage
+ * - Rate limiting at server level
+ * - CSRF protection
+ * - Encrypted password transmission (HTTPS)
  *
  * This abstraction layer ensures easy migration from localStorage to API
  * without changing component code.
@@ -128,10 +143,22 @@ class AuthService {
    * Password hashing simulation (bcrypt will be used in backend)
    */
   private async hashPassword(password: string): Promise<string> {
-    // Simulate bcrypt hashing - in production, this happens server-side
-    // Using a simple hash for MVP simulation
+    // ⚠️ MVP SIMULATION ONLY - NOT SECURE FOR PRODUCTION ⚠️
+    // In production, password hashing MUST happen server-side using:
+    // - bcrypt with cost factor >= 12, OR
+    // - Argon2id with appropriate memory/iteration parameters
+    // - Unique salt per password (never hardcoded)
+    // - Secure random salt generation
+    //
+    // This client-side hashing provides NO real security and is only
+    // for MVP demonstration. Attackers with access to localStorage can:
+    // 1. Steal password hashes and perform offline attacks
+    // 2. Use rainbow tables due to hardcoded salt
+    // 3. Access user data through XSS vulnerabilities
+    //
+    // DO NOT USE IN PRODUCTION WITHOUT PROPER BACKEND IMPLEMENTATION
     const encoder = new TextEncoder()
-    const data = encoder.encode(password + 'paperlyte_salt')
+    const data = encoder.encode(password + 'paperlyte_salt_NOT_SECURE')
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
@@ -315,7 +342,12 @@ class AuthService {
           users.push(newUser)
           this.saveUsers(users)
 
-          // Store password hash separately
+          // ⚠️ SECURITY WARNING: Storing password hash in localStorage ⚠️
+          // This is INSECURE and only for MVP simulation. In production:
+          // - Password hashes MUST be stored server-side in a secure database
+          // - Never store passwords/hashes in client-accessible storage
+          // - Use HTTP-only cookies for authentication tokens
+          // - Implement proper CSRF protection
           const passwordKey = `${this.storagePrefix}password_${newUser.id}`
           this.saveToStorage(passwordKey, passwordHash)
 
