@@ -4,7 +4,9 @@
       "url": ["http://localhost:4173"],
       "numberOfRuns": 3,
       "settings": {
-        "chromeFlags": "--no-sandbox --headless"
+        "chromeFlags": "--no-sandbox --headless --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions",
+        "maxWaitForLoad": 90000,
+        "skipAudits": null
       }
     },
     "assert": {
