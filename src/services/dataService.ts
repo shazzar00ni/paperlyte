@@ -1,77 +1,25 @@
 import type { Note, WaitlistEntry } from '../types'
 import { monitoring } from '../utils/monitoring'
-import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
-import {
-  migrateToIndexedDB,
-  isIndexedDBAvailable,
-} from '../utils/dataMigration'
 
 /**
  * Data Service - Abstraction layer for data persistence
  *
- * CURRENT IMPLEMENTATION: IndexedDB (offline-first)
+ * CURRENT IMPLEMENTATION: localStorage (MVP phase)
  * FUTURE MIGRATION: Will be replaced with API calls in Q4 2025
  *
- * This abstraction layer ensures easy migration from IndexedDB to API
+ * This abstraction layer ensures easy migration from localStorage to API
  * without changing component code.
- *
- * Features:
- * - IndexedDB for large data storage
- * - Automatic localStorage migration
- * - Offline-first behavior
- * - Fallback to localStorage if IndexedDB unavailable
  */
 
 class DataService {
   private storagePrefix = 'paperlyte_'
-  private useIndexedDB: boolean = false
-  private migrationCompleted: boolean = false
 
   /**
-   * Initialize the data service and run migration if needed
-   */
-  async initialize(): Promise<void> {
-    try {
-      // Check if IndexedDB is available
-      this.useIndexedDB = isIndexedDBAvailable()
-
-      if (this.useIndexedDB) {
-        // Initialize IndexedDB
-        await indexedDB.init()
-
-        // Run migration from localStorage if not already done
-        if (!this.migrationCompleted) {
-          const result = await migrateToIndexedDB()
-          this.migrationCompleted = result.success
-
-          if (result.notesCount > 0 || result.waitlistCount > 0) {
-            monitoring.addBreadcrumb('Data migrated to IndexedDB', 'info', {
-              notesCount: result.notesCount,
-              waitlistCount: result.waitlistCount,
-              errors: result.errors,
-            })
-          }
-        }
-      } else {
-        monitoring.addBreadcrumb(
-          'IndexedDB not available, using localStorage fallback',
-          'warning'
-        )
-      }
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'initialize',
-      })
-      // Fall back to localStorage
-      this.useIndexedDB = false
-    }
-  }
-
-  /**
-   * Generic storage operations (localStorage fallback)
+   * Generic storage operations
    */
   private getFromStorage<T>(key: string): T[] {
+    // This private method can remain synchronous as it's an internal implementation detail.
+    // The public methods calling it will provide the async abstraction.
     try {
       const data = localStorage.getItem(`${this.storagePrefix}${key}`)
       return data ? JSON.parse(data) : []
@@ -81,11 +29,13 @@ class DataService {
         action: 'get_from_storage',
         additionalData: { key },
       })
-      return []
+      // Re-throw the error so the public-facing method's catch block can handle it.
+      throw error
     }
   }
 
   private saveToStorage<T>(key: string, data: T[]): boolean {
+    // This private method can also remain synchronous.
     try {
       localStorage.setItem(`${this.storagePrefix}${key}`, JSON.stringify(data))
       return true
@@ -95,61 +45,65 @@ class DataService {
         action: 'save_to_storage',
         additionalData: { key, dataLength: data.length },
       })
-      return false
+      throw error
     }
   }
 
   /**
    * Notes operations
-   *
-   * TODO: Replace with API calls in Q4 2025:
-   * - GET /api/notes
-   * - POST /api/notes
-   * - PUT /api/notes/:id
-   * - DELETE /api/notes/:id
    */
   async getNotes(): Promise<Note[]> {
-    return Promise.resolve(this.getFromStorage<Note>('notes'))
+    try {
+      const notes = this.getFromStorage<Note>('notes')
+      return Promise.resolve(notes)
+    } catch (error) {
+      // The error is already logged by getFromStorage, just return a safe value.
+      return Promise.resolve([])
+    }
   }
 
   async saveNote(note: Note): Promise<boolean> {
-    const notes = this.getFromStorage<Note>('notes')
-    const existingIndex = notes.findIndex(n => n.id === note.id)
+    try {
+      const notes = this.getFromStorage<Note>('notes')
+      const existingIndex = notes.findIndex(n => n.id === note.id)
 
-    if (existingIndex >= 0) {
-      notes[existingIndex] = note
-    } else {
-      notes.unshift(note) // Add new notes to the beginning
+      if (existingIndex >= 0) {
+        notes[existingIndex] = note
+      } else {
+        notes.unshift(note) // Add new notes to the beginning
+      }
+      const success = this.saveToStorage('notes', notes)
+      return Promise.resolve(success)
+    } catch (error) {
+      return Promise.resolve(false)
     }
-
-    return Promise.resolve(this.saveToStorage('notes', notes))
   }
 
   async deleteNote(noteId: string): Promise<boolean> {
-    const notes = this.getFromStorage<Note>('notes')
-    const filteredNotes = notes.filter(note => note.id !== noteId)
-    return Promise.resolve(this.saveToStorage('notes', filteredNotes))
+    try {
+      const notes = this.getFromStorage<Note>('notes')
+      const filteredNotes = notes.filter(note => note.id !== noteId)
+      const success = this.saveToStorage('notes', filteredNotes)
+      return Promise.resolve(success)
+    } catch (error) {
+      return Promise.resolve(false)
+    }
   }
 
   /**
    * Waitlist operations
-   *
-   * TODO: Replace with API calls in Q4 2025:
-   * - POST /api/waitlist
-   * - GET /api/waitlist (admin only)
    */
-  addToWaitlist(
+  async addToWaitlist(
     entry: Omit<WaitlistEntry, 'id' | 'createdAt'>
-  ): { success: boolean; error?: string } {
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const existingEntries = this.getFromStorage<WaitlistEntry>('waitlist')
 
-      // Check for duplicate email
       if (existingEntries.some(e => e.email === entry.email)) {
-        return {
+        return Promise.resolve({
           success: false,
           error: "You're already on the waitlist!",
-        }
+        })
       }
 
       const newEntry: WaitlistEntry = {
@@ -159,70 +113,79 @@ class DataService {
       }
 
       existingEntries.push(newEntry)
-      const success = this.saveToStorage('waitlist', existingEntries)
-
-      if (success) {
-        return { success: true }
-      } else {
-        return { success: false, error: 'Failed to save to waitlist' }
-      }
+      this.saveToStorage('waitlist', existingEntries)
+      return Promise.resolve({ success: true })
     } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'data_service',
-        action: 'add_to_waitlist',
-      })
-      return { success: false, error: 'An unexpected error occurred' }
+      // The error is already logged by the storage methods.
+      return Promise.resolve({ success: false, error: 'An unexpected error occurred' })
     }
   }
 
-  getWaitlistEntries(): WaitlistEntry[] {
-    return this.getFromStorage<WaitlistEntry>('waitlist')
+  async getWaitlistEntries(): Promise<WaitlistEntry[]> {
+    try {
+      const entries = this.getFromStorage<WaitlistEntry>('waitlist')
+      return Promise.resolve(entries)
+    } catch (error) {
+      return Promise.resolve([])
+    }
   }
 
   /**
    * Data export for admin dashboard
    */
   async exportData(): Promise<{ notes: Note[]; waitlist: WaitlistEntry[] }> {
-    const notes = await this.getNotes()
-    const waitlist = this.getWaitlistEntries()
-    return { notes, waitlist }
+    try {
+      const notes = await this.getNotes()
+      const waitlist = await this.getWaitlistEntries()
+      return Promise.resolve({ notes, waitlist })
+    } catch (error) {
+      return Promise.resolve({ notes: [], waitlist: [] })
+    }
   }
 
   /**
    * Clear all data (for testing/development)
    */
-  clearAllData(): void {
-    localStorage.removeItem(`${this.storagePrefix}notes`)
-    localStorage.removeItem(`${this.storagePrefix}waitlist`)
+  async clearAllData(): Promise<boolean> {
+    try {
+      localStorage.removeItem(`${this.storagePrefix}notes`)
+      localStorage.removeItem(`${this.storagePrefix}waitlist`)
+      return Promise.resolve(true)
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'clear_all_data',
+      })
+      return Promise.resolve(false)
+    }
   }
 
   /**
    * Check data storage health
    */
-  getStorageInfo(): {
+  async getStorageInfo(): Promise<{
     notesCount: number
     waitlistCount: number
     storageUsed: number
     storageQuota: number
-  } {
-    const notes = this.getFromStorage<Note>('notes')
-    const waitlist = this.getFromStorage<WaitlistEntry>('waitlist')
+  } | null> {
+    try {
+      const notes = this.getFromStorage<Note>('notes')
+      const waitlist = this.getFromStorage<WaitlistEntry>('waitlist')
 
-    // Estimate storage usage
-    const notesData =
-      localStorage.getItem(`${this.storagePrefix}notes`) || ''
-    const waitlistData =
-      localStorage.getItem(`${this.storagePrefix}waitlist`) || ''
-    const storageUsed = new Blob([notesData + waitlistData]).size
+      const notesData = localStorage.getItem(`${this.storagePrefix}notes`) || ''
+      const waitlistData = localStorage.getItem(`${this.storagePrefix}waitlist`) || ''
+      const storageUsed = new Blob([notesData + waitlistData]).size
+      const storageQuota = 5 * 1024 * 1024 // 5MB assumption
 
-    // Typical localStorage quota is 5-10MB, but we can't reliably detect it
-    const storageQuota = 5 * 1024 * 1024 // 5MB assumption
-
-    return {
-      notesCount: notes.length,
-      waitlistCount: waitlist.length,
-      storageUsed,
-      storageQuota,
+      return Promise.resolve({
+        notesCount: notes.length,
+        waitlistCount: waitlist.length,
+        storageUsed,
+        storageQuota,
+      })
+    } catch (error) {
+      return Promise.resolve(null)
     }
   }
 }

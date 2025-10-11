@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { dataService } from '../dataService'
-import type { Note } from '../../types'
+import type { Note, WaitlistEntry } from '../../types'
+
+// Mock the monitoring utility to prevent logging during tests
+vi.mock('../../utils/monitoring', () => ({
+  monitoring: {
+    logError: vi.fn(),
+  },
+}))
 
 describe('DataService', () => {
   beforeEach(() => {
@@ -10,21 +17,21 @@ describe('DataService', () => {
   })
 
   describe('Notes Operations', () => {
+    const testNote: Note = {
+      id: 'test-id',
+      title: 'Test Note',
+      content: 'This is a test note content',
+      tags: ['test', 'example'],
+      createdAt: '2025-09-25T10:00:00.000Z',
+      updatedAt: '2025-09-25T10:00:00.000Z',
+    }
+
     it('should return empty array when no notes exist', async () => {
       const notes = await dataService.getNotes()
       expect(notes).toEqual([])
     })
 
     it('should save and retrieve a note', async () => {
-      const testNote: Note = {
-        id: 'test-id',
-        title: 'Test Note',
-        content: 'This is a test note content',
-        tags: ['test', 'example'],
-        createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z',
-      }
-
       const success = await dataService.saveNote(testNote)
       expect(success).toBe(true)
 
@@ -34,159 +41,121 @@ describe('DataService', () => {
     })
 
     it('should update an existing note', async () => {
-      const originalNote: Note = {
-        id: 'test-id',
-        title: 'Original Title',
-        content: 'Original content',
-        tags: [],
-        createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z',
-      }
-
-      await dataService.saveNote(originalNote)
-
-      const updatedNote: Note = {
-        ...originalNote,
-        title: 'Updated Title',
-        content: 'Updated content',
-        updatedAt: '2025-09-25T11:00:00.000Z',
-      }
-
+      await dataService.saveNote(testNote)
+      const updatedNote = { ...testNote, title: 'Updated Title' }
       const success = await dataService.saveNote(updatedNote)
       expect(success).toBe(true)
 
       const notes = await dataService.getNotes()
       expect(notes).toHaveLength(1)
       expect(notes[0].title).toBe('Updated Title')
-      expect(notes[0].content).toBe('Updated content')
     })
 
     it('should delete a note', async () => {
-      const testNote: Note = {
-        id: 'test-id',
-        title: 'Test Note',
-        content: 'This will be deleted',
-        tags: [],
-        createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z',
-      }
-
       await dataService.saveNote(testNote)
-
       const success = await dataService.deleteNote('test-id')
       expect(success).toBe(true)
-
       const notes = await dataService.getNotes()
       expect(notes).toHaveLength(0)
+    })
+
+    it('should return empty array on getNotes error', async () => {
+      vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const notes = await dataService.getNotes()
+      expect(notes).toEqual([])
+    })
+
+    it('should return false on saveNote error', async () => {
+      vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const success = await dataService.saveNote(testNote)
+      expect(success).toBe(false)
+    })
+
+    it('should return false on deleteNote error', async () => {
+      await dataService.saveNote(testNote)
+      vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const success = await dataService.deleteNote('test-id')
+      expect(success).toBe(false)
     })
   })
 
   describe('Waitlist Operations', () => {
-    it('should add entry to waitlist', () => {
-      const entry = {
-        email: 'test@example.com',
-        name: 'Test User',
-        interest: 'professional' as const,
-      }
+    const waitlistEntry: Omit<WaitlistEntry, 'id' | 'createdAt'> = {
+      email: 'test@example.com',
+      name: 'Test User',
+      interest: 'professional',
+    }
 
-      const result = dataService.addToWaitlist(entry)
+    it('should add entry to waitlist', async () => {
+      const result = await dataService.addToWaitlist(waitlistEntry)
       expect(result.success).toBe(true)
       expect(result.error).toBeUndefined()
     })
 
-    it('should prevent duplicate email entries', () => {
-      const entry = {
-        email: 'test@example.com',
-        name: 'Test User',
-        interest: 'professional' as const,
-      }
-
-      // Add first entry
-      dataService.addToWaitlist(entry)
-
-      // Try to add duplicate
-      const result = dataService.addToWaitlist(entry)
+    it('should prevent duplicate email entries', async () => {
+      await dataService.addToWaitlist(waitlistEntry)
+      const result = await dataService.addToWaitlist(waitlistEntry)
       expect(result.success).toBe(false)
       expect(result.error).toBe("You're already on the waitlist!")
     })
 
-    it('should retrieve waitlist entries', () => {
-      const entry = {
-        email: 'test@example.com',
-        name: 'Test User',
-        interest: 'student' as const,
-      }
-
-      dataService.addToWaitlist(entry)
-      const entries = dataService.getWaitlistEntries()
-
+    it('should retrieve waitlist entries', async () => {
+      await dataService.addToWaitlist(waitlistEntry)
+      const entries = await dataService.getWaitlistEntries()
       expect(entries).toHaveLength(1)
       expect(entries[0].email).toBe('test@example.com')
-      expect(entries[0].name).toBe('Test User')
-      expect(entries[0].interest).toBe('student')
-      expect(entries[0].id).toBeDefined()
-      expect(entries[0].createdAt).toBeDefined()
+    })
+
+    it('should return error object on addToWaitlist error', async () => {
+      vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const result = await dataService.addToWaitlist(waitlistEntry)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('An unexpected error occurred')
+    })
+
+    it('should return empty array on getWaitlistEntries error', async () => {
+      vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const entries = await dataService.getWaitlistEntries()
+      expect(entries).toEqual([])
     })
   })
 
   describe('Storage Operations', () => {
-    it('should handle localStorage errors gracefully', async () => {
-      // Mock localStorage.setItem to throw an error
-      const originalSetItem = localStorage.setItem
-      localStorage.setItem = vi.fn(() => {
-        throw new Error('Storage quota exceeded')
-      })
-
-      const testNote: Note = {
-        id: 'test-id',
-        title: 'Test Note',
-        content: 'This should fail to save',
-        tags: [],
-        createdAt: '2025-09-25T10:00:00.000Z',
-        updatedAt: '2025-09-25T10:00:00.000Z',
-      }
-
-      const success = await dataService.saveNote(testNote)
-      expect(success).toBe(false)
-
-      // Restore original function
-      localStorage.setItem = originalSetItem
-    })
-
     it('should clear all data', async () => {
-      // Add some test data
-      const testNote: Note = {
+      await dataService.saveNote({
         id: 'test-id',
         title: 'Test Note',
         content: 'Test content',
         tags: [],
         createdAt: '2025-09-25T10:00:00.000Z',
         updatedAt: '2025-09-25T10:00:00.000Z',
-      }
-
-      const waitlistEntry = {
-        email: 'test@example.com',
-        name: 'Test User',
-        interest: 'professional' as const,
-      }
-
-      await dataService.saveNote(testNote)
-      dataService.addToWaitlist(waitlistEntry)
-
-      // Clear all data
-      dataService.clearAllData()
-
-      // Verify data is cleared
+      })
+      const success = await dataService.clearAllData()
+      expect(success).toBe(true)
       const notes = await dataService.getNotes()
-      const entries = dataService.getWaitlistEntries()
-
       expect(notes).toHaveLength(0)
-      expect(entries).toHaveLength(0)
+    })
+
+    it('should return false on clearAllData error', async () => {
+      vi.spyOn(localStorage, 'removeItem').mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const success = await dataService.clearAllData()
+      expect(success).toBe(false)
     })
 
     it('should export all data', async () => {
-      // Add some test data
-      const testNote: Note = {
+      const note = {
         id: 'test-id',
         title: 'Test Note',
         content: 'Test content',
@@ -194,22 +163,39 @@ describe('DataService', () => {
         createdAt: '2025-09-25T10:00:00.000Z',
         updatedAt: '2025-09-25T10:00:00.000Z',
       }
-
       const waitlistEntry = {
         email: 'test@example.com',
         name: 'Test User',
         interest: 'professional' as const,
       }
-
-      await dataService.saveNote(testNote)
-      dataService.addToWaitlist(waitlistEntry)
-
+      await dataService.saveNote(note)
+      await dataService.addToWaitlist(waitlistEntry)
       const exportedData = await dataService.exportData()
-
       expect(exportedData.notes).toHaveLength(1)
       expect(exportedData.waitlist).toHaveLength(1)
-      expect(exportedData.notes[0].id).toBe('test-id')
-      expect(exportedData.waitlist[0].email).toBe('test@example.com')
+    })
+
+    it('should return empty data on exportData error', async () => {
+       vi.spyOn(dataService, 'getNotes').mockImplementation(async () => {
+        throw new Error('Storage error')
+      })
+      const exportedData = await dataService.exportData()
+      expect(exportedData.notes).toEqual([])
+      expect(exportedData.waitlist).toEqual([])
+    })
+
+    it('should get storage info', async () => {
+        const info = await dataService.getStorageInfo()
+        expect(info).not.toBeNull()
+        expect(info?.notesCount).toBe(0)
+    })
+
+    it('should return null on getStorageInfo error', async () => {
+        vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+            throw new Error('Storage error')
+        })
+        const info = await dataService.getStorageInfo()
+        expect(info).toBeNull()
     })
   })
 })

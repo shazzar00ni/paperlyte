@@ -17,7 +17,6 @@ module.exports = {
     '**/*.spec.ts',
     '**/*.spec.tsx',
     'src/test/**',
-    'docs/**/*.tsx',
   ],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],

@@ -2,6 +2,10 @@
 
 Master Paperlyte with these keyboard shortcuts for lightning-fast note-taking.
 
+> **📝 Implementation Status:**
+> ✅ Currently Implemented: `Ctrl/Cmd+N` (New Note), `Ctrl/Cmd+S` (Save), `Ctrl/Cmd+F` (Search Focus), `Ctrl/Cmd+B/I/U` (Text Formatting)
+> 🚧 Coming Soon: All other shortcuts listed below
+
 ---
 
 ## 🚀 Essential Shortcuts

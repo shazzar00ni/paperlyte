@@ -4,67 +4,34 @@
 
 Paperlyte uses a phased approach to data persistence, designed to enable rapid MVP development while ensuring smooth migration to production-grade infrastructure.
 
-## Current Implementation (Q3 2025 - Enhanced)
+## Current Implementation (MVP Phase - Q3 2025)
 
 ### Storage Method
 
-- **Primary Technology**: Browser IndexedDB
-- **Fallback**: localStorage (for browsers without IndexedDB support)
-- **Rationale**: Enables robust local storage with support for large notes and offline-first behavior
+- **Technology**: Browser localStorage
+- **Rationale**: Enables rapid prototyping and user testing without backend infrastructure
 - **Location**: Client-side only (browser storage)
-
-### Key Features
-
-- **Large storage capacity**: IndexedDB supports GBs of data vs localStorage's 5-10MB
-- **Offline-first**: Full functionality without internet connection
-- **Automatic migration**: Seamlessly migrates existing localStorage data to IndexedDB
-- **Graceful fallback**: Falls back to localStorage if IndexedDB is unavailable
-- **Better performance**: Asynchronous operations don't block UI
 
 ### Limitations
 
 - **Device-specific**: Data is tied to the specific browser/device
-- **No cross-device sync**: Notes don't sync between devices (yet)
+- **No cross-device sync**: Notes don't sync between devices
+- **Storage limits**: ~5-10MB per domain (varies by browser)
 - **Data volatility**: Data can be lost if browser storage is cleared
-- **No backup**: No automatic backup or recovery mechanisms (yet)
+- **No backup**: No automatic backup or recovery mechanisms
 
 ### Data Abstraction Layer
 
 We've implemented a `DataService` abstraction layer (`src/services/dataService.ts`) that:
 
 ```typescript
-// Current implementation uses IndexedDB with localStorage fallback
+// Current implementation uses localStorage
 const notes = await dataService.getNotes()
 await dataService.saveNote(note)
 await dataService.addToWaitlist(entry)
-
-// Automatic migration on first use
-await dataService.initialize() // Called automatically by methods
 ```
 
 This abstraction ensures that when we migrate to API-based storage, component code won't need to change.
-
-### Storage Architecture
-
-```
-┌─────────────────────────────────────────┐
-│         Application Layer               │
-│    (Components, Pages, Hooks)           │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│         DataService Layer               │
-│  (Abstraction + Migration Logic)        │
-└──────┬──────────────────────────────────┘
-       │
-       ├─────────────┬────────────────┐
-       ▼             ▼                ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│  IndexedDB   │ │ localStorage │ │   SyncEngine │
-│  (Primary)   │ │  (Fallback)  │ │  (Metadata)  │
-└──────────────┘ └──────────────┘ └──────────────┘
-```
 
 ## Planned Migration (Q4 2025)
 
@@ -107,60 +74,13 @@ GET    /api/waitlist        // Admin: list entries
 
 ## Technical Implementation
 
-### IndexedDB Implementation
-
-The application uses a custom IndexedDB wrapper (`src/utils/indexedDB.ts`) with:
-
-**Object Stores:**
-
-- `notes`: Stores note documents with indexes on `updatedAt`, `createdAt`, and `tags`
-- `waitlist`: Stores waitlist entries with unique index on `email`
-- `metadata`: Stores sync metadata and conflict information
-
-**Key Features:**
-
-```typescript
-// Initialize database (automatic on first use)
-await indexedDB.init()
-
-// CRUD operations
-await indexedDB.put(STORE_NAMES.NOTES, note)
-const notes = await indexedDB.getAll<Note>(STORE_NAMES.NOTES)
-const note = await indexedDB.get<Note>(STORE_NAMES.NOTES, noteId)
-await indexedDB.delete(STORE_NAMES.NOTES, noteId)
-await indexedDB.clear(STORE_NAMES.NOTES)
-
-// Storage estimation
-const estimate = await indexedDB.getStorageEstimate()
-// Returns: { usage: number, quota: number, usagePercentage: number }
-```
-
-### Data Migration
-
-Automatic migration from localStorage to IndexedDB:
-
-```typescript
-// Migration runs automatically on first DataService use
-// Status tracked in localStorage to prevent re-migration
-const result = await migrateToIndexedDB()
-// Returns: { success: boolean, notesCount: number, waitlistCount: number, errors: number }
-```
-
-**Migration Process:**
-
-1. Check if migration already completed (via localStorage flag)
-2. Initialize IndexedDB with proper schema
-3. Read all data from localStorage (notes, waitlist, sync metadata)
-4. Write data to IndexedDB object stores
-5. Mark migration as complete
-6. Preserve localStorage as backup (not automatically deleted)
-
 ### Data Service Architecture
 
 ```typescript
 class DataService {
-  // Automatic initialization
-  async initialize(): Promise<void>
+  // Generic storage operations
+  private getFromStorage<T>(key: string): T[]
+  private saveToStorage<T>(key: string, data: T[]): boolean
 
   // Notes operations (will become API calls)
   async getNotes(): Promise<Note[]>
@@ -174,7 +94,6 @@ class DataService {
   // Utility operations
   async exportData(): Promise<{ notes: Note[]; waitlist: WaitlistEntry[] }>
   async getStorageInfo(): Promise<StorageInfo>
-  async clearAllData(): Promise<boolean>
 }
 ```
 
@@ -194,15 +113,12 @@ class DataService {
 
 ## Migration Timeline
 
-### Q3 2025 (Current - Enhanced MVP)
+### Q3 2025 (Current - MVP)
 
-- ✅ IndexedDB implementation with localStorage fallback
-- ✅ Automatic data migration from localStorage
+- ✅ localStorage implementation
 - ✅ Data abstraction layer
 - ✅ User warnings about limitations
 - ✅ Export functionality
-- ✅ Support for large notes (GBs of storage)
-- ✅ Offline-first architecture
 
 ### Q4 2025 (API Migration)
 
