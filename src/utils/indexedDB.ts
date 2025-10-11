@@ -11,10 +11,12 @@ import { monitoring } from './monitoring'
  */
 
 const DB_NAME = 'paperlyte_db'
-const DB_VERSION = 1
+const DB_VERSION = 2 // Incremented for feedback and interviews stores
 const NOTES_STORE = 'notes'
 const WAITLIST_STORE = 'waitlist'
 const METADATA_STORE = 'metadata'
+const FEEDBACK_STORE = 'feedback'
+const INTERVIEWS_STORE = 'interviews'
 
 export interface IDBConfig {
   dbName?: string
@@ -95,6 +97,26 @@ class IndexedDBStorage {
 
         if (!db.objectStoreNames.contains(METADATA_STORE)) {
           db.createObjectStore(METADATA_STORE, { keyPath: 'key' })
+        }
+
+        if (!db.objectStoreNames.contains(FEEDBACK_STORE)) {
+          const feedbackStore = db.createObjectStore(FEEDBACK_STORE, {
+            keyPath: 'id',
+          })
+          feedbackStore.createIndex('createdAt', 'createdAt', { unique: false })
+          feedbackStore.createIndex('type', 'type', { unique: false })
+          feedbackStore.createIndex('status', 'status', { unique: false })
+        }
+
+        if (!db.objectStoreNames.contains(INTERVIEWS_STORE)) {
+          const interviewsStore = db.createObjectStore(INTERVIEWS_STORE, {
+            keyPath: 'id',
+          })
+          interviewsStore.createIndex('email', 'email', { unique: false })
+          interviewsStore.createIndex('createdAt', 'createdAt', {
+            unique: false,
+          })
+          interviewsStore.createIndex('status', 'status', { unique: false })
         }
 
         monitoring.addBreadcrumb('IndexedDB schema upgraded', 'info', {
@@ -423,4 +445,6 @@ export const STORE_NAMES = {
   NOTES: NOTES_STORE,
   WAITLIST: WAITLIST_STORE,
   METADATA: METADATA_STORE,
+  FEEDBACK: FEEDBACK_STORE,
+  INTERVIEWS: INTERVIEWS_STORE,
 } as const

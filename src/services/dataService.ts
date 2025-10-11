@@ -1,4 +1,9 @@
-import type { Note, WaitlistEntry } from '../types'
+import type {
+  Note,
+  WaitlistEntry,
+  FeedbackEntry,
+  InterviewRequest,
+} from '../types'
 import { monitoring } from '../utils/monitoring'
 import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
 import {
@@ -313,15 +318,202 @@ class DataService {
   }
 
   /**
+   * Feedback operations
+   *
+   * TODO: Replace with API calls in Q4 2025:
+   * - POST /api/feedback
+   * - GET /api/feedback (admin only)
+   */
+  async addFeedback(
+    entry: Omit<FeedbackEntry, 'id' | 'createdAt' | 'status'>
+  ): Promise<{ success: boolean; error?: string }> {
+    await this.initialize()
+
+    try {
+      if (this.useIndexedDB) {
+        const newEntry: FeedbackEntry = {
+          id: crypto.randomUUID(),
+          ...entry,
+          status: 'new',
+          createdAt: new Date().toISOString(),
+        }
+
+        await indexedDB.put(STORE_NAMES.FEEDBACK, newEntry)
+        monitoring.addBreadcrumb('Feedback entry added to IndexedDB', 'info')
+        return { success: true }
+      } else {
+        // Fallback to localStorage
+        const existingEntries = this.getFromStorage<FeedbackEntry>('feedback')
+
+        const newEntry: FeedbackEntry = {
+          id: crypto.randomUUID(),
+          ...entry,
+          status: 'new',
+          createdAt: new Date().toISOString(),
+        }
+
+        existingEntries.push(newEntry)
+        const success = this.saveToStorage('feedback', existingEntries)
+
+        if (success) {
+          return { success: true }
+        } else {
+          return { success: false, error: 'Failed to save feedback' }
+        }
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'add_feedback',
+      })
+      return { success: false, error: 'An unexpected error occurred' }
+    }
+  }
+
+  async getFeedbackEntries(): Promise<FeedbackEntry[]> {
+    await this.initialize()
+
+    try {
+      if (this.useIndexedDB) {
+        const entries = await indexedDB.getAll<FeedbackEntry>(
+          STORE_NAMES.FEEDBACK
+        )
+        // Sort by createdAt descending (newest first)
+        return entries.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      } else {
+        // Fallback to localStorage
+        return this.getFromStorage<FeedbackEntry>('feedback')
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'get_feedback_entries',
+      })
+      // Fallback to localStorage on error
+      return this.getFromStorage<FeedbackEntry>('feedback')
+    }
+  }
+
+  /**
+   * Interview scheduling operations
+   *
+   * TODO: Replace with API calls in Q4 2025:
+   * - POST /api/interviews
+   * - GET /api/interviews (admin only)
+   */
+  async scheduleInterview(
+    request: Omit<InterviewRequest, 'id' | 'createdAt' | 'status'>
+  ): Promise<{ success: boolean; error?: string }> {
+    await this.initialize()
+
+    try {
+      // Check for duplicate email
+      if (this.useIndexedDB) {
+        const existingRequests = await indexedDB.getAll<InterviewRequest>(
+          STORE_NAMES.INTERVIEWS
+        )
+
+        if (existingRequests.some(r => r.email === request.email)) {
+          return {
+            success: false,
+            error: 'You already have a pending interview request!',
+          }
+        }
+
+        const newRequest: InterviewRequest = {
+          id: crypto.randomUUID(),
+          ...request,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        }
+
+        await indexedDB.put(STORE_NAMES.INTERVIEWS, newRequest)
+        monitoring.addBreadcrumb('Interview request added to IndexedDB', 'info')
+        return { success: true }
+      } else {
+        // Fallback to localStorage
+        const existingRequests =
+          this.getFromStorage<InterviewRequest>('interviews')
+
+        if (existingRequests.some(r => r.email === request.email)) {
+          return {
+            success: false,
+            error: 'You already have a pending interview request!',
+          }
+        }
+
+        const newRequest: InterviewRequest = {
+          id: crypto.randomUUID(),
+          ...request,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        }
+
+        existingRequests.push(newRequest)
+        const success = this.saveToStorage('interviews', existingRequests)
+
+        if (success) {
+          return { success: true }
+        } else {
+          return { success: false, error: 'Failed to schedule interview' }
+        }
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'schedule_interview',
+      })
+      return { success: false, error: 'An unexpected error occurred' }
+    }
+  }
+
+  async getInterviewRequests(): Promise<InterviewRequest[]> {
+    await this.initialize()
+
+    try {
+      if (this.useIndexedDB) {
+        const requests = await indexedDB.getAll<InterviewRequest>(
+          STORE_NAMES.INTERVIEWS
+        )
+        // Sort by createdAt descending (newest first)
+        return requests.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      } else {
+        // Fallback to localStorage
+        return this.getFromStorage<InterviewRequest>('interviews')
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'get_interview_requests',
+      })
+      // Fallback to localStorage on error
+      return this.getFromStorage<InterviewRequest>('interviews')
+    }
+  }
+
+  /**
    * Data export for admin dashboard
    */
-  async exportData(): Promise<{ notes: Note[]; waitlist: WaitlistEntry[] }> {
-    const [notes, waitlist] = await Promise.all([
+  async exportData(): Promise<{
+    notes: Note[]
+    waitlist: WaitlistEntry[]
+    feedback: FeedbackEntry[]
+    interviews: InterviewRequest[]
+  }> {
+    const [notes, waitlist, feedback, interviews] = await Promise.all([
       this.getNotes(),
       this.getWaitlistEntries(),
+      this.getFeedbackEntries(),
+      this.getInterviewRequests(),
     ])
 
-    return { notes, waitlist }
+    return { notes, waitlist, feedback, interviews }
   }
 
   /**

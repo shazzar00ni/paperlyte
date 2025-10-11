@@ -1,12 +1,30 @@
-import { CheckCircle, Search, Shield, Smartphone, Tag, Zap } from 'lucide-react'
+import {
+  CheckCircle,
+  MessageSquare,
+  Calendar,
+  Search,
+  Shield,
+  Smartphone,
+  Tag,
+  Zap,
+} from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import DemoCarousel from '../components/DemoCarousel'
 import WaitlistModal from '../components/WaitlistModal'
-import { trackUserAction, trackWaitlistEvent } from '../utils/analytics'
+import FeedbackModal from '../components/FeedbackModal'
+import InterviewScheduleModal from '../components/InterviewScheduleModal'
+import {
+  trackUserAction,
+  trackWaitlistEvent,
+  trackFeedbackEvent,
+  trackInterviewEvent,
+} from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 
 const LandingPage: React.FC = () => {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
+  const [isInterviewOpen, setIsInterviewOpen] = useState(false)
 
   useEffect(() => {
     // Track landing page view
@@ -17,6 +35,16 @@ const LandingPage: React.FC = () => {
   const handleWaitlistClick = () => {
     setIsWaitlistOpen(true)
     trackWaitlistEvent('view')
+  }
+
+  const handleFeedbackClick = () => {
+    setIsFeedbackOpen(true)
+    trackFeedbackEvent('view')
+  }
+
+  const handleInterviewClick = () => {
+    setIsInterviewOpen(true)
+    trackInterviewEvent('view')
   }
 
   const features = [
@@ -133,6 +161,62 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* User Engagement Section */}
+      <section className='py-20 bg-white'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='text-center mb-12'>
+            <h2 className='text-3xl md:text-4xl font-bold text-dark mb-4'>
+              Help Shape Paperlyte
+            </h2>
+            <p className='text-xl text-gray-600'>
+              Your feedback drives our product development
+            </p>
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto'>
+            {/* Feedback Card */}
+            <div className='bg-gray-50 rounded-xl p-8 text-center'>
+              <div className='w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <MessageSquare className='h-8 w-8 text-primary' />
+              </div>
+              <h3 className='text-xl font-semibold text-dark mb-2'>
+                Share Feedback
+              </h3>
+              <p className='text-gray-600 mb-6'>
+                Found a bug? Have a feature idea? Let us know how we can improve
+                your experience.
+              </p>
+              <button
+                onClick={handleFeedbackClick}
+                className='btn-secondary btn-md w-full'
+              >
+                Give Feedback
+              </button>
+            </div>
+
+            {/* Interview Card */}
+            <div className='bg-gray-50 rounded-xl p-8 text-center'>
+              <div className='w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <Calendar className='h-8 w-8 text-accent' />
+              </div>
+              <h3 className='text-xl font-semibold text-dark mb-2'>
+                User Interview
+              </h3>
+              <p className='text-gray-600 mb-6'>
+                Share your experience in a 20-minute call and help us build
+                better features.
+              </p>
+              <button
+                onClick={handleInterviewClick}
+                className='btn-secondary btn-md w-full'
+              >
+                Schedule Interview
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className='py-20 bg-gray-50'>
         <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
@@ -153,6 +237,18 @@ const LandingPage: React.FC = () => {
       <WaitlistModal
         isOpen={isWaitlistOpen}
         onClose={() => setIsWaitlistOpen(false)}
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
+
+      {/* Interview Schedule Modal */}
+      <InterviewScheduleModal
+        isOpen={isInterviewOpen}
+        onClose={() => setIsInterviewOpen(false)}
       />
     </div>
   )
