@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { CheckCircle, Zap, Shield, Smartphone, Search, Tag } from 'lucide-react'
-import { trackWaitlistEvent, trackUserAction } from '../utils/analytics'
-import { monitoring } from '../utils/monitoring'
-import WaitlistModal from '../components/WaitlistModal'
+import { CheckCircle, Search, Shield, Smartphone, Tag, Zap } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
 import DemoCarousel from '../components/DemoCarousel'
+import WaitlistModal from '../components/WaitlistModal'
+import { trackUserAction, trackWaitlistEvent } from '../utils/analytics'
+import { monitoring } from '../utils/monitoring'
 
 const LandingPage: React.FC = () => {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)

@@ -22,17 +22,20 @@ npm run ci
 ## 📋 Development Scripts
 
 ### Core Development
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 
 ### Testing & Quality
+
 - `npm run test` - Run tests in watch mode
 - `npm run test:ci` - Run tests once (CI mode)
 - `npm run test:coverage` - Generate coverage report
 - `npm run test:ui` - Open Vitest UI
 
 ### Code Quality
+
 - `npm run lint` - Check code with ESLint
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run format` - Format code with Prettier
@@ -40,12 +43,14 @@ npm run ci
 - `npm run type-check` - TypeScript type checking
 
 ### Security & Dependencies
+
 - `npm run security-audit` - Check for vulnerabilities
 - `npm run security-fix` - Auto-fix security issues
 - `npm run deps:check` - Check for outdated packages
 - `npm run deps:update` - Update all dependencies
 
 ### Utilities
+
 - `npm run clean` - Clean build artifacts
 - `npm run analyze` - Analyze bundle size
 - `npm run ci` - Run complete CI pipeline locally
@@ -58,6 +63,7 @@ npm run ci
 
 **Triggers:** Push to `main`/`develop`, Pull requests
 **Jobs:**
+
 - **lint-and-format**: ESLint + Prettier validation
 - **type-check**: TypeScript compilation check
 - **test**: Run test suite with memory optimization
@@ -68,6 +74,7 @@ npm run ci
 
 **Triggers:** Push to `main`, Releases
 **Jobs:**
+
 - **deploy-staging**: Auto-deploy to staging on main branch
 - **deploy-production**: Deploy to production on releases
 
@@ -75,6 +82,7 @@ npm run ci
 
 **Triggers:** Daily schedule, Push to `main`, Pull requests
 **Jobs:**
+
 - **security-audit**: npm audit + dependency review
 - **codeql-analysis**: Static code analysis
 - **license-check**: License compliance verification
@@ -83,6 +91,7 @@ npm run ci
 
 **Triggers:** Push to `main`, Pull requests, Weekly schedule
 **Jobs:**
+
 - **lighthouse-audit**: Core Web Vitals monitoring
 - **bundle-analysis**: Bundle size tracking
 
@@ -90,12 +99,14 @@ npm run ci
 
 **Triggers:** Weekly schedule, Manual
 **Jobs:**
+
 - **update-dependencies**: Weekly dependency updates
 - **security-updates**: Automated security patches
 
 ### Quality Gates
 
 All pull requests must pass:
+
 - ✅ ESLint (0 warnings)
 - ✅ Prettier formatting
 - ✅ TypeScript compilation
@@ -108,6 +119,7 @@ All pull requests must pass:
 ### Branch Protection Rules
 
 **Main Branch:**
+
 - Require pull request reviews
 - Require status checks to pass
 - Require branches to be up to date
@@ -126,6 +138,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -138,6 +151,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```bash
 feat(auth): add user authentication
 fix(ui): resolve mobile navigation issue
@@ -148,11 +162,13 @@ ci: add performance monitoring workflow
 ### Pre-commit Hooks
 
 **Husky hooks automatically run:**
+
 - `pre-commit`: lint-staged (ESLint + Prettier on staged files)
 - `commit-msg`: commitlint (validate commit message format)
 - `pre-push`: type-check + test suite
 
 **Skip hooks (emergency only):**
+
 ```bash
 git commit --no-verify -m "emergency fix"
 ```
@@ -160,6 +176,7 @@ git commit --no-verify -m "emergency fix"
 ## 🧪 Testing Strategy
 
 ### Test Structure
+
 ```
 src/
 ├── components/
@@ -178,6 +195,7 @@ src/
 ### Memory Optimization
 
 Tests run with increased memory allocation:
+
 ```bash
 NODE_OPTIONS="--max-old-space-size=4096" npm run test
 ```
@@ -193,6 +211,7 @@ NODE_OPTIONS="--max-old-space-size=4096" npm run test
 ### Lighthouse CI
 
 Automated performance audits on every PR:
+
 - **Performance:** >75 (target: >90)
 - **Accessibility:** >90
 - **Best Practices:** >90
@@ -231,6 +250,7 @@ Automated performance audits on every PR:
 ### Environment Variables
 
 **Required for deployment:**
+
 ```bash
 VITE_POSTHOG_API_KEY=your_posthog_key
 VITE_SENTRY_DSN=your_sentry_dsn
@@ -250,6 +270,7 @@ NETLIFY_SITE_ID=your_site_id
 ### VS Code Configuration
 
 **Auto-configured features:**
+
 - Format on save (Prettier)
 - ESLint auto-fix on save
 - Import organization
@@ -257,6 +278,7 @@ NETLIFY_SITE_ID=your_site_id
 - Tailwind CSS IntelliSense
 
 **Recommended Extensions:**
+
 - ESLint
 - Prettier
 - Tailwind CSS IntelliSense
@@ -267,6 +289,7 @@ NETLIFY_SITE_ID=your_site_id
 ### IDE Settings
 
 Settings are automatically configured in `.vscode/settings.json` for:
+
 - Consistent code formatting
 - TypeScript preferences
 - File exclusions for better performance
@@ -277,6 +300,7 @@ Settings are automatically configured in `.vscode/settings.json` for:
 ### Common Issues
 
 **Test Memory Errors:**
+
 ```bash
 # Increase Node.js memory limit
 export NODE_OPTIONS="--max-old-space-size=4096"
@@ -284,6 +308,7 @@ npm run test
 ```
 
 **Build Failures:**
+
 ```bash
 # Clean and rebuild
 npm run clean
@@ -292,12 +317,14 @@ npm run build
 ```
 
 **Hook Failures:**
+
 ```bash
 # Reset Husky hooks
 npm run prepare
 ```
 
 **Dependency Issues:**
+
 ```bash
 # Check for updates
 npm run deps:check
@@ -308,12 +335,13 @@ npm run deps:update
 
 ### VS Code Extension Issues
 
-**Vitest Extension Error:** When working with remote repositories, the Vitest extension may show path resolution errors. 
+**Vitest Extension Error:** When working with remote repositories, the Vitest extension may show path resolution errors.
 
 **Solution:** Use terminal commands instead:
+
 ```bash
 npm run test      # Watch mode
-npm run test:ci   # Single run  
+npm run test:ci   # Single run
 npm run test:ui   # Browser UI
 ```
 
