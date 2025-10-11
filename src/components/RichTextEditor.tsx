@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify'
 import { Bold, Italic, List, ListOrdered } from 'lucide-react'
 import React, { useCallback, useEffect, useRef } from 'react'
+import { monitoring } from '../utils/monitoring'
 
 interface RichTextEditorProps {
   content: string
@@ -55,29 +56,46 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const handleInput = useCallback(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       isUpdatingRef.current = true
-      const rawContent = editorRef.current.innerHTML
-      const sanitizedContent = DOMPurify.sanitize(rawContent, {
-        ALLOWED_TAGS: [
-          'b',
-          'strong',
-          'i',
-          'em',
-          'u',
-          'ul',
-          'ol',
-          'li',
-          'br',
-          'div',
-          'span',
-          'p',
-        ],
-        ALLOWED_ATTR: ['style'],
-      })
-      onChange(sanitizedContent)
-      // Reset flag after a short delay to allow for external updates
-      setTimeout(() => {
-        isUpdatingRef.current = false
-      }, 10)
+      try {
+        const rawContent = editorRef.current.innerHTML
+        const sanitizedContent = DOMPurify.sanitize(rawContent, {
+          ALLOWED_TAGS: [
+            'b',
+            'strong',
+            'i',
+            'em',
+            'u',
+            'ul',
+            'ol',
+            'li',
+            'br',
+            'div',
+            'span',
+            'p',
+          ],
+          ALLOWED_ATTR: ['style'],
+        })
+        onChange(sanitizedContent)
+      } catch (error) {
+        // Handle errors gracefully without exposing sensitive information
+        const sanitizedMessage =
+          error instanceof Error
+            ? error.message.replace(/[^\w\s]/g, '*')
+            : 'Unknown error'
+
+        console.error('Editor content change failed:', sanitizedMessage)
+
+        // Log to monitoring with sanitized error message
+        monitoring.logError(new Error(sanitizedMessage), {
+          feature: 'rich_text_editor',
+          action: 'content_change_failed',
+        })
+      } finally {
+        // Reset flag after a short delay to allow for external updates
+        setTimeout(() => {
+          isUpdatingRef.current = false
+        }, 10)
+      }
     }
   }, [onChange])
 
