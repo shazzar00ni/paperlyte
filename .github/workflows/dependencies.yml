@@ -1,0 +1,125 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run dependency updates weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for dependency updates
+        run: |
+          npx npm-check-updates --format group --target minor > dependency-updates.txt
+          cat dependency-updates.txt
+
+      - name: Create dependency update PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies'
+          title: 'chore(deps): weekly dependency updates'
+          body: |
+            ## 📦 Dependency Updates
+
+            This PR contains weekly dependency updates to keep the project secure and up-to-date.
+
+            ### What's Changed
+            - Updated npm dependencies to latest minor versions
+            - Security updates applied automatically
+
+            ### Testing
+            - [ ] All tests pass
+            - [ ] Build succeeds
+            - [ ] Security audit passes
+
+            ### Notes
+            Please review the changes carefully before merging.
+
+            ---
+
+            🤖 This PR was created automatically by GitHub Actions
+
+          branch: automated-dependency-updates
+          delete-branch: true
+
+  security-updates:
+    name: Security Updates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply security fixes
+        run: npm audit fix
+        continue-on-error: true
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create security update PR
+        if: steps.changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(security): apply security updates'
+          title: '🔒 Security Updates'
+          body: |
+            ## 🔒 Security Updates
+
+            This PR contains security updates for npm dependencies.
+
+            ### What's Changed
+            - Applied `npm audit fix` to resolve security vulnerabilities
+
+            ### Security
+            - [ ] Security audit passes
+            - [ ] All tests pass
+            - [ ] Build succeeds
+
+            ### Priority
+            **High Priority** - Please review and merge as soon as possible.
+
+            ---
+
+            🤖 This PR was created automatically by GitHub Actions
+
+          branch: automated-security-updates
+          delete-branch: true
+          labels: security,dependencies

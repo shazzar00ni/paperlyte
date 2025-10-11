@@ -1,6 +1,6 @@
-import React, { useRef, useCallback, useEffect } from 'react'
-import { Bold, Italic, List, ListOrdered } from 'lucide-react'
 import DOMPurify from 'dompurify'
+import { Bold, Italic, List, ListOrdered } from 'lucide-react'
+import React, { useCallback, useEffect, useRef } from 'react'
 
 interface RichTextEditorProps {
   content: string
@@ -356,7 +356,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onPaste={handlePaste}
         className={`
           rich-text-content min-h-[400px] p-6 text-lg leading-relaxed outline-none focus:outline-none
-          text-dark bg-transparent resize-none overflow-y-auto
+          text-dark bg-transparent resize-none overflow-y-auto break-words
           ${className}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}
         `}
@@ -364,10 +364,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         aria-multiline='true'
         aria-label='Rich text editor'
         data-placeholder={placeholder}
-        style={{
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-        }}
         suppressContentEditableWarning={true}
       />
     </div>

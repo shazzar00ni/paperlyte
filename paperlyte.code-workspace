@@ -1,0 +1,40 @@
+{
+  "folders": [
+    {
+      "name": "Paperlyte",
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "vitest.enable": false,
+    "vitest.commandLine": "npm run test",
+    "vitest.rootConfig": "vite.config.ts",
+    "testing.automaticallyOpenPeekView": "never",
+    "testing.openTesting": "neverOpen",
+    "eslint.workingDirectories": [
+      {
+        "mode": "auto",
+      },
+    ],
+    // Note: Vitest extension disabled for GitHub VFS workspaces
+    // Enable locally when working with cloned repository
+    "vitest.disabledWorkspaceFolders": ["paperlyte"],
+    "testing.automaticallyOpenTestResults": "neverOpen",
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      "ms-vscode.vscode-typescript-next",
+      "usernamehw.errorlens",
+      "christian-kohler.path-intellisense",
+      "ms-vscode.vscode-json",
+      "redhat.vscode-yaml",
+      "github.copilot",
+      "github.copilot-chat",
+      "vitest.explorer",
+    ],
+    "unwantedRecommendations": ["ms-vscode.vscode-typescript"],
+  },
+}

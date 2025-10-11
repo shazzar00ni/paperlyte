@@ -66,6 +66,7 @@ const DemoCarousel: React.FC = () => {
   ]
 
   useEffect(() => {
+    trackUserAction('demo_carousel_view')
     monitoring.addBreadcrumb('Demo carousel loaded', 'ui')
   }, [])
 

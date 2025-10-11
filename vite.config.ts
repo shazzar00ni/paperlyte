@@ -25,6 +25,13 @@ export default defineConfig(({ mode }) => ({
         "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
     },
   },
+  preview: {
+    port: 4173,
+    headers: {
+      'Content-Security-Policy':
+        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:;",
+    },
+  },
   build: {
     outDir: 'dist',
     // Only enable sourcemaps in development mode for security
@@ -36,5 +43,16 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+  },
+  define: {
+    // Make environment variables available at build time
+    __POSTHOG_API_KEY__: JSON.stringify(process.env.VITE_POSTHOG_API_KEY),
+    __POSTHOG_HOST__: JSON.stringify(process.env.VITE_POSTHOG_HOST),
+    __SENTRY_DSN__: JSON.stringify(process.env.VITE_SENTRY_DSN),
   },
 }))

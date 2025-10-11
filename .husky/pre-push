@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type check before push
+npm run type-check
+
+# Run tests before push (with memory optimization)
+NODE_OPTIONS="--max-old-space-size=4096" npm run test:ci
