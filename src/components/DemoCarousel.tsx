@@ -11,11 +11,26 @@ interface DemoSlide {
   alt: string
 }
 
+// Escape HTML special characters to prevent XSS in SVG
+function escapeHTML(str: string): string {
+  return str.replace(/[&<>"']/g, function (m) {
+    switch (m) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return m;
+    }
+  });
+}
+
 // Generate SVG placeholder images for demo
 const generatePlaceholderSVG = (title: string, color: string) => {
+  const safeTitle = escapeHTML(title);
   const svg = `<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
     <rect width="600" height="400" fill="${color}"/>
-    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
+    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${safeTitle}</text>
   </svg>`
   return `data:image/svg+xml;base64,${btoa(svg)}`
 }
