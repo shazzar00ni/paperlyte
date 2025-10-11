@@ -4,7 +4,7 @@ Comprehensive plan for creating all visual assets needed for Paperlyte launch.
 
 > **Status:** 🔄 In Progress  
 > **Priority:** P1 (Required for launch)  
-> **Deadline:** Before Product Hunt submission  
+> **Deadline:** Before Product Hunt submission
 
 ---
 
@@ -67,6 +67,7 @@ Comprehensive plan for creating all visual assets needed for Paperlyte launch.
 ### 📹 Main Product Demo (30-60 seconds)
 
 **Script Outline:**
+
 ```
 0:00-0:05 - "Meet Paperlyte - note-taking, lighter than ever"
 0:05-0:15 - Show instant startup and first note creation
@@ -77,6 +78,7 @@ Comprehensive plan for creating all visual assets needed for Paperlyte launch.
 ```
 
 **Technical Specs:**
+
 - [ ] Resolution: 1920x1080 (16:9)
 - [ ] Format: MP4, H.264 codec
 - [ ] Duration: 45-60 seconds
@@ -103,6 +105,7 @@ Comprehensive plan for creating all visual assets needed for Paperlyte launch.
 - [ ] **Mobile Smooth:** Seamless mobile experience
 
 **Technical Specs:**
+
 - Resolution: 800x600 (4:3) or 1200x675 (16:9)
 - Format: GIF, optimized for web
 - File size: Under 2MB each
@@ -115,25 +118,29 @@ Comprehensive plan for creating all visual assets needed for Paperlyte launch.
 ### Visual Design Standards
 
 **Color Palette:**
+
 - Use Paperlyte's actual brand colors
 - Consistent backgrounds (white/light gray)
 - Accent colors for highlights and callouts
 
 **Typography:**
+
 - Use system fonts or Paperlyte's chosen typeface
 - Consistent font sizes across screenshots
 - Clear, readable text in all examples
 
 **Content Standards:**
+
 - Use realistic, professional sample content
 - Avoid lorem ipsum - use actual note examples
 - Include variety: meeting notes, recipes, lists, etc.
 - Keep content appropriate and inclusive
 
 **Example Note Content:**
+
 ```
 Title: "Project Alpha - Meeting Notes"
-Content: 
+Content:
 # Weekly Standup - October 3, 2025
 
 ## Action Items
@@ -152,11 +159,13 @@ Discussion about improving load times - target under 1 second...
 ### UI Element Guidelines
 
 **Highlighting Important Features:**
+
 - Use subtle overlays or arrows to point out key features
 - Consistent color scheme for callouts
 - Non-intrusive annotations that don't overwhelm the UI
 
 **Mouse Cursor/Interactions:**
+
 - Show cursor when demonstrating interactions
 - Use consistent cursor style
 - Animate clicks and selections smoothly
@@ -168,12 +177,14 @@ Discussion about improving load times - target under 1 second...
 ### Setup Requirements
 
 **Browser/Environment:**
+
 - [ ] Use Chrome or Firefox (latest stable)
 - [ ] Standard zoom level (100%)
 - [ ] Clean browser (no extensions visible)
 - [ ] Consistent screen resolution (1920x1080 or higher)
 
 **Application State:**
+
 - [ ] Clear localStorage for fresh start
 - [ ] Create sample notes with realistic content
 - [ ] Test all features work properly
@@ -182,6 +193,7 @@ Discussion about improving load times - target under 1 second...
 ### Capture Tools
 
 **Recommended Tools:**
+
 - [ ] **CleanShot X** (Mac) - Professional screenshot tool
 - [ ] **Greenshot** (Windows) - Free, powerful screenshot tool
 - [ ] **Browser DevTools** - For responsive testing
@@ -191,12 +203,14 @@ Discussion about improving load times - target under 1 second...
 ### Quality Checklist
 
 **Before Capture:**
+
 - [ ] Check for typos in any visible text
 - [ ] Ensure UI is in expected state
 - [ ] Verify no personal information visible
 - [ ] Test on different screen resolutions
 
 **After Capture:**
+
 - [ ] Review for clarity and focus
 - [ ] Check file size and compression
 - [ ] Verify no artifacts or compression issues
@@ -209,12 +223,14 @@ Discussion about improving load times - target under 1 second...
 ### Recording Setup
 
 **Screen Recording:**
+
 - [ ] Use OBS Studio or QuickTime (Mac) for high quality
 - [ ] Record at 1920x1080 or higher
 - [ ] Use 30fps for smooth playback
 - [ ] Ensure consistent frame rate throughout
 
 **Audio Considerations:**
+
 - [ ] Background music: Upbeat, non-distracting
 - [ ] No voiceover for international appeal
 - [ ] Audio levels consistent and not overpowering
@@ -223,11 +239,13 @@ Discussion about improving load times - target under 1 second...
 ### Editing Guidelines
 
 **Pacing:**
+
 - Each feature demo: 3-5 seconds
 - Transitions: Quick but smooth (0.5-1 second)
 - Overall tempo: Energetic but not rushed
 
 **Effects:**
+
 - Minimal text overlays with key benefits
 - Smooth transitions between scenes
 - Consistent visual style throughout
@@ -236,12 +254,14 @@ Discussion about improving load times - target under 1 second...
 ### Export Settings
 
 **For Product Hunt:**
+
 - Format: MP4 (H.264)
 - Resolution: 1280x720 minimum
 - Duration: 30-60 seconds
 - File size: Under 10MB
 
 **For Social Media:**
+
 - Square format (1080x1080) for Instagram
 - Vertical format (1080x1920) for Stories
 - Horizontal (1920x1080) for Twitter/LinkedIn
@@ -253,6 +273,7 @@ Discussion about improving load times - target under 1 second...
 ### File Naming Convention
 
 **Screenshots:**
+
 ```
 paperlyte_screenshot_[type]_[description]_[size].png
 
@@ -263,6 +284,7 @@ paperlyte_screenshot_feature_search-demo_1200x800.png
 ```
 
 **Videos:**
+
 ```
 paperlyte_video_[type]_[description]_[duration].mp4
 
@@ -303,6 +325,7 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ### Product Hunt
 
 **Required Assets:**
+
 - [ ] Product logo: 240x240px PNG
 - [ ] Gallery images: 1270x760px (up to 4 images)
 - [ ] Maker profile image: 440x440px
@@ -311,6 +334,7 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ### Chrome Web Store
 
 **Required Assets:**
+
 - [ ] Icon: 128x128px PNG
 - [ ] Screenshots: 1280x800px or 640x400px
 - [ ] Promo image: 440x280px (optional)
@@ -319,6 +343,7 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ### Microsoft Store
 
 **Required Assets:**
+
 - [ ] App icons: Multiple sizes (44x44 to 310x310)
 - [ ] Screenshots: 1920x1080 (up to 10 images)
 - [ ] Store logos: 300x300, 150x150, 50x50
@@ -326,11 +351,13 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ### Social Media
 
 **Profile/Cover Images:**
+
 - [ ] Twitter header: 1500x500px
 - [ ] LinkedIn banner: 1584x396px
 - [ ] Facebook cover: 820x312px
 
 **Post Images:**
+
 - [ ] Square format: 1080x1080px
 - [ ] Story format: 1080x1920px
 - [ ] Horizontal: 1200x630px
@@ -342,18 +369,21 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ### Screenshot Review Checklist
 
 **Visual Quality:**
+
 - [ ] High resolution and crisp details
 - [ ] Consistent lighting and contrast
 - [ ] No pixelation or compression artifacts
 - [ ] Colors accurate to actual application
 
 **Content Quality:**
+
 - [ ] Realistic, professional sample content
 - [ ] No typos or errors in visible text
 - [ ] Appropriate and inclusive examples
 - [ ] Consistent UI state across shots
 
 **Technical Quality:**
+
 - [ ] Proper file formats and sizes
 - [ ] Optimized for web loading
 - [ ] Accessible alt text prepared
@@ -362,12 +392,14 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ### Video Review Checklist
 
 **Technical Quality:**
+
 - [ ] Smooth playback at target framerate
 - [ ] Clear audio without distortion
 - [ ] Proper compression for web delivery
 - [ ] No dropped frames or stuttering
 
 **Content Quality:**
+
 - [ ] Clear demonstration of key features
 - [ ] Appropriate pacing for audience
 - [ ] Professional and polished presentation
@@ -378,24 +410,28 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ## 📅 Production Timeline
 
 ### Week 1: Planning & Setup
+
 - [ ] Finalize content strategy and shot list
 - [ ] Set up recording environment and tools
 - [ ] Create sample note content
 - [ ] Test application in various states
 
 ### Week 2: Screenshot Production
+
 - [ ] Capture all required screenshots
 - [ ] Create mobile and responsive variants
 - [ ] Process and optimize images
 - [ ] Review and iterate on quality
 
 ### Week 3: Video Production
+
 - [ ] Record main product demo
 - [ ] Create feature-specific videos
 - [ ] Produce GIF animations
 - [ ] Edit and optimize all video content
 
 ### Week 4: Review & Finalization
+
 - [ ] Internal review and feedback
 - [ ] Final revisions and improvements
 - [ ] Asset organization and backup
@@ -406,16 +442,19 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ## 📞 Team Responsibilities
 
 ### Design Team
+
 - [ ] Create style guide and visual standards
 - [ ] Review all assets for brand consistency
 - [ ] Provide feedback and iteration guidance
 
 ### Development Team
+
 - [ ] Ensure application is in demo-ready state
 - [ ] Create sample data and realistic content
 - [ ] Test all features work smoothly for recording
 
 ### Marketing Team
+
 - [ ] Define platform requirements and specs
 - [ ] Coordinate with external asset creation if needed
 - [ ] Manage asset distribution and usage
@@ -423,6 +462,7 @@ paperlyte_video_gif_instant-startup_5s.mp4
 ---
 
 **Next Steps:**
+
 1. Begin screenshot capture setup
 2. Create realistic sample note content
 3. Set up recording environment

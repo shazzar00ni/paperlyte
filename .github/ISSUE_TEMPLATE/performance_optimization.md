@@ -13,7 +13,7 @@ assignees: []
 ### Core Web Vitals Issues
 
 - **First Contentful Paint:** 10.6s ❌ (Target: <1.8s)
-- **Largest Contentful Paint:** 19.5s ❌ (Target: <2.5s) 
+- **Largest Contentful Paint:** 19.5s ❌ (Target: <2.5s)
 - **Speed Index:** 10.6s ❌ (Poor)
 - **Total Blocking Time:** 40ms ✅ (Good)
 - **Cumulative Layout Shift:** 0 ✅ (Excellent)
@@ -79,23 +79,27 @@ assignees: []
 ## 📋 Implementation Checklist
 
 ### Bundle Analysis
+
 - [ ] Install bundle analyzer
 - [ ] Generate bundle report
 - [ ] Identify largest dependencies
 - [ ] Create optimization plan
 
 ### Code Splitting
+
 - [ ] Implement route-based splitting
 - [ ] Add component lazy loading
 - [ ] Optimize dynamic imports
 
 ### Resource Optimization
+
 - [ ] Audit all static assets
 - [ ] Implement image optimization
 - [ ] Add resource hints
 - [ ] Configure caching headers
 
 ### Performance Monitoring
+
 - [ ] Set up Core Web Vitals tracking
 - [ ] Configure performance alerts
 - [ ] Add real user monitoring

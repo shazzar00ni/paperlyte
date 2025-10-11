@@ -1,4 +1,5 @@
 :root {
+  /* cSpell:ignore Avenir */
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,7 +12,11 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Progressive enhancement for text size adjustment */
   -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 a {
@@ -70,7 +75,8 @@ button:focus-visible {
 
 /* Keyboard shortcuts and UX polish */
 @keyframes glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
   }
   50% {
@@ -79,7 +85,8 @@ button:focus-visible {
 }
 
 @keyframes success-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -98,7 +105,11 @@ button:focus-visible {
 }
 
 /* Smooth transitions for all interactive elements */
-button, input, textarea, [contenteditable] {
+button,
+input,
+textarea,
+/* cSpell:ignore contenteditable */
+[contenteditable] {
   transition: all 0.2s ease-in-out;
 }
 

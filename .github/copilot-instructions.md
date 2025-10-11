@@ -71,7 +71,7 @@ When refactoring large files:
 
 - **Single Page Application**: Currently runs as landing page only (`LandingPage.tsx`) - note editor exists but not routed
 - **No Authentication**: User management exists in types but not implemented yet
-- **localStorage Persistence**: All data stored locally with service abstraction for future API migration  
+- **localStorage Persistence**: All data stored locally with service abstraction for future API migration
 - **Simulated Cloud Sync**: `syncEngine.ts` provides sync simulation using localStorage as "cloud" storage
 - **Waitlist Collection**: Primary user interaction is waitlist signup via modal
 

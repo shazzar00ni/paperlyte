@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import WaitlistModal from '../WaitlistModal'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { dataService } from '../../services/dataService'
+import WaitlistModal from '../WaitlistModal'
 
 // Mock the dataService
 vi.mock('../../services/dataService', () => ({
@@ -72,8 +73,8 @@ describe('WaitlistModal', () => {
 
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
-    const emailInput = screen.getByLabelText('Email Address')
-    const nameInput = screen.getByLabelText('Name (Optional)')
+    const emailInput = screen.getByLabelText('Email Address *')
+    const nameInput = screen.getByLabelText('Name *')
     const submitButton = screen.getByText('Join Waitlist')
 
     // Fill form with valid data
@@ -99,7 +100,7 @@ describe('WaitlistModal', () => {
 
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
-    const emailInput = screen.getByLabelText('Email Address')
+    const emailInput = screen.getByLabelText('Email Address *')
     const submitButton = screen.getByText('Join Waitlist')
 
     await user.type(emailInput, 'existing@example.com')
@@ -116,7 +117,7 @@ describe('WaitlistModal', () => {
 
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
-    const emailInput = screen.getByLabelText('Email Address')
+    const emailInput = screen.getByLabelText('Email Address *')
     const submitButton = screen.getByText('Join Waitlist')
 
     await user.type(emailInput, 'success@example.com')
@@ -133,8 +134,8 @@ describe('WaitlistModal', () => {
 
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
-    const emailInput = screen.getByLabelText('Email Address')
-    const interestSelect = screen.getByLabelText('I am a...')
+    const emailInput = screen.getByLabelText('Email Address *')
+    const interestSelect = screen.getByLabelText("I'm interested as a...")
     const submitButton = screen.getByText('Join Waitlist')
 
     await user.type(emailInput, 'professional@example.com')

@@ -7,7 +7,7 @@ on:
     types: [published]
 
 env:
-  NODE_VERSION: "18"
+  NODE_VERSION: '18'
 
 jobs:
   deploy-staging:
@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -63,7 +63,7 @@ jobs:
       - name: Build for staging
         run: npm run build
         env:
-          VITE_ENVIRONMENT: "staging"
+          VITE_ENVIRONMENT: 'staging'
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY_STAGING }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_STAGING }}
 
@@ -71,9 +71,9 @@ jobs:
         id: deploy
         uses: nwtgck/actions-netlify@v2.1
         with:
-          publish-dir: "./dist"
+          publish-dir: './dist'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Staging Deploy - ${{ github.sha }} - ${{ github.event.head_commit.message }}"
+          deploy-message: 'Staging Deploy - ${{ github.sha }} - ${{ github.event.head_commit.message }}'
           alias: staging-${{ github.sha }}
           enable-pull-request-comment: true
           enable-commit-comment: true
@@ -109,7 +109,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -132,7 +132,7 @@ jobs:
       - name: Build for production
         run: npm run build
         env:
-          VITE_ENVIRONMENT: "production"
+          VITE_ENVIRONMENT: 'production'
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY_PROD }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
 
@@ -140,9 +140,9 @@ jobs:
         id: deploy
         uses: nwtgck/actions-netlify@v2.1
         with:
-          publish-dir: "./dist"
+          publish-dir: './dist'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Production Release - ${{ github.event.release.tag_name }} - ${{ github.event.release.name }}"
+          deploy-message: 'Production Release - ${{ github.event.release.tag_name }} - ${{ github.event.release.name }}'
           production-deploy: true
           enable-commit-comment: true
         env:
