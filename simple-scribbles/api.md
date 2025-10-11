@@ -196,6 +196,69 @@ Authorization: Bearer jwt.access.token
 
 All note endpoints require authentication.
 
+#### Get Notes (Paginated)
+
+```http
+GET /api/notes?page=1&limit=20&sortBy=updatedAt&sortOrder=desc&includeDeleted=false
+Authorization: Bearer jwt.access.token
+```
+
+**Query Parameters:**
+
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 20, max: 100)
+- `sortBy` (optional): Sort field - `createdAt`, `updatedAt`, or `title` (default: `updatedAt`)
+- `sortOrder` (optional): Sort order - `asc` or `desc` (default: `desc`)
+- `includeDeleted` (optional): Include soft-deleted notes (default: false)
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "title": "My Note",
+      "content": "Note content",
+      "tags": ["work", "important"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "wordCount": 2,
+      "version": 1,
+      "deletedAt": null
+    }
+  ],
+  "total": 100,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 5,
+  "hasMore": true
+}
+```
+
+#### Get Single Note
+
+```http
+GET /api/notes/:id
+Authorization: Bearer jwt.access.token
+```
+
+**Response:**
+
+```json
+{
+  "id": "uuid",
+  "title": "My Note",
+  "content": "Note content",
+  "tags": ["work", "important"],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "wordCount": 2,
+  "version": 1,
+  "deletedAt": null
+}
+```
+
 #### Create/Update Note
 
 ```http
@@ -211,19 +274,77 @@ Content-Type: application/json
 }
 ```
 
-#### Get All Notes
+**Response:**
 
-```http
-GET /api/notes
-Authorization: Bearer jwt.access.token
+```json
+{
+  "id": "uuid",
+  "title": "My Note",
+  "content": "Note content",
+  "tags": ["work", "important"],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "wordCount": 2,
+  "version": 2
+}
 ```
 
-#### Delete Note
+**Notes:**
+
+- Title is required and limited to 255 characters
+- Content is optional, max 10MB
+- Input is automatically sanitized for XSS prevention
+- Word count is calculated automatically
+- Version number increments on each update
+
+#### Delete Note (Soft Delete)
 
 ```http
 DELETE /api/notes/:id
 Authorization: Bearer jwt.access.token
 ```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Note deleted successfully",
+  "deletedAt": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Notes:**
+
+- Notes are soft-deleted (marked with deletedAt timestamp)
+- Deleted notes retained for 30 days
+- Can be restored within retention period
+
+#### Restore Deleted Note
+
+```http
+POST /api/notes/:id/restore
+Authorization: Bearer jwt.access.token
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Note restored successfully",
+  "note": {
+    "id": "uuid",
+    "title": "Restored Note",
+    "deletedAt": null
+  }
+}
+```
+
+**Notes:**
+
+- Only works for notes deleted within last 30 days
+- Returns error if note not found or beyond retention period
 
 ## Error Responses
 

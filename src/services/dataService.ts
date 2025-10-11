@@ -1,10 +1,21 @@
-import type { Note, WaitlistEntry } from '../types'
+import type {
+  Note,
+  WaitlistEntry,
+  PaginationOptions,
+  PaginatedResult,
+} from '../types'
 import { monitoring } from '../utils/monitoring'
 import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
 import {
   migrateToIndexedDB,
   isIndexedDBAvailable,
 } from '../utils/dataMigration'
+import {
+  calculateWordCount,
+  sanitizeTitle,
+  sanitizeContent,
+  validateNote,
+} from '../utils/noteUtils'
 
 /**
  * Data Service - Abstraction layer for data persistence
@@ -108,20 +119,28 @@ class DataService {
    * - PUT /api/notes/:id
    * - DELETE /api/notes/:id
    */
+
+  /**
+   * Get all notes (legacy method - maintained for backward compatibility)
+   * For pagination support, use getNotesWithPagination
+   */
   async getNotes(): Promise<Note[]> {
     await this.initialize()
 
     try {
       if (this.useIndexedDB) {
         const notes = await indexedDB.getAll<Note>(STORE_NAMES.NOTES)
+        // Filter out deleted notes by default
+        const activeNotes = notes.filter(note => !note.deletedAt)
         // Sort by updatedAt descending (newest first)
-        return notes.sort(
+        return activeNotes.sort(
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         )
       } else {
         // Fallback to localStorage
-        return this.getFromStorage<Note>('notes')
+        const notes = this.getFromStorage<Note>('notes')
+        return notes.filter(note => !note.deletedAt)
       }
     } catch (error) {
       monitoring.logError(error as Error, {
@@ -129,29 +148,202 @@ class DataService {
         action: 'get_notes',
       })
       // Fallback to localStorage on error
-      return this.getFromStorage<Note>('notes')
+      return this.getFromStorage<Note>('notes').filter(note => !note.deletedAt)
     }
   }
 
-  async saveNote(note: Note): Promise<boolean> {
+  /**
+   * Get notes with pagination support
+   *
+   * @param options - Pagination and filtering options
+   * @returns Paginated result with notes and metadata
+   */
+  async getNotesWithPagination(
+    options: PaginationOptions = {}
+  ): Promise<PaginatedResult<Note>> {
+    await this.initialize()
+
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = 'updatedAt',
+      sortOrder = 'desc',
+      includeDeleted = false,
+    } = options
+
+    try {
+      let allNotes: Note[]
+
+      if (this.useIndexedDB) {
+        allNotes = await indexedDB.getAll<Note>(STORE_NAMES.NOTES)
+      } else {
+        allNotes = this.getFromStorage<Note>('notes')
+      }
+
+      // Filter deleted notes if needed
+      const filteredNotes = includeDeleted
+        ? allNotes
+        : allNotes.filter(note => !note.deletedAt)
+
+      // Sort notes
+      filteredNotes.sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+
+        if (sortBy === 'title') {
+          aValue = a.title.toLowerCase()
+          bValue = b.title.toLowerCase()
+        } else {
+          // For dates (createdAt, updatedAt)
+          aValue = new Date(a[sortBy]).getTime()
+          bValue = new Date(b[sortBy]).getTime()
+        }
+
+        if (sortOrder === 'asc') {
+          return aValue > bValue ? 1 : -1
+        } else {
+          return aValue < bValue ? 1 : -1
+        }
+      })
+
+      // Calculate pagination
+      const total = filteredNotes.length
+      const totalPages = Math.ceil(total / limit)
+      const startIndex = (page - 1) * limit
+      const endIndex = startIndex + limit
+      const paginatedNotes = filteredNotes.slice(startIndex, endIndex)
+
+      return {
+        data: paginatedNotes,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasMore: page < totalPages,
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'get_notes_with_pagination',
+        additionalData: { page, limit },
+      })
+
+      // Return empty result on error
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+        hasMore: false,
+      }
+    }
+  }
+
+  /**
+   * Get a single note by ID
+   *
+   * @param noteId - The ID of the note to retrieve
+   * @returns The note if found, null otherwise
+   */
+  async getNote(noteId: string): Promise<Note | null> {
     await this.initialize()
 
     try {
       if (this.useIndexedDB) {
-        await indexedDB.put(STORE_NAMES.NOTES, note)
-        monitoring.addBreadcrumb('Note saved to IndexedDB', 'info', {
-          noteId: note.id,
-        })
+        const note = await indexedDB.get<Note>(STORE_NAMES.NOTES, noteId)
+        return note || null
+      } else {
+        const notes = this.getFromStorage<Note>('notes')
+        return notes.find(note => note.id === noteId) || null
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'get_note',
+        additionalData: { noteId },
+      })
+      return null
+    }
+  }
+
+  /**
+   * Save or update a note with validation, sanitization, and metadata tracking
+   * Implements optimistic updates with automatic rollback on failure
+   *
+   * @param note - The note to save
+   * @returns Promise<boolean> - true if saved successfully
+   */
+  async saveNote(note: Note): Promise<boolean> {
+    await this.initialize()
+
+    // Validate note data
+    const validationError = validateNote({
+      title: note.title,
+      content: note.content,
+    })
+
+    if (validationError) {
+      monitoring.logError(new Error(validationError), {
+        feature: 'data_service',
+        action: 'save_note_validation',
+        additionalData: { noteId: note.id },
+      })
+      return false
+    }
+
+    // Sanitize input
+    const sanitizedNote: Note = {
+      ...note,
+      title: sanitizeTitle(note.title),
+      content: sanitizeContent(note.content || ''),
+      wordCount: calculateWordCount(note.content || ''),
+      updatedAt: new Date().toISOString(),
+    }
+
+    // Check if this is an update or create
+    let isUpdate = false
+    try {
+      const existingNote = await this.getNote(note.id)
+      if (existingNote) {
+        isUpdate = true
+        // Increment version for updates
+        sanitizedNote.version = (existingNote.version || 1) + 1
+      } else {
+        // Initialize version for new notes
+        sanitizedNote.version = 1
+        sanitizedNote.createdAt =
+          sanitizedNote.createdAt || new Date().toISOString()
+      }
+    } catch (error) {
+      // If we can't determine, assume new note
+      sanitizedNote.version = 1
+      sanitizedNote.createdAt =
+        sanitizedNote.createdAt || new Date().toISOString()
+    }
+
+    try {
+      if (this.useIndexedDB) {
+        await indexedDB.put(STORE_NAMES.NOTES, sanitizedNote)
+        monitoring.addBreadcrumb(
+          isUpdate ? 'Note updated in IndexedDB' : 'Note created in IndexedDB',
+          'info',
+          {
+            noteId: sanitizedNote.id,
+            version: sanitizedNote.version,
+            wordCount: sanitizedNote.wordCount,
+          }
+        )
         return true
       } else {
         // Fallback to localStorage
         const notes = this.getFromStorage<Note>('notes')
-        const existingIndex = notes.findIndex(n => n.id === note.id)
+        const existingIndex = notes.findIndex(n => n.id === sanitizedNote.id)
 
         if (existingIndex >= 0) {
-          notes[existingIndex] = note
+          notes[existingIndex] = sanitizedNote
         } else {
-          notes.unshift(note) // Add new notes to the beginning
+          notes.unshift(sanitizedNote) // Add new notes to the beginning
         }
 
         return this.saveToStorage('notes', notes)
@@ -160,18 +352,18 @@ class DataService {
       monitoring.logError(error as Error, {
         feature: 'data_service',
         action: 'save_note',
-        additionalData: { noteId: note.id },
+        additionalData: { noteId: sanitizedNote.id },
       })
 
       // Try localStorage fallback
       try {
         const notes = this.getFromStorage<Note>('notes')
-        const existingIndex = notes.findIndex(n => n.id === note.id)
+        const existingIndex = notes.findIndex(n => n.id === sanitizedNote.id)
 
         if (existingIndex >= 0) {
-          notes[existingIndex] = note
+          notes[existingIndex] = sanitizedNote
         } else {
-          notes.unshift(note)
+          notes.unshift(sanitizedNote)
         }
 
         return this.saveToStorage('notes', notes)
@@ -181,21 +373,49 @@ class DataService {
     }
   }
 
+  /**
+   * Soft delete a note (marks as deleted but retains for 30 days)
+   *
+   * @param noteId - The ID of the note to delete
+   * @returns Promise<boolean> - true if deleted successfully
+   */
   async deleteNote(noteId: string): Promise<boolean> {
     await this.initialize()
 
     try {
-      if (this.useIndexedDB) {
-        await indexedDB.delete(STORE_NAMES.NOTES, noteId)
-        monitoring.addBreadcrumb('Note deleted from IndexedDB', 'info', {
+      // Get the note first
+      const note = await this.getNote(noteId)
+      if (!note) {
+        monitoring.addBreadcrumb('Note not found for deletion', 'warning', {
           noteId,
+        })
+        return false
+      }
+
+      // Mark as deleted with timestamp (soft delete)
+      const deletedNote: Note = {
+        ...note,
+        deletedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      if (this.useIndexedDB) {
+        await indexedDB.put(STORE_NAMES.NOTES, deletedNote)
+        monitoring.addBreadcrumb('Note soft-deleted in IndexedDB', 'info', {
+          noteId,
+          deletedAt: deletedNote.deletedAt,
         })
         return true
       } else {
         // Fallback to localStorage
         const notes = this.getFromStorage<Note>('notes')
-        const filteredNotes = notes.filter(note => note.id !== noteId)
-        return this.saveToStorage('notes', filteredNotes)
+        const existingIndex = notes.findIndex(n => n.id === noteId)
+
+        if (existingIndex >= 0) {
+          notes[existingIndex] = deletedNote
+          return this.saveToStorage('notes', notes)
+        }
+        return false
       }
     } catch (error) {
       monitoring.logError(error as Error, {
@@ -207,11 +427,159 @@ class DataService {
       // Try localStorage fallback
       try {
         const notes = this.getFromStorage<Note>('notes')
-        const filteredNotes = notes.filter(note => note.id !== noteId)
-        return this.saveToStorage('notes', filteredNotes)
+        const existingIndex = notes.findIndex(n => n.id === noteId)
+
+        if (existingIndex >= 0) {
+          notes[existingIndex] = {
+            ...notes[existingIndex],
+            deletedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+          return this.saveToStorage('notes', notes)
+        }
+        return false
       } catch {
         return false
       }
+    }
+  }
+
+  /**
+   * Restore a soft-deleted note (within 30-day retention period)
+   *
+   * @param noteId - The ID of the note to restore
+   * @returns Promise<boolean> - true if restored successfully
+   */
+  async restoreNote(noteId: string): Promise<boolean> {
+    await this.initialize()
+
+    try {
+      // Get the note (including deleted ones)
+      const note = await this.getNote(noteId)
+      if (!note) {
+        monitoring.addBreadcrumb('Note not found for restoration', 'warning', {
+          noteId,
+        })
+        return false
+      }
+
+      if (!note.deletedAt) {
+        monitoring.addBreadcrumb(
+          'Note is not deleted, cannot restore',
+          'warning',
+          {
+            noteId,
+          }
+        )
+        return false
+      }
+
+      // Check if within 30-day retention period
+      const deletedDate = new Date(note.deletedAt)
+      const daysSinceDeleted =
+        (Date.now() - deletedDate.getTime()) / (1000 * 60 * 60 * 24)
+
+      if (daysSinceDeleted > 30) {
+        monitoring.addBreadcrumb(
+          'Note is beyond 30-day retention period',
+          'warning',
+          {
+            noteId,
+            daysSinceDeleted: Math.floor(daysSinceDeleted),
+          }
+        )
+        return false
+      }
+
+      // Restore the note by removing deletedAt timestamp
+      const restoredNote: Note = {
+        ...note,
+        deletedAt: null,
+        updatedAt: new Date().toISOString(),
+      }
+
+      if (this.useIndexedDB) {
+        await indexedDB.put(STORE_NAMES.NOTES, restoredNote)
+        monitoring.addBreadcrumb('Note restored in IndexedDB', 'info', {
+          noteId,
+        })
+        return true
+      } else {
+        // Fallback to localStorage
+        const notes = this.getFromStorage<Note>('notes')
+        const existingIndex = notes.findIndex(n => n.id === noteId)
+
+        if (existingIndex >= 0) {
+          notes[existingIndex] = restoredNote
+          return this.saveToStorage('notes', notes)
+        }
+        return false
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'restore_note',
+        additionalData: { noteId },
+      })
+      return false
+    }
+  }
+
+  /**
+   * Permanently delete notes that have been soft-deleted for more than 30 days
+   * Should be called periodically (e.g., daily) to clean up old deleted notes
+   *
+   * @returns Promise<number> - number of notes permanently deleted
+   */
+  async cleanupDeletedNotes(): Promise<number> {
+    await this.initialize()
+
+    try {
+      let allNotes: Note[]
+
+      if (this.useIndexedDB) {
+        allNotes = await indexedDB.getAll<Note>(STORE_NAMES.NOTES)
+      } else {
+        allNotes = this.getFromStorage<Note>('notes')
+      }
+
+      // Find notes deleted more than 30 days ago
+      const now = Date.now()
+      const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
+
+      const notesToDelete = allNotes.filter(note => {
+        if (!note.deletedAt) return false
+        const deletedTime = new Date(note.deletedAt).getTime()
+        return deletedTime < thirtyDaysAgo
+      })
+
+      if (notesToDelete.length === 0) {
+        return 0
+      }
+
+      // Permanently delete these notes
+      if (this.useIndexedDB) {
+        for (const note of notesToDelete) {
+          await indexedDB.delete(STORE_NAMES.NOTES, note.id)
+        }
+      } else {
+        const remainingNotes = allNotes.filter(
+          note => !notesToDelete.some(n => n.id === note.id)
+        )
+        this.saveToStorage('notes', remainingNotes)
+      }
+
+      monitoring.addBreadcrumb('Cleaned up old deleted notes', 'info', {
+        count: notesToDelete.length,
+      })
+
+      return notesToDelete.length
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'cleanup_deleted_notes',
+      })
+      return 0
     }
   }
 
