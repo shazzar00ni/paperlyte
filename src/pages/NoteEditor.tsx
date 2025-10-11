@@ -5,6 +5,7 @@ import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
 import ConfirmationModal from '../components/ConfirmationModal'
+import FeedbackButton from '../components/FeedbackButton'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
@@ -333,6 +334,9 @@ const NoteEditor: React.FC = () => {
         onConfirm={confirmDeleteNote}
         isLoading={isDeleting}
       />
+
+      {/* Feedback Button */}
+      <FeedbackButton position='fixed' />
     </div>
   )
 }

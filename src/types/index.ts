@@ -144,3 +144,41 @@ export interface OAuthResponse {
   code: string
   state: string
 }
+
+/**
+ * Feedback and User Interview types
+ */
+
+export type FeedbackType = 'bug' | 'feature' | 'improvement' | 'other'
+export type FeedbackStatus = 'new' | 'in_review' | 'addressed' | 'dismissed'
+
+export interface FeedbackEntry {
+  id: string
+  type: FeedbackType
+  message: string
+  email?: string
+  name?: string
+  userAgent?: string
+  url?: string
+  createdAt: string
+  status: FeedbackStatus
+}
+
+export type InterviewAvailability =
+  | 'morning'
+  | 'afternoon'
+  | 'evening'
+  | 'flexible'
+
+export interface InterviewRequest {
+  id: string
+  name: string
+  email: string
+  availability: InterviewAvailability
+  preferredDays: string[]
+  timezone: string
+  topics: string[]
+  additionalNotes?: string
+  createdAt: string
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled'
+}

@@ -217,3 +217,13 @@ export const trackNavigationEvent = (
   action: 'page_change' | 'menu_click',
   properties?: Record<string, any>
 ) => trackFeatureUsage('navigation', action, properties)
+
+export const trackFeedbackEvent = (
+  action: 'view' | 'submit' | 'cancel',
+  properties?: Record<string, any>
+) => trackFeatureUsage('feedback', action, properties)
+
+export const trackInterviewEvent = (
+  action: 'view' | 'schedule' | 'cancel',
+  properties?: Record<string, any>
+) => trackFeatureUsage('user_interview', action, properties)
