@@ -76,7 +76,6 @@ const DemoCarousel: React.FC = () => {
       monitoring.addBreadcrumb('Demo carousel loaded', 'ui')
     } catch (error) {
       // Silently fail if monitoring is unavailable
-      console.error('Failed to log carousel load to monitoring service:', error)
     }
   }, [])
 
