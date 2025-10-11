@@ -11,7 +11,7 @@ import {
   readLatestLighthouseResults, 
   getPerformanceTargets, 
   getMockResults 
-} from './helpers/lighthouseHelper.js';
+} from './helpers/lighthouseHelper.ts';
 
 describe('Launch Checklist Validation', () => {
   describe('Technical Readiness', () => {
