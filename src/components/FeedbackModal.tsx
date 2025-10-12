@@ -94,7 +94,9 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     if (!isSubmitting) {
-      trackFeedbackEvent('cancel')
+      if (!isSubmitted) {
+        trackFeedbackEvent('cancel')
+      }
       onClose()
       // Reset form after a delay to prevent flash
       setTimeout(() => {
@@ -104,7 +106,6 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
       }, 300)
     }
   }
-
   return (
     <div className='modal-overlay' onClick={handleClose}>
       <div className='modal-content' onClick={e => e.stopPropagation()}>
