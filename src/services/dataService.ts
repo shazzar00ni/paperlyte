@@ -416,7 +416,11 @@ class DataService {
           STORE_NAMES.INTERVIEWS
         )
 
-        if (existingRequests.some(r => r.email === request.email)) {
+        if (
+          existingRequests.some(
+            r => r.email.toLowerCase() === request.email.toLowerCase()
+          )
+        ) {
           return {
             success: false,
             error: 'You already have a pending interview request!',
@@ -438,7 +442,11 @@ class DataService {
         const existingRequests =
           this.getFromStorage<InterviewRequest>('interviews')
 
-        if (existingRequests.some(r => r.email === request.email)) {
+        if (
+          existingRequests.some(
+            r => r.email.toLowerCase() === request.email.toLowerCase()
+          )
+        ) {
           return {
             success: false,
             error: 'You already have a pending interview request!',

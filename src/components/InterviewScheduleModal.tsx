@@ -79,7 +79,7 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         throw new Error('Please fill in all required fields')
       }
 
-      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         throw new Error('Please enter a valid email address')
       }
 

@@ -40,7 +40,10 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         throw new Error('Feedback message must be at least 10 characters')
       }
 
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      if (
+        formData.email &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+      ) {
         throw new Error('Please enter a valid email address')
       }
 
