@@ -34,7 +34,8 @@ class DataService {
   }
 
   private saveToStorage<T>(key: string, data: T[]): boolean {
-    // This private method can also remain synchronous.
+    // This private method is intentionally synchronous, as it wraps localStorage.
+    // The public API provides an async abstraction by wrapping this in a Promise.
     try {
       localStorage.setItem(`${this.storagePrefix}${key}`, JSON.stringify(data))
       return true
