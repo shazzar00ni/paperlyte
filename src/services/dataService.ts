@@ -19,7 +19,6 @@ class DataService {
    */
   private getFromStorage<T>(key: string): T[] {
     // This private method can remain synchronous as it's an internal implementation detail.
-    // The public methods calling it will provide the async abstraction.
     try {
       const data = localStorage.getItem(`${this.storagePrefix}${key}`)
       return data ? JSON.parse(data) : []
