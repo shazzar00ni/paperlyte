@@ -22,6 +22,10 @@ export interface Note {
   lastSyncedAt?: string
   remoteVersion?: number
   localVersion?: number
+  // Enhanced metadata for CRUD operations
+  deletedAt?: string | null
+  wordCount?: number
+  version?: number
 }
 
 export interface WaitlistEntry {
@@ -143,4 +147,25 @@ export interface OAuthConfig {
 export interface OAuthResponse {
   code: string
   state: string
+}
+
+/**
+ * Pagination types for notes CRUD operations
+ */
+
+export interface PaginationOptions {
+  page?: number
+  limit?: number
+  sortBy?: 'createdAt' | 'updatedAt' | 'title'
+  sortOrder?: 'asc' | 'desc'
+  includeDeleted?: boolean
+}
+
+export interface PaginatedResult<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  hasMore: boolean
 }
