@@ -18,11 +18,8 @@ const generatePlaceholderSVG = (title: string, color: string) => {
     <rect width="600" height="400" fill="${color}"/>
     <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
   </svg>`
-  // Handle Unicode characters (like emojis) using modern TextEncoder
-  const encoder = new TextEncoder()
-  const utf8Bytes = encoder.encode(svg)
-  const binaryString = Array.from(utf8Bytes, byte => String.fromCharCode(byte)).join('')
-  return `data:image/svg+xml;base64,${btoa(binaryString)}`
+  // Handle Unicode characters (like emojis) using btoa and encodeURIComponent
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
 }
 
 const DemoCarousel: React.FC = () => {
