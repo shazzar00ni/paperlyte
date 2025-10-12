@@ -1,0 +1,142 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Renovate configuration for Paperlyte - automated dependency management",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticPrefixFixDepsChoreOthers",
+    ":ignoreModulesAndTests",
+    "group:monorepos",
+    "group:recommended",
+    "workarounds:all"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["before 10am on monday"],
+  "labels": ["dependencies", "automated-pr"],
+  "assignees": ["shazzar00ni"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "stabilityDays": 3,
+  "minimumReleaseAge": "3 days",
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "📦 Dependency Updates Dashboard",
+  "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
+  "packageRules": [
+    {
+      "description": "Group React ecosystem updates",
+      "groupName": "React ecosystem",
+      "matchPackageNames": ["react", "react-dom"],
+      "matchPackagePatterns": ["^@types/react"],
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Group testing framework updates",
+      "groupName": "Testing frameworks",
+      "matchPackagePatterns": [
+        "^vitest",
+        "^@vitest/",
+        "^@testing-library/",
+        "^@playwright/"
+      ],
+      "matchPackageNames": ["jsdom"],
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Group development tooling updates",
+      "groupName": "Development tooling",
+      "matchPackagePatterns": [
+        "^eslint",
+        "^@typescript-eslint/",
+        "^@commitlint/"
+      ],
+      "matchPackageNames": ["prettier", "husky", "lint-staged"],
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Group build and bundling tools",
+      "groupName": "Build tools",
+      "matchPackagePatterns": ["^vite", "^@vitejs/"],
+      "matchPackageNames": ["typescript", "postcss", "autoprefixer"],
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Group Tailwind CSS updates",
+      "groupName": "Tailwind CSS",
+      "matchPackagePatterns": ["^tailwindcss", "^@tailwindcss/"],
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Group monitoring and analytics",
+      "groupName": "Monitoring & Analytics",
+      "matchPackagePatterns": ["^@sentry/", "^posthog"],
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Auto-merge patch updates for non-critical dependencies",
+      "matchUpdateTypes": ["patch"],
+      "excludePackageNames": ["react", "react-dom", "typescript", "vite"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Pin GitHub Actions to exact versions for security",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "description": "Separate major updates with higher stability requirements",
+      "matchUpdateTypes": ["major"],
+      "stabilityDays": 7,
+      "minimumReleaseAge": "7 days",
+      "labels": ["dependencies", "major-update", "needs-review"]
+    },
+    {
+      "description": "Security updates should be processed immediately",
+      "matchPackagePatterns": ["*"],
+      "vulnerabilityAlerts": {
+        "labels": ["security", "dependencies", "urgent"],
+        "assignees": ["shazzar00ni"],
+        "stabilityDays": 0,
+        "minimumReleaseAge": null,
+        "schedule": ["at any time"]
+      }
+    },
+    {
+      "description": "Ignore alpha, beta, and RC versions",
+      "matchPackagePatterns": ["*"],
+      "ignoreUnstable": true,
+      "respectLatest": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "dependencies", "urgent"],
+    "assignees": ["shazzar00ni"],
+    "schedule": ["at any time"]
+  },
+  "osvVulnerabilityAlerts": true,
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "separateMinorPatch": false,
+  "rangeStrategy": "bump",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "commitMessageSuffix": "",
+  "prTitle": "{{semanticPrefix}}{{#if isPin}}📌 Pin{{else}}⬆️ Update{{/if}} {{depName}} {{#if isMajor}}(major){{else if isMinor}}(minor){{else}}(patch){{/if}}",
+  "prBodyTemplate": "This PR contains the following updates:\n\n| Package | Type | Update | Change |\n|---------|------|--------|---------|\n{{#each upgrades as |upgrade|}}\n| {{upgrade.depName}} | {{upgrade.depType}} | {{upgrade.updateType}} | {{#if upgrade.displayFrom}}`{{upgrade.displayFrom}}` -> {{/if}}{{#if upgrade.displayTo}}`{{upgrade.displayTo}}`{{/if}} |\n{{/each}}\n\n---\n\n### Configuration\n\n📅 **Schedule**: {{schedule}}\n\n🚦 **Automerge**: {{#if automerge}}✅ Enabled{{else}}❌ Disabled{{/if}}\n\n♻ **Rebasing**: {{#if rebaseWhen}}Rebasing will be triggered {{rebaseWhen}}{{else}}Rebasing is disabled{{/if}}\n\n🔕 **Ignore**: Close this PR and you won't be reminded about {{#unless isSingleUpdate}}these updates{{else}}this update{{/unless}} again.\n\n---\n\nThis PR was generated by [Renovate](https://github.com/renovatebot/renovate). View the [repository job log]({{logUrl}}).",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on monday"],
+    "commitMessageAction": "Lock file maintenance"
+  },
+  "node": {
+    "supportPolicy": ["lts"]
+  },
+  "npm": {
+    "rangeStrategy": "bump"
+  }
+}

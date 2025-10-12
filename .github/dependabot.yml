@@ -1,0 +1,107 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/New_York'
+    # Limit the number of open pull requests for version updates
+    open-pull-requests-limit: 5
+    # Assignees for dependency PRs
+    assignees:
+      - 'shazzar00ni'
+    # Labels to add to dependency PRs
+    labels:
+      - 'dependencies'
+      - 'automated-pr'
+    # Group minor and patch updates together to reduce PR noise
+    groups:
+      # Group all React-related updates
+      react-updates:
+        patterns:
+          - 'react*'
+          - '@types/react*'
+      # Group all testing-related updates
+      testing-updates:
+        patterns:
+          - 'vitest*'
+          - '@vitest/*'
+          - '@testing-library/*'
+          - '@playwright/test'
+          - 'jsdom'
+      # Group all linting/formatting updates
+      dev-tooling-updates:
+        patterns:
+          - 'eslint*'
+          - '@typescript-eslint/*'
+          - 'prettier'
+          - '@commitlint/*'
+          - 'husky'
+          - 'lint-staged'
+      # Group all build tooling updates
+      build-updates:
+        patterns:
+          - 'vite*'
+          - '@vitejs/*'
+          - 'typescript'
+          - 'postcss*'
+          - 'autoprefixer'
+      # Group Tailwind CSS updates
+      styling-updates:
+        patterns:
+          - 'tailwindcss*'
+          - '@tailwindcss/*'
+    # Allow both patch and minor updates, but not major updates
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'vite'
+        update-types: ['version-update:semver-major']
+      # Ignore beta/alpha releases
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+        versions: ['*alpha*', '*beta*', '*rc*']
+    # Commit message configuration
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+      include: 'scope'
+    # PR title and body customization
+    pull-request-branch-name:
+      separator: '/'
+    # Rebase strategy for PRs
+    rebase-strategy: 'auto'
+    # Enable security updates
+    allow:
+      - dependency-type: 'all'
+    # Vendored dependencies (none for this project)
+    vendor: false
+
+  # Enable updates for GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/New_York'
+    open-pull-requests-limit: 3
+    assignees:
+      - 'shazzar00ni'
+    labels:
+      - 'github-actions'
+      - 'automated-pr'
+    commit-message:
+      prefix: 'chore(ci)'
+      include: 'scope'
