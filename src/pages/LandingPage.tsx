@@ -2,7 +2,11 @@ import { CheckCircle, Search, Shield, Smartphone, Tag, Zap } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import DemoCarousel from '../components/DemoCarousel'
 import WaitlistModal from '../components/WaitlistModal'
-import { trackUserAction, trackWaitlistEvent } from '../utils/analytics'
+import {
+  trackFeatureUsage,
+  trackUserAction,
+  trackWaitlistEvent,
+} from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 
 const LandingPage: React.FC = () => {
@@ -10,6 +14,7 @@ const LandingPage: React.FC = () => {
 
   useEffect(() => {
     // Track landing page view
+    trackFeatureUsage('landing_page', 'view')
     trackUserAction('landing_page_view')
     monitoring.addBreadcrumb('Landing page loaded', 'navigation')
   }, [])
