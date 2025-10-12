@@ -29,7 +29,7 @@ export const useKeyboardShortcut = (
 
       // Check modifiers (Ctrl on Windows/Linux, Cmd on Mac)
       const modifierMatches =
-        (ctrl ? event.ctrlKey || event.metaKey : true) &&
+        (ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey) &&
         (shift ? event.shiftKey : !event.shiftKey) &&
         (alt ? event.altKey : !event.altKey)
 
