@@ -139,7 +139,9 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     if (!isSubmitting) {
-      trackInterviewEvent('cancel')
+      if (!isSubmitted) {
+        trackInterviewEvent('cancel')
+      }
       onClose()
       // Reset form after a delay to prevent flash
       setTimeout(() => {

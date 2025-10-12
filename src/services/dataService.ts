@@ -410,15 +410,18 @@ class DataService {
     await this.initialize()
 
     try {
+      // Normalize email for consistent comparison and storage
+      const normalizedEmail = request.email.toLowerCase().trim()
+
       // Check for duplicate email
       if (this.useIndexedDB) {
-        const existingRequests = await indexedDB.getAll<InterviewRequest>(
-          STORE_NAMES.INTERVIEWS
-        )
+        const existingRequests =
+          (await indexedDB.getAll<InterviewRequest>(STORE_NAMES.INTERVIEWS)) ||
+          []
 
         if (
           existingRequests.some(
-            r => r.email.toLowerCase() === request.email.toLowerCase()
+            r => (r.email || '').toLowerCase().trim() === normalizedEmail
           )
         ) {
           return {
@@ -430,6 +433,7 @@ class DataService {
         const newRequest: InterviewRequest = {
           id: crypto.randomUUID(),
           ...request,
+          email: normalizedEmail,
           status: 'pending',
           createdAt: new Date().toISOString(),
         }
@@ -440,11 +444,11 @@ class DataService {
       } else {
         // Fallback to localStorage
         const existingRequests =
-          this.getFromStorage<InterviewRequest>('interviews')
+          this.getFromStorage<InterviewRequest>('interviews') || []
 
         if (
           existingRequests.some(
-            r => r.email.toLowerCase() === request.email.toLowerCase()
+            r => (r.email || '').toLowerCase().trim() === normalizedEmail
           )
         ) {
           return {
@@ -456,6 +460,7 @@ class DataService {
         const newRequest: InterviewRequest = {
           id: crypto.randomUUID(),
           ...request,
+          email: normalizedEmail,
           status: 'pending',
           createdAt: new Date().toISOString(),
         }
