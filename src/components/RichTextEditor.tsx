@@ -83,8 +83,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             ? error.message.replace(/[^\w\s]/g, '*')
             : 'Unknown error'
 
-        console.error('Editor content change failed:', sanitizedMessage)
-
         // Log to monitoring with sanitized error message
         monitoring.logError(new Error(sanitizedMessage), {
           feature: 'rich_text_editor',
