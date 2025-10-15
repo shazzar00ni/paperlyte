@@ -49,6 +49,11 @@ class IndexedDBStorage {
     }
 
     this.initPromise = new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error('IndexedDB is not available'))
+        return
+      }
+
       const request = window.indexedDB.open(this.dbName, this.version)
 
       request.onerror = () => {

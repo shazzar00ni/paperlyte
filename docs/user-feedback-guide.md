@@ -157,20 +157,20 @@ Common topics we discuss:
 
 ### Sample Interview Guide
 
-**Introduction (3 minutes)**
+#### Introduction (3 minutes)
 
 - Thank them for their time
 - Explain the session format
 - Ask permission to take notes
 
-**Current Experience (10 minutes)**
+#### Current Experience (10 minutes)
 
 - Walk me through your typical note-taking session
 - What tools do you use currently?
 - What's working well?
 - What frustrations do you have?
 
-**Paperlyte Specific (10 minutes)**
+#### Paperlyte Specific (10 minutes)
 
 - How did you discover Paperlyte?
 - What made you try it?
@@ -178,13 +178,13 @@ Common topics we discuss:
 - What features do you use most?
 - What's missing?
 
-**Future Vision (5 minutes)**
+#### Future Vision (5 minutes)
 
 - If you could add one feature, what would it be?
 - How would that help you?
 - What would make Paperlyte indispensable?
 
-**Wrap-up (2 minutes)**
+#### Wrap-up (2 minutes)
 
 - Any questions for us?
 - Thank you and next steps
@@ -264,7 +264,7 @@ A: As often as you'd like! We appreciate all input.
 
 Questions about feedback or interviews?
 
-- Email: feedback@paperlyte.com
+- Email: <feedback@paperlyte.com>
 - Check our FAQ: [Link to FAQ]
 - Join our community: [Link to Discord/Forum]
 

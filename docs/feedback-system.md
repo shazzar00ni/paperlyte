@@ -320,19 +320,19 @@ Track these metrics via PostHog:
 
 ### Common Issues
 
-**Feedback not submitting**
+#### Feedback not submitting
 
 - Check IndexedDB availability in browser
 - Verify network connectivity (future API version)
 - Check browser console for errors
 
-**Modal not opening**
+#### Modal not opening
 
 - Verify component is imported correctly
 - Check state management in parent component
 - Ensure CSS classes are loaded
 
-**Tests failing**
+#### Tests failing
 
 - Clear test cache: `npm test -- --clearCache`
 - Check mock implementations
