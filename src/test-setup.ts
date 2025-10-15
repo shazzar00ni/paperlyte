@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom'
 import { vi, beforeEach } from 'vitest'
+import 'fake-indexeddb/auto'
 
 // Mock global crypto for tests
 Object.defineProperty(global, 'crypto', {
@@ -40,12 +41,6 @@ class LocalStorageMock {
 
 Object.defineProperty(window, 'localStorage', {
   value: new LocalStorageMock(),
-  writable: true,
-})
-
-// Mock IndexedDB as not available (use localStorage fallback in tests)
-Object.defineProperty(window, 'indexedDB', {
-  value: undefined,
   writable: true,
 })
 
