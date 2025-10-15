@@ -68,20 +68,6 @@ check_command() {
     fi
 }
 
-# Function to check if npm script exists in package.json
-check_npm_script() {
-    local script=$1
-    local description=$2
-    
-    if grep -q "\"$script\":" package.json 2>/dev/null; then
-        echo -e "${GREEN}✅ ${description}${NC}"
-        ((PASSED++))
-    else
-        echo -e "${RED}❌ ${description}${NC}"
-        ((FAILED++))
-    fi
-}
-
 echo "📦 Checking GitHub Actions Workflows..."
 echo "---------------------------------------"
 check_file ".github/workflows/ci.yml" "CI workflow"
