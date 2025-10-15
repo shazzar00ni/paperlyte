@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { 
-  trackUserAction, 
-  trackFeatureUsage, 
+import {
+  trackUserAction,
+  trackFeatureUsage,
   trackEvent,
-  analytics
+  analytics,
 } from '../../utils/analytics'
 
 describe('Analytics Utilities', () => {
@@ -14,9 +14,9 @@ describe('Analytics Utilities', () => {
   describe('trackUserAction', () => {
     it('should call analytics track method', () => {
       const trackSpy = vi.spyOn(analytics, 'track')
-      
+
       trackUserAction('landing_page_view')
-      
+
       expect(trackSpy).toHaveBeenCalledWith('user_landing_page_view', undefined)
     })
 
@@ -32,28 +32,36 @@ describe('Analytics Utilities', () => {
   describe('trackFeatureUsage', () => {
     it('should call analytics trackFeature method', () => {
       const trackFeatureSpy = vi.spyOn(analytics, 'trackFeature')
-      
+
       trackFeatureUsage('note_editor', 'create')
-      
-      expect(trackFeatureSpy).toHaveBeenCalledWith('note_editor', 'create', undefined)
+
+      expect(trackFeatureSpy).toHaveBeenCalledWith(
+        'note_editor',
+        'create',
+        undefined
+      )
     })
 
     it('should pass through metadata', () => {
       const trackFeatureSpy = vi.spyOn(analytics, 'trackFeature')
-      
+
       trackFeatureUsage('search', 'query', { query_length: 10 })
-      
-      expect(trackFeatureSpy).toHaveBeenCalledWith('search', 'query', { query_length: 10 })
+
+      expect(trackFeatureSpy).toHaveBeenCalledWith('search', 'query', {
+        query_length: 10,
+      })
     })
   })
 
   describe('trackEvent', () => {
     it('should call analytics track method', () => {
       const trackSpy = vi.spyOn(analytics, 'track')
-      
+
       trackEvent('custom_event', { custom_prop: 'value' })
-      
-      expect(trackSpy).toHaveBeenCalledWith('custom_event', { custom_prop: 'value' })
+
+      expect(trackSpy).toHaveBeenCalledWith('custom_event', {
+        custom_prop: 'value',
+      })
     })
   })
 

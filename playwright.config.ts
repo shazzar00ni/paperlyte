@@ -26,10 +26,10 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    
+
     /* Screenshots on failure */
     screenshot: 'only-on-failure',
-    
+
     /* Videos on failure */
     video: 'retain-on-failure',
   },

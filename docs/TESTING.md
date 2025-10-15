@@ -27,6 +27,7 @@ npm run test:coverage
 ```
 
 #### Key Features:
+
 - **Component Testing**: React components with user interactions
 - **Service Layer Testing**: Data persistence and business logic
 - **Utility Testing**: Analytics, monitoring, and helper functions
@@ -44,6 +45,7 @@ npm run test:run -- tests/integration
 ```
 
 #### Test Coverage:
+
 - **Note Management Workflow**: Create, edit, save, delete operations
 - **Search and Organization**: Search functionality and filtering
 - **Data Persistence**: localStorage and session management
@@ -67,6 +69,7 @@ npm run test:e2e:debug
 ```
 
 #### Test Scenarios:
+
 - **Landing Page**: User interactions and waitlist functionality
 - **Note Editor**: Text editing, formatting, and persistence
 - **Cross-browser Testing**: Chromium, Firefox, WebKit
@@ -136,11 +139,11 @@ describe('MyComponent', () => {
   it('should handle user interactions', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
-    
+
     render(<MyComponent onSubmit={onSubmit} />)
-    
+
     await user.click(screen.getByRole('button', { name: /submit/i }))
-    
+
     expect(onSubmit).toHaveBeenCalled()
   })
 })
@@ -153,9 +156,9 @@ import { test, expect } from '@playwright/test'
 
 test('should complete user workflow', async ({ page }) => {
   await page.goto('/')
-  
+
   await page.getByRole('button', { name: /get started/i }).click()
-  
+
   await expect(page).toHaveURL('/dashboard')
 })
 ```
@@ -168,7 +171,7 @@ test('should complete user workflow', async ({ page }) => {
 it('should sanitize malicious input', () => {
   const maliciousInput = '<script>alert("xss")</script>'
   const sanitized = sanitizeContent(maliciousInput)
-  
+
   expect(sanitized).not.toContain('<script>')
 })
 ```
@@ -178,10 +181,10 @@ it('should sanitize malicious input', () => {
 ```typescript
 it('should validate email format', async () => {
   const user = userEvent.setup()
-  
+
   await user.type(emailInput, 'invalid-email')
   await user.click(submitButton)
-  
+
   expect(screen.getByText(/invalid email/i)).toBeVisible()
 })
 ```
@@ -191,6 +194,7 @@ it('should validate email format', async () => {
 ### GitHub Actions Workflows
 
 #### Main CI Pipeline (`.github/workflows/ci.yml`)
+
 - Linting and formatting
 - Type checking
 - Unit tests
@@ -200,6 +204,7 @@ it('should validate email format', async () => {
 - Build verification
 
 #### Comprehensive Test Suite (`.github/workflows/test.yml`)
+
 - Cross-platform testing (Ubuntu, Windows, macOS)
 - Multiple Node.js versions (18, 20)
 - Browser matrix testing (Chromium, Firefox, WebKit)
@@ -215,6 +220,7 @@ it('should validate email format', async () => {
 ### PR Checks
 
 All pull requests must pass:
+
 - [ ] Unit tests (all passing)
 - [ ] Integration tests (all passing)
 - [ ] E2E tests (all passing)
@@ -232,8 +238,9 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 **Format:** `<type>[optional scope]: <description>`
 
 **Valid types:**
+
 - `feat:` - New features
-- `fix:` - Bug fixes  
+- `fix:` - Bug fixes
 - `docs:` - Documentation changes
 - `style:` - Code style changes (formatting, etc.)
 - `refactor:` - Code refactoring
@@ -244,6 +251,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 - `chore:` - Other maintenance tasks
 
 **Examples:**
+
 ```
 feat: add user authentication
 fix: resolve memory leak in editor
@@ -256,6 +264,7 @@ test: add integration tests for search
 ### Lighthouse Metrics
 
 Monitored metrics with thresholds:
+
 - **Performance Score**: ≥80
 - **Accessibility Score**: ≥90
 - **Best Practices Score**: ≥80
@@ -272,7 +281,7 @@ test('should load within performance budget', async ({ page }) => {
   const startTime = Date.now()
   await page.goto('/')
   const loadTime = Date.now() - startTime
-  
+
   expect(loadTime).toBeLessThan(2000)
 })
 ```
