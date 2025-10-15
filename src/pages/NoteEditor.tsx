@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react'
-import { Save, Tag, Search, PlusCircle, Trash2 } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  Save,
+  Tag,
+  Search,
+  PlusCircle,
+  Trash2,
+  Maximize2,
+  X,
+} from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
@@ -15,6 +23,8 @@ const NoteEditor: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const focusModeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Track editor page view
@@ -24,6 +34,34 @@ const NoteEditor: React.FC = () => {
     // Load notes from localStorage
     loadNotes()
   }, [])
+
+  // Focus Mode event handlers
+  useEffect(() => {
+    if (!focusMode) return
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        exitFocusMode()
+      }
+    }
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        focusModeRef.current &&
+        !focusModeRef.current.contains(e.target as Node)
+      ) {
+        exitFocusMode()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscapeKey)
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [focusMode])
 
   const loadNotes = async () => {
     try {
@@ -173,6 +211,18 @@ const NoteEditor: React.FC = () => {
     setNoteToDelete(null)
   }
 
+  const enterFocusMode = () => {
+    setFocusMode(true)
+    trackFeatureUsage('focus_mode', 'enter')
+    monitoring.addBreadcrumb('Focus Mode entered', 'user_action')
+  }
+
+  const exitFocusMode = () => {
+    setFocusMode(false)
+    trackFeatureUsage('focus_mode', 'exit')
+    monitoring.addBreadcrumb('Focus Mode exited', 'user_action')
+  }
+
   const filteredNotes = notes.filter(
     note =>
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,6 +339,14 @@ const NoteEditor: React.FC = () => {
                   <span>Tags</span>
                 </button>
                 <button
+                  onClick={enterFocusMode}
+                  className='btn-ghost btn-sm flex items-center space-x-1'
+                  title='Enter Focus Mode'
+                >
+                  <Maximize2 className='h-4 w-4' />
+                  <span>Focus</span>
+                </button>
+                <button
                   onClick={saveCurrentNote}
                   disabled={isLoading}
                   className='btn-primary btn-sm flex items-center space-x-1'
@@ -333,6 +391,61 @@ const NoteEditor: React.FC = () => {
         onConfirm={confirmDeleteNote}
         isLoading={isDeleting}
       />
+
+      {/* Focus Mode Overlay */}
+      {focusMode && currentNote && (
+        <div className='fixed inset-0 bg-background z-50 flex items-center justify-center p-4'>
+          <div
+            ref={focusModeRef}
+            className='w-full max-w-4xl h-full flex flex-col bg-white rounded-lg shadow-lg p-8'
+          >
+            {/* Focus Mode Header */}
+            <div className='flex items-center justify-between mb-6'>
+              <input
+                type='text'
+                value={currentNote.title}
+                onChange={e => updateCurrentNote({ title: e.target.value })}
+                className='text-3xl font-bold text-dark bg-transparent border-none outline-none flex-1'
+                placeholder='Note title...'
+              />
+              <button
+                onClick={exitFocusMode}
+                className='ml-4 p-2 text-gray-400 hover:text-dark hover:bg-gray-100 rounded-full transition-colors'
+                title='Exit Focus Mode (ESC)'
+                aria-label='Exit Focus Mode'
+              >
+                <X className='h-6 w-6' />
+              </button>
+            </div>
+
+            {/* Focus Mode Content */}
+            <div className='flex-1 overflow-hidden'>
+              <RichTextEditor
+                content={currentNote.content}
+                onChange={content => updateCurrentNote({ content })}
+                placeholder='Start writing your thoughts...'
+                className='h-full text-lg'
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Focus Mode Footer - Save Status */}
+            <div className='mt-4 flex items-center justify-center text-sm text-gray-500'>
+              {isLoading ? (
+                <span className='flex items-center space-x-2'>
+                  <Save className='h-4 w-4 animate-pulse' />
+                  <span>Saving...</span>
+                </span>
+              ) : (
+                <span className='flex items-center space-x-2'>
+                  <Save className='h-4 w-4' />
+                  <span>Auto-saved</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
