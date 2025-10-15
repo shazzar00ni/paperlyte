@@ -6,9 +6,11 @@ import {
   AlertTriangle,
   Check,
   Clock,
+  ShieldCheck,
 } from 'lucide-react'
-import type { SyncStatus, SyncMetadata } from '../types'
+import type { SyncStatus, SyncMetadata, EncryptionMetadata } from '../types'
 import { syncEngine } from '../services/syncEngine'
+import { keyManagementService } from '../services/keyManagementService'
 import { trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 
@@ -16,23 +18,29 @@ interface SyncStatusIndicatorProps {
   status?: SyncStatus
   compact?: boolean
   showLastSync?: boolean
+  showEncryption?: boolean
 }
 
 /**
  * SyncStatusIndicator - Displays current sync status
  *
  * Shows visual feedback about sync state and provides quick access to sync info
+ * Also displays encryption status when enabled
  */
 const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
   status = 'synced',
   compact = false,
   showLastSync = true,
+  showEncryption = true,
 }) => {
   const [syncMetadata, setSyncMetadata] = useState<SyncMetadata | null>(null)
+  const [encryptionMetadata, setEncryptionMetadata] =
+    useState<EncryptionMetadata | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     loadSyncMetadata()
+    loadEncryptionMetadata()
     trackFeatureUsage('sync_status_indicator', 'view')
   }, [])
 
@@ -48,12 +56,24 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
     }
   }
 
+  const loadEncryptionMetadata = async () => {
+    try {
+      const metadata = await keyManagementService.getEncryptionMetadata()
+      setEncryptionMetadata(metadata)
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_status_indicator',
+        action: 'load_encryption_metadata',
+      })
+    }
+  }
+
   const handleRefresh = async () => {
     setIsRefreshing(true)
     trackFeatureUsage('sync_status_indicator', 'manual_refresh')
 
     try {
-      await loadSyncMetadata()
+      await Promise.all([loadSyncMetadata(), loadEncryptionMetadata()])
     } finally {
       setIsRefreshing(false)
     }
@@ -143,6 +163,19 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
         {getStatusIcon()}
         <span className='text-sm font-medium'>{getStatusText()}</span>
       </div>
+
+      {showEncryption && encryptionMetadata && encryptionMetadata.isEnabled && (
+        <>
+          <span className='text-gray-300'>|</span>
+          <div
+            className='flex items-center gap-1 text-green-600'
+            title='End-to-end encryption enabled'
+          >
+            <ShieldCheck className='w-4 h-4' />
+            <span className='text-xs font-medium'>Encrypted</span>
+          </div>
+        </>
+      )}
 
       {showLastSync && syncMetadata && (
         <>
