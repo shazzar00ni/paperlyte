@@ -8,6 +8,8 @@ import type {
 import { monitoring } from '../utils/monitoring'
 import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
 import { isIndexedDBAvailable } from '../utils/dataMigration'
+import { encryptionService } from './encryptionService'
+import { keyManagementService } from './keyManagementService'
 
 /**
  * Sync Engine - Manages cloud synchronization and conflict resolution
@@ -21,6 +23,7 @@ import { isIndexedDBAvailable } from '../utils/dataMigration'
  * - Last-write-wins and manual conflict resolution
  * - Offline-first architecture
  * - IndexedDB for metadata and conflict storage
+ * - Client-side encryption before cloud sync
  */
 
 class SyncEngine {
@@ -33,22 +36,146 @@ class SyncEngine {
   }
 
   /**
+   * Encrypt a note before syncing to cloud
+   * Only encrypts if key manager is initialized
+   *
+   * @param note - Note to encrypt
+   * @returns Note with encrypted content (or original if encryption not enabled)
+   */
+  private async encryptNoteForSync(note: Note): Promise<Note> {
+    // Skip encryption if key manager not initialized
+    if (!keyManagementService.isInitialized()) {
+      return note
+    }
+
+    try {
+      // Generate or get encryption key for this note
+      const keyId = await keyManagementService.generateNoteKey(note.id)
+      const key = await keyManagementService.getNoteKey(note.id, keyId)
+
+      // Encrypt title and content
+      const encryptedTitle = await encryptionService.encrypt(note.title, key)
+      const encryptedContent = await encryptionService.encrypt(
+        note.content,
+        key
+      )
+
+      // Return note with encrypted data
+      return {
+        ...note,
+        isEncrypted: true,
+        encryptedTitle: encryptedTitle.ciphertext,
+        encryptedContent: encryptedContent.ciphertext,
+        encryptionIv: encryptedContent.iv, // Store IV for decryption
+        encryptionKeyId: keyId,
+        // Keep original for local use, but cloud will only have encrypted version
+        title: '[Encrypted]',
+        content: '[Encrypted]',
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_engine',
+        action: 'encrypt_note_for_sync',
+        additionalData: { noteId: note.id },
+      })
+      // Return original note if encryption fails
+      return note
+    }
+  }
+
+  /**
+   * Decrypt a note after fetching from cloud
+   * Only decrypts if note is marked as encrypted
+   *
+   * @param note - Note to decrypt
+   * @returns Note with decrypted content (or original if not encrypted)
+   */
+  private async decryptNoteFromSync(note: Note): Promise<Note> {
+    // Skip if not encrypted
+    if (!note.isEncrypted || !note.encryptionKeyId) {
+      return note
+    }
+
+    // Skip if key manager not initialized
+    if (!keyManagementService.isInitialized()) {
+      monitoring.addBreadcrumb(
+        'Cannot decrypt note: key manager not initialized',
+        'warning',
+        { noteId: note.id }
+      )
+      return note
+    }
+
+    try {
+      // Get encryption key
+      const key = await keyManagementService.getNoteKey(
+        note.id,
+        note.encryptionKeyId
+      )
+
+      // Decrypt title and content
+      const decryptedTitle = await encryptionService.decrypt(
+        {
+          ciphertext: note.encryptedTitle || '',
+          iv: note.encryptionIv || '',
+          algorithm: 'AES-GCM',
+        },
+        key
+      )
+
+      const decryptedContent = await encryptionService.decrypt(
+        {
+          ciphertext: note.encryptedContent || '',
+          iv: note.encryptionIv || '',
+          algorithm: 'AES-GCM',
+        },
+        key
+      )
+
+      // Return note with decrypted data
+      return {
+        ...note,
+        title: decryptedTitle,
+        content: decryptedContent,
+      }
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_engine',
+        action: 'decrypt_note_from_sync',
+        additionalData: { noteId: note.id },
+      })
+      // Return original note if decryption fails
+      return note
+    }
+  }
+
+  /**
    * Simulate cloud storage for MVP (will be replaced with API calls)
+   * Decrypts notes after fetching from cloud if encrypted
    */
   private async getCloudNotes(): Promise<Note[]> {
     try {
+      let encryptedNotes: Note[] = []
+
       if (this.useIndexedDB) {
         await indexedDB.init()
         const metadata = await indexedDB.get<{ key: string; value: Note[] }>(
           STORE_NAMES.METADATA,
           'cloud_notes'
         )
-        return metadata?.value || []
+        encryptedNotes = metadata?.value || []
       } else {
         // Fallback to localStorage
         const data = localStorage.getItem(`${this.storagePrefix}cloud_notes`)
-        return data ? JSON.parse(data) : []
+        encryptedNotes = data ? JSON.parse(data) : []
       }
+
+      // Decrypt notes if they are encrypted
+      const decryptedNotes = await Promise.all(
+        encryptedNotes.map(note => this.decryptNoteFromSync(note))
+      )
+
+      return decryptedNotes
     } catch (error) {
       monitoring.logError(error as Error, {
         feature: 'sync_engine',
@@ -60,18 +187,23 @@ class SyncEngine {
 
   private async saveToCloud(notes: Note[]): Promise<boolean> {
     try {
+      // Encrypt notes before saving to cloud
+      const encryptedNotes = await Promise.all(
+        notes.map(note => this.encryptNoteForSync(note))
+      )
+
       if (this.useIndexedDB) {
         await indexedDB.init()
         await indexedDB.put(STORE_NAMES.METADATA, {
           key: 'cloud_notes',
-          value: notes,
+          value: encryptedNotes,
         })
         return true
       } else {
         // Fallback to localStorage
         localStorage.setItem(
           `${this.storagePrefix}cloud_notes`,
-          JSON.stringify(notes)
+          JSON.stringify(encryptedNotes)
         )
         return true
       }

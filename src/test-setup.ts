@@ -1,12 +1,31 @@
 import '@testing-library/jest-dom'
 import { vi, beforeEach } from 'vitest'
 
-// Mock global crypto for tests
-Object.defineProperty(global, 'crypto', {
-  value: {
-    randomUUID: vi.fn(() => 'test-uuid-123'),
-  },
+// Mock global crypto for tests with Web Crypto API support
+// Use Node.js crypto for tests
+import crypto from 'crypto'
+
+// Polyfill crypto for tests
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: crypto.webcrypto,
+    writable: true,
+  })
+}
+
+// Override randomUUID for deterministic tests
+Object.defineProperty(crypto, 'randomUUID', {
+  value: vi.fn(() => 'test-uuid-123'),
+  writable: true,
 })
+
+// Also patch global crypto.randomUUID for compatibility
+if (globalThis.crypto) {
+  Object.defineProperty(globalThis.crypto, 'randomUUID', {
+    value: vi.fn(() => 'test-uuid-123'),
+    writable: true,
+  })
+}
 
 // Mock localStorage with functional implementation
 class LocalStorageMock {

@@ -26,6 +26,12 @@ export interface Note {
   deletedAt?: string | null
   wordCount?: number
   version?: number
+  // Encryption metadata
+  isEncrypted?: boolean
+  encryptedContent?: string
+  encryptedTitle?: string
+  encryptionKeyId?: string
+  encryptionIv?: string
 }
 
 export interface WaitlistEntry {
@@ -168,4 +174,28 @@ export interface PaginatedResult<T> {
   limit: number
   totalPages: number
   hasMore: boolean
+}
+
+/**
+ * Encryption-related types
+ */
+
+export interface EncryptedData {
+  ciphertext: string
+  iv: string
+  algorithm: 'AES-GCM'
+}
+
+export interface EncryptionKey {
+  id: string
+  encryptedKey: string
+  keyIv: string // IV used for key wrapping
+  createdAt: string
+}
+
+export interface EncryptionMetadata {
+  isEnabled: boolean
+  hasPassword: boolean
+  keyCount: number
+  lastKeyRotation: string | null
 }

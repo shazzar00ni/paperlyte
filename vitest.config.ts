@@ -8,6 +8,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
+    environmentOptions: {
+      jsdom: {
+        // Enable Web Crypto API in jsdom
+        url: 'https://localhost',
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
