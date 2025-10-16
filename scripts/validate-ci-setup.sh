@@ -144,25 +144,58 @@ if [ -f "package.json" ]; then
         "ci"
     )
     
-    for script in "${scripts[@]}"; do
-        if grep -q "\"$script\":" package.json; then
-            echo -e "${GREEN}✅ Script: $script${NC}"
-            ((PASSED++))
-        else
-            echo -e "${RED}❌ Script: $script${NC}"
-            ((FAILED++))
-        fi
-    done
+    # Check if jq is available for accurate JSON parsing
+    if command -v jq &> /dev/null; then
+        # Use jq for accurate script validation
+        for script in "${scripts[@]}"; do
+            if jq -e ".scripts[\"$script\"]" package.json > /dev/null 2>&1; then
+                echo -e "${GREEN}✅ Script: $script${NC}"
+                ((PASSED++))
+            else
+                echo -e "${RED}❌ Script: $script${NC}"
+                ((FAILED++))
+            fi
+        done
+    else
+        # Fallback to grep with improved pattern matching
+        for script in "${scripts[@]}"; do
+            # Use more specific grep pattern to match within scripts object
+            if grep -q "\"$script\"\s*:" package.json; then
+                echo -e "${GREEN}✅ Script: $script${NC}"
+                ((PASSED++))
+            else
+                echo -e "${RED}❌ Script: $script${NC}"
+                ((FAILED++))
+            fi
+        done
+    fi
 fi
 
 echo ""
 echo "🔒 Checking Security Configuration..."
 echo "-------------------------------------"
-if [ -f "package.json" ] && grep -q "\"security-audit\":" package.json; then
-    echo -e "${GREEN}✅ Security audit script configured${NC}"
-    ((PASSED++))
+if [ -f "package.json" ]; then
+    if command -v jq &> /dev/null; then
+        # Use jq for accurate validation
+        if jq -e '.scripts["security-audit"]' package.json > /dev/null 2>&1; then
+            echo -e "${GREEN}✅ Security audit script configured${NC}"
+            ((PASSED++))
+        else
+            echo -e "${RED}❌ Security audit script not found${NC}"
+            ((FAILED++))
+        fi
+    else
+        # Fallback to grep
+        if grep -q "\"security-audit\"\s*:" package.json; then
+            echo -e "${GREEN}✅ Security audit script configured${NC}"
+            ((PASSED++))
+        else
+            echo -e "${RED}❌ Security audit script not found${NC}"
+            ((FAILED++))
+        fi
+    fi
 else
-    echo -e "${RED}❌ Security audit script not found${NC}"
+    echo -e "${RED}❌ package.json not found${NC}"
     ((FAILED++))
 fi
 
