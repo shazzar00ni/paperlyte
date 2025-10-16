@@ -238,7 +238,7 @@ if (!globalThis.crypto) {
 
 ## Limitations & Known Issues
 
-1. **Test Coverage** - Some edge case tests still failing (11/14 passing)
+1. **Test Coverage** - Some edge case tests still failing (27/30 passing)
 2. **No key rotation** - Single key per note for lifetime
 3. **No multi-device sync** - Key management across devices not implemented
 4. **Recovery options** - No way to recover encrypted data if password lost
