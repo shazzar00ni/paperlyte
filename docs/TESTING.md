@@ -78,6 +78,41 @@ npm run test:e2e:debug
 
 ## Test Configuration
 
+### Memory Optimization
+
+Tests are configured with memory optimization to prevent "JavaScript heap out of memory" errors:
+
+#### Node.js Memory Limits
+
+All test scripts include increased memory allocation:
+
+```bash
+NODE_OPTIONS='--max-old-space-size=4096' vitest run
+```
+
+This setting allocates 4GB of heap space to Node.js, sufficient for running the full test suite.
+
+#### Vitest Configuration Settings
+
+The test runner uses optimized settings for memory efficiency:
+
+- **Single-threaded execution**: Reduces memory overhead from parallel test execution
+- **Disabled isolation**: Shares context between tests in same file for better memory usage
+- **Proper timeouts**: Prevents memory leaks from hanging tests
+
+#### IndexedDB Testing
+
+Tests use `fake-indexeddb` package to provide a working IndexedDB implementation in the test environment without the overhead of a real browser database.
+
+#### Troubleshooting Memory Issues
+
+If you encounter memory errors:
+
+1. **Increase memory limit**: Adjust `--max-old-space-size` value in package.json
+2. **Run tests in batches**: Use `npm run test:run -- <specific-path>` to test subsets
+3. **Check for leaks**: Ensure proper cleanup in `afterEach` hooks
+4. **Monitor usage**: Use `node --expose-gc` to manually trigger garbage collection
+
 ### Vitest Configuration (`vitest.config.ts`)
 
 ```typescript
@@ -87,6 +122,18 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
+    // Memory optimization settings
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true, // Reduce memory usage by using single thread
+      },
+    },
+    // Test execution timeout
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    // Disable isolation for better memory usage
+    isolate: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -102,6 +149,34 @@ export default defineConfig({
   },
 })
 ```
+
+### Test Setup File (`src/test-setup.ts`)
+
+The test setup file configures the testing environment:
+
+```typescript
+import '@testing-library/jest-dom'
+import { vi, beforeEach } from 'vitest'
+import 'fake-indexeddb/auto' // Provides IndexedDB implementation for tests
+
+// Mock global crypto for tests
+Object.defineProperty(global, 'crypto', {
+  value: {
+    randomUUID: vi.fn(() => 'test-uuid-123'),
+  },
+})
+
+// Mock localStorage with functional implementation
+// Mock PostHog analytics globally
+// Mock Sentry monitoring globally
+```
+
+**Key Features**:
+
+- **fake-indexeddb**: Provides a working IndexedDB implementation for tests
+- **localStorage mock**: Functional implementation for data persistence testing
+- **Analytics mocking**: Prevents tracking during tests
+- **Monitoring mocking**: Prevents error reporting during tests
 
 ### Playwright Configuration (`playwright.config.ts`)
 
