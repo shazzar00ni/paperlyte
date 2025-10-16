@@ -31,7 +31,8 @@ export interface Note {
   encryptedContent?: string
   encryptedTitle?: string
   encryptionKeyId?: string
-  encryptionIv?: string
+  encryptedTitleIv?: string
+  encryptedContentIv?: string
 }
 
 export interface WaitlistEntry {
