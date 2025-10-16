@@ -331,13 +331,27 @@ lhci collect --config=./.lighthouserc.json
   - Every pull request
   - Weekly schedule (Sundays at 3 AM UTC)
 
+## Recent Changes
+
+### October 2025: Configuration Separation
+
+**Issue:** Lighthouse CI was failing on PRs unrelated to performance changes due to overly strict thresholds.
+
+**Solution:** Separated configurations into:
+
+- `.lighthouserc.json`: Lenient thresholds for PR validation
+- `.lighthouserc.strict.json`: Strict thresholds for dedicated monitoring
+
+**Details:** See [lighthouse-ci-fix.md](./lighthouse-ci-fix.md) for complete explanation.
+
 ## Resources
 
 - [Lighthouse CI Documentation](https://github.com/GoogleChrome/lighthouse-ci)
 - [Vite Preview Server](https://vitejs.dev/guide/cli.html#vite-preview)
 - [Lighthouse Metrics](https://web.dev/lighthouse-performance/)
 - [treosh/lighthouse-ci-action](https://github.com/treosh/lighthouse-ci-action)
+- [Configuration Fix Details](./lighthouse-ci-fix.md)
 
 ---
 
-_Last Updated: October 2025_
+_Last Updated: October 16, 2025_
