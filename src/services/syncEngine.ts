@@ -49,8 +49,10 @@ class SyncEngine {
     }
 
     try {
-      // Generate or get encryption key for this note
-      const keyId = await keyManagementService.generateNoteKey(note.id)
+      // Use existing encryption key if present, otherwise generate a new one
+      const keyId = note.encryptionKeyId
+        ? note.encryptionKeyId
+        : await keyManagementService.generateNoteKey(note.id)
       const key = await keyManagementService.getNoteKey(note.id, keyId)
 
       // Encrypt title and content
