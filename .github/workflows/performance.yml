@@ -39,7 +39,7 @@ jobs:
       - name: Run Lighthouse audit
         uses: treosh/lighthouse-ci-action@v10
         with:
-          configPath: './.lighthouserc.json'
+          configPath: './.lighthouserc.strict.json'
           uploadArtifacts: true
           temporaryPublicStorage: true
 
