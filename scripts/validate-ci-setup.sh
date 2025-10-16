@@ -21,6 +21,21 @@ PASSED=0
 FAILED=0
 WARNINGS=0
 
+# Check for JSON parsing capability
+HAS_JQ=false
+HAS_NODE=false
+
+if command -v jq &> /dev/null; then
+    HAS_JQ=true
+elif command -v node &> /dev/null; then
+    HAS_NODE=true
+else
+    echo -e "${YELLOW}⚠️  Warning: Neither 'jq' nor 'node' found for accurate JSON parsing${NC}"
+    echo -e "${YELLOW}   Package script validation may be less accurate${NC}"
+    echo -e "${YELLOW}   Install jq for best results: https://jqlang.github.io/jq/download/${NC}"
+    echo ""
+fi
+
 # Function to check if a file exists and is executable
 check_executable() {
     local file=$1
@@ -65,6 +80,40 @@ check_command() {
     else
         echo -e "${YELLOW}⚠️  ${description}${NC}"
         ((WARNINGS++))
+    fi
+}
+
+# Function to check if npm script exists using the best available method
+check_npm_script_exists() {
+    local script=$1
+    local package_json=$2
+    
+    if [ "$HAS_JQ" = true ]; then
+        # Most accurate: Use jq for JSON parsing
+        jq -e ".scripts[\"$script\"]" "$package_json" > /dev/null 2>&1
+        return $?
+    elif [ "$HAS_NODE" = true ]; then
+        # Second best: Use Node.js for JSON parsing
+        local abs_path
+        abs_path=$(cd "$(dirname "$package_json")" && pwd)/$(basename "$package_json")
+        node -e "
+            try {
+                const pkg = require('$abs_path');
+                process.exit(pkg.scripts && pkg.scripts['$script'] ? 0 : 1);
+            } catch (e) {
+                process.exit(1);
+            }
+        " 2>/dev/null
+        return $?
+    else
+        # Fallback: Use grep with improved pattern
+        # This checks for the script name followed by optional whitespace and colon
+        # within the scripts section
+        grep -q "\"scripts\"\s*:" "$package_json" && \
+        grep -A 100 "\"scripts\"\s*:" "$package_json" | \
+        grep -B 100 "^\s*}" | \
+        grep -q "\"$script\"\s*:"
+        return $?
     fi
 }
 
@@ -144,55 +193,28 @@ if [ -f "package.json" ]; then
         "ci"
     )
     
-    # Check if jq is available for accurate JSON parsing
-    if command -v jq &> /dev/null; then
-        # Use jq for accurate script validation
-        for script in "${scripts[@]}"; do
-            if jq -e ".scripts[\"$script\"]" package.json > /dev/null 2>&1; then
-                echo -e "${GREEN}✅ Script: $script${NC}"
-                ((PASSED++))
-            else
-                echo -e "${RED}❌ Script: $script${NC}"
-                ((FAILED++))
-            fi
-        done
-    else
-        # Fallback to grep with improved pattern matching
-        for script in "${scripts[@]}"; do
-            # Use more specific grep pattern to match within scripts object
-            if grep -q "\"$script\"\s*:" package.json; then
-                echo -e "${GREEN}✅ Script: $script${NC}"
-                ((PASSED++))
-            else
-                echo -e "${RED}❌ Script: $script${NC}"
-                ((FAILED++))
-            fi
-        done
-    fi
+    # Use the best available method for validation
+    for script in "${scripts[@]}"; do
+        if check_npm_script_exists "$script" "package.json"; then
+            echo -e "${GREEN}✅ Script: $script${NC}"
+            ((PASSED++))
+        else
+            echo -e "${RED}❌ Script: $script${NC}"
+            ((FAILED++))
+        fi
+    done
 fi
 
 echo ""
 echo "🔒 Checking Security Configuration..."
 echo "-------------------------------------"
 if [ -f "package.json" ]; then
-    if command -v jq &> /dev/null; then
-        # Use jq for accurate validation
-        if jq -e '.scripts["security-audit"]' package.json > /dev/null 2>&1; then
-            echo -e "${GREEN}✅ Security audit script configured${NC}"
-            ((PASSED++))
-        else
-            echo -e "${RED}❌ Security audit script not found${NC}"
-            ((FAILED++))
-        fi
+    if check_npm_script_exists "security-audit" "package.json"; then
+        echo -e "${GREEN}✅ Security audit script configured${NC}"
+        ((PASSED++))
     else
-        # Fallback to grep
-        if grep -q "\"security-audit\"\s*:" package.json; then
-            echo -e "${GREEN}✅ Security audit script configured${NC}"
-            ((PASSED++))
-        else
-            echo -e "${RED}❌ Security audit script not found${NC}"
-            ((FAILED++))
-        fi
+        echo -e "${RED}❌ Security audit script not found${NC}"
+        ((FAILED++))
     fi
 else
     echo -e "${RED}❌ package.json not found${NC}"
