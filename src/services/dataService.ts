@@ -27,6 +27,18 @@ import {
  * - Fallback to localStorage if IndexedDB unavailable
  */
 
+/**
+ * Generate a unique ID with fallback for older browsers
+ * Uses crypto.randomUUID() when available, otherwise falls back to timestamp-based ID
+ */
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  // Fallback for older browsers
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
 class DataService {
   private storagePrefix = 'paperlyte_'
   private useIndexedDB: boolean = false
@@ -247,7 +259,7 @@ class DataService {
         }
 
         const newEntry: WaitlistEntry = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           ...entry,
           createdAt: new Date().toISOString(),
         }
@@ -267,7 +279,7 @@ class DataService {
         }
 
         const newEntry: WaitlistEntry = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           ...entry,
           createdAt: new Date().toISOString(),
         }
@@ -332,7 +344,7 @@ class DataService {
     try {
       if (this.useIndexedDB) {
         const newEntry: FeedbackEntry = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           ...entry,
           status: 'new',
           createdAt: new Date().toISOString(),
@@ -346,7 +358,7 @@ class DataService {
         const existingEntries = this.getFromStorage<FeedbackEntry>('feedback')
 
         const newEntry: FeedbackEntry = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           ...entry,
           status: 'new',
           createdAt: new Date().toISOString(),
@@ -431,7 +443,7 @@ class DataService {
         }
 
         const newRequest: InterviewRequest = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           ...request,
           email: normalizedEmail,
           status: 'pending',
@@ -458,7 +470,7 @@ class DataService {
         }
 
         const newRequest: InterviewRequest = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           ...request,
           email: normalizedEmail,
           status: 'pending',
