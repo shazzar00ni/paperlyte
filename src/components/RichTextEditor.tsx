@@ -1,6 +1,17 @@
 import DOMPurify from 'dompurify'
-import { Bold, Italic, List, ListOrdered } from 'lucide-react'
-import React, { useCallback, useEffect, useRef } from 'react'
+import {
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  Heading3,
+  Undo,
+  Redo,
+  Underline,
+} from 'lucide-react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { monitoring } from '../utils/monitoring'
 
 interface RichTextEditorProps {
@@ -25,6 +36,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null)
   const isUpdatingRef = useRef(false)
 
+  // Undo/Redo history
+  const historyRef = useRef<string[]>([])
+  const historyIndexRef = useRef<number>(-1)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
   // Update editor content when prop changes (but not during user input)
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
@@ -43,14 +60,29 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           'div',
           'span',
           'p',
+          'h1',
+          'h2',
+          'h3',
         ],
         ALLOWED_ATTR: ['style'],
       })
       if (currentContent !== sanitizedContent) {
         editorRef.current.innerHTML = sanitizedContent
+
+        // Initialize history if empty
+        if (historyRef.current.length === 0 && sanitizedContent) {
+          historyRef.current = [sanitizedContent]
+          historyIndexRef.current = 0
+        }
       }
     }
   }, [content])
+
+  // Update undo/redo button states
+  useEffect(() => {
+    setCanUndo(historyIndexRef.current > 0)
+    setCanRedo(historyIndexRef.current < historyRef.current.length - 1)
+  }, [historyRef.current.length])
 
   // Handle content changes with sanitization
   const handleInput = useCallback(() => {
@@ -72,9 +104,33 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             'div',
             'span',
             'p',
+            'h1',
+            'h2',
+            'h3',
           ],
           ALLOWED_ATTR: ['style'],
         })
+
+        // Add to history for undo/redo
+        if (sanitizedContent !== historyRef.current[historyIndexRef.current]) {
+          // Remove any future history if we're not at the end
+          historyRef.current = historyRef.current.slice(
+            0,
+            historyIndexRef.current + 1
+          )
+          historyRef.current.push(sanitizedContent)
+          historyIndexRef.current = historyRef.current.length - 1
+
+          // Limit history to 50 entries
+          if (historyRef.current.length > 50) {
+            historyRef.current.shift()
+            historyIndexRef.current--
+          }
+
+          setCanUndo(historyIndexRef.current > 0)
+          setCanRedo(false)
+        }
+
         onChange(sanitizedContent)
       } catch (error) {
         // Handle errors gracefully without exposing sensitive information
@@ -94,6 +150,32 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           isUpdatingRef.current = false
         }, 10)
       }
+    }
+  }, [onChange])
+
+  // Undo/Redo functions
+  const undo = useCallback(() => {
+    if (historyIndexRef.current > 0 && editorRef.current) {
+      historyIndexRef.current--
+      const previousContent = historyRef.current[historyIndexRef.current]
+      editorRef.current.innerHTML = previousContent
+      onChange(previousContent)
+      setCanUndo(historyIndexRef.current > 0)
+      setCanRedo(true)
+    }
+  }, [onChange])
+
+  const redo = useCallback(() => {
+    if (
+      historyIndexRef.current < historyRef.current.length - 1 &&
+      editorRef.current
+    ) {
+      historyIndexRef.current++
+      const nextContent = historyRef.current[historyIndexRef.current]
+      editorRef.current.innerHTML = nextContent
+      onChange(nextContent)
+      setCanUndo(true)
+      setCanRedo(historyIndexRef.current < historyRef.current.length - 1)
     }
   }, [onChange])
 
@@ -129,6 +211,134 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           break
         case 'underline':
           wrapSelectionWithTag('u')
+          break
+        case 'h1':
+        case 'h2':
+        case 'h3':
+          // Convert current block to heading
+          {
+            const selection = window.getSelection()
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0)
+              let block = range.startContainer
+
+              // Find the block element
+              while (block && block.nodeType === 3 && block.parentNode) {
+                block = block.parentNode
+              }
+
+              if (
+                block &&
+                block instanceof HTMLElement &&
+                block !== editorRef.current
+              ) {
+                // Check if we're already in the same heading type
+                if (block.nodeName.toLowerCase() === command) {
+                  // Convert back to paragraph
+                  const p = document.createElement('p')
+                  p.innerHTML = block.innerHTML
+                  block.replaceWith(p)
+                } else {
+                  // Convert to heading
+                  const heading = document.createElement(command)
+                  heading.innerHTML = block.innerHTML
+                  block.replaceWith(heading)
+                }
+              }
+            }
+          }
+          break
+        case 'insertUnorderedList':
+          // Create unordered list
+          {
+            const selection = window.getSelection()
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0)
+              let block = range.startContainer
+
+              // Find the block element
+              while (block && block.nodeType === 3 && block.parentNode) {
+                block = block.parentNode
+              }
+
+              if (block && block instanceof HTMLElement) {
+                // Check if already in a list
+                const existingList = block.closest('ul')
+                if (existingList) {
+                  // Remove from list
+                  const listItem = block.closest('li')
+                  if (listItem) {
+                    const p = document.createElement('p')
+                    p.innerHTML = listItem.innerHTML
+                    listItem.replaceWith(p)
+
+                    // Clean up empty list
+                    if (existingList.children.length === 0) {
+                      existingList.remove()
+                    }
+                  }
+                } else {
+                  // Create new list
+                  const ul = document.createElement('ul')
+                  const li = document.createElement('li')
+                  li.innerHTML = block.innerHTML || '<br>'
+                  ul.appendChild(li)
+
+                  if (block === editorRef.current) {
+                    editorRef.current.appendChild(ul)
+                  } else {
+                    block.replaceWith(ul)
+                  }
+                }
+              }
+            }
+          }
+          break
+        case 'insertOrderedList':
+          // Create ordered list
+          {
+            const selection = window.getSelection()
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0)
+              let block = range.startContainer
+
+              // Find the block element
+              while (block && block.nodeType === 3 && block.parentNode) {
+                block = block.parentNode
+              }
+
+              if (block && block instanceof HTMLElement) {
+                // Check if already in a list
+                const existingList = block.closest('ol')
+                if (existingList) {
+                  // Remove from list
+                  const listItem = block.closest('li')
+                  if (listItem) {
+                    const p = document.createElement('p')
+                    p.innerHTML = listItem.innerHTML
+                    listItem.replaceWith(p)
+
+                    // Clean up empty list
+                    if (existingList.children.length === 0) {
+                      existingList.remove()
+                    }
+                  }
+                } else {
+                  // Create new list
+                  const ol = document.createElement('ol')
+                  const li = document.createElement('li')
+                  li.innerHTML = block.innerHTML || '<br>'
+                  ol.appendChild(li)
+
+                  if (block === editorRef.current) {
+                    editorRef.current.appendChild(ol)
+                  } else {
+                    block.replaceWith(ol)
+                  }
+                }
+              }
+            }
+          }
           break
         // Minimal stubs for outdent and formatBlock
         case 'outdent':
@@ -185,6 +395,30 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             e.preventDefault()
             formatText('underline')
             break
+          case '1':
+            e.preventDefault()
+            formatText('h1')
+            break
+          case '2':
+            e.preventDefault()
+            formatText('h2')
+            break
+          case '3':
+            e.preventDefault()
+            formatText('h3')
+            break
+          case 'z':
+            e.preventDefault()
+            if (e.shiftKey) {
+              redo()
+            } else {
+              undo()
+            }
+            break
+          case 'y':
+            e.preventDefault()
+            redo()
+            break
         }
       }
 
@@ -204,7 +438,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         }
       }
     },
-    [disabled, formatText]
+    [disabled, formatText, undo, redo]
   )
 
   // Handle paste to clean up formatting
@@ -281,6 +515,30 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             node = node.parentElement
           }
           return false
+        case 'h1':
+          while (node && node !== editorRef.current) {
+            if (node.nodeName === 'H1') {
+              return true
+            }
+            node = node.parentElement
+          }
+          return false
+        case 'h2':
+          while (node && node !== editorRef.current) {
+            if (node.nodeName === 'H2') {
+              return true
+            }
+            node = node.parentElement
+          }
+          return false
+        case 'h3':
+          while (node && node !== editorRef.current) {
+            if (node.nodeName === 'H3') {
+              return true
+            }
+            node = node.parentElement
+          }
+          return false
         case 'insertUnorderedList':
           while (node && node !== editorRef.current) {
             if (node.nodeName === 'UL') {
@@ -306,8 +564,38 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <div className='rich-text-editor'>
-      {/* Minimal Toolbar */}
+      {/* Enhanced Toolbar */}
       <div className='flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50'>
+        {/* Undo/Redo */}
+        <button
+          type='button'
+          onClick={undo}
+          disabled={disabled || !canUndo}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            disabled || !canUndo ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          title='Undo (Ctrl+Z)'
+          aria-label='Undo'
+        >
+          <Undo className='h-4 w-4' />
+        </button>
+
+        <button
+          type='button'
+          onClick={redo}
+          disabled={disabled || !canRedo}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            disabled || !canRedo ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          title='Redo (Ctrl+Y or Ctrl+Shift+Z)'
+          aria-label='Redo'
+        >
+          <Redo className='h-4 w-4' />
+        </button>
+
+        <div className='w-px h-6 bg-gray-300 mx-1' />
+
+        {/* Text Formatting */}
         <button
           type='button'
           onClick={() => formatText('bold')}
@@ -334,8 +622,64 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <Italic className='h-4 w-4' />
         </button>
 
+        <button
+          type='button'
+          onClick={() => formatText('underline')}
+          disabled={disabled}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            isActive('underline') ? 'bg-gray-300' : ''
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title='Underline (Ctrl+U)'
+          aria-label='Underline'
+        >
+          <Underline className='h-4 w-4' />
+        </button>
+
         <div className='w-px h-6 bg-gray-300 mx-1' />
 
+        {/* Headings */}
+        <button
+          type='button'
+          onClick={() => formatText('h1')}
+          disabled={disabled}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            isActive('h1') ? 'bg-gray-300' : ''
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title='Heading 1 (Ctrl+1)'
+          aria-label='Heading 1'
+        >
+          <Heading1 className='h-4 w-4' />
+        </button>
+
+        <button
+          type='button'
+          onClick={() => formatText('h2')}
+          disabled={disabled}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            isActive('h2') ? 'bg-gray-300' : ''
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title='Heading 2 (Ctrl+2)'
+          aria-label='Heading 2'
+        >
+          <Heading2 className='h-4 w-4' />
+        </button>
+
+        <button
+          type='button'
+          onClick={() => formatText('h3')}
+          disabled={disabled}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            isActive('h3') ? 'bg-gray-300' : ''
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title='Heading 3 (Ctrl+3)'
+          aria-label='Heading 3'
+        >
+          <Heading3 className='h-4 w-4' />
+        </button>
+
+        <div className='w-px h-6 bg-gray-300 mx-1' />
+
+        {/* Lists */}
         <button
           type='button'
           onClick={() => formatText('insertUnorderedList')}
