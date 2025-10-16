@@ -315,8 +315,13 @@ class DataService {
         sanitizedNote.createdAt =
           sanitizedNote.createdAt || new Date().toISOString()
       }
-    } catch {
+    } catch (error) {
       // If we can't determine, assume new note
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'save_note_version_check',
+        additionalData: { noteId: note.id },
+      })
       sanitizedNote.version = 1
       sanitizedNote.createdAt =
         sanitizedNote.createdAt || new Date().toISOString()
