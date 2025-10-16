@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -47,7 +47,15 @@ export default defineConfig(({ mode }) => ({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      lines: 60,
+      functions: 60,
+      branches: 50,
+    },
+    css: true,
   },
   define: {
     // Make environment variables available at build time

@@ -15,6 +15,7 @@ vi.mock('../../services/dataService', () => ({
 // Mock analytics
 vi.mock('../../utils/analytics', () => ({
   trackUserAction: vi.fn(),
+  trackWaitlistEvent: vi.fn(),
 }))
 
 describe('WaitlistModal', () => {
