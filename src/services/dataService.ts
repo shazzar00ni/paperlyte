@@ -315,7 +315,7 @@ class DataService {
         sanitizedNote.createdAt =
           sanitizedNote.createdAt || new Date().toISOString()
       }
-    } catch (error) {
+    } catch {
       // If we can't determine, assume new note
       sanitizedNote.version = 1
       sanitizedNote.createdAt =
