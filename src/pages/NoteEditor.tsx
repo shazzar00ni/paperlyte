@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Save,
   Tag,
@@ -13,6 +13,7 @@ import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
 import ConfirmationModal from '../components/ConfirmationModal'
+import TagModal from '../components/TagModal'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
@@ -24,7 +25,9 @@ const NoteEditor: React.FC = () => {
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const focusModeRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Track editor page view
@@ -79,7 +82,7 @@ const NoteEditor: React.FC = () => {
     }
   }
 
-  const createNewNote = async () => {
+  const createNewNote = useCallback(async () => {
     const newNote: Note = {
       id: crypto.randomUUID(),
       title: 'Untitled Note',
@@ -103,7 +106,7 @@ const NoteEditor: React.FC = () => {
         action: 'create_note_failed',
       })
     }
-  }
+  }, [notes])
 
   const updateCurrentNote = async (updates: Partial<Note>) => {
     if (!currentNote) return
@@ -136,7 +139,7 @@ const NoteEditor: React.FC = () => {
     }
   }
 
-  const saveCurrentNote = async () => {
+  const saveCurrentNote = useCallback(async () => {
     if (!currentNote) return
 
     setIsLoading(true)
@@ -157,7 +160,57 @@ const NoteEditor: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentNote])
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in an input/textarea
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        // Allow Ctrl+S and Ctrl+F even in contenteditable
+        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'f')) {
+          // Continue to handle these shortcuts
+        } else {
+          return
+        }
+      }
+
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        saveCurrentNote()
+      }
+
+      // Ctrl/Cmd + F to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+
+      // Ctrl/Cmd + N to create new note
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault()
+        createNewNote()
+      }
+
+      // Ctrl/Cmd + T to open tag modal
+      if ((e.ctrlKey || e.metaKey) && e.key === 't' && currentNote) {
+        e.preventDefault()
+        setIsTagModalOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyboardShortcuts)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts)
+    }
+  }, [currentNote, createNewNote, saveCurrentNote])
 
   const handleDeleteNote = (note: Note, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent note selection when clicking delete
@@ -211,6 +264,17 @@ const NoteEditor: React.FC = () => {
     setNoteToDelete(null)
   }
 
+  const handleSaveTags = async (tags: string[]) => {
+    if (!currentNote) return
+
+    await updateCurrentNote({ tags })
+    trackNoteEvent('edit', {
+      noteId: currentNote.id,
+      field: 'tags',
+      tagCount: tags.length,
+    })
+  }
+
   const enterFocusMode = () => {
     setFocusMode(true)
     trackFeatureUsage('focus_mode', 'enter')
@@ -244,6 +308,7 @@ const NoteEditor: React.FC = () => {
               type='text'
               placeholder='Search notes...'
               value={searchQuery}
+              ref={searchInputRef}
               onChange={e => {
                 setSearchQuery(e.target.value)
                 trackFeatureUsage('search', 'query', { query: e.target.value })
@@ -334,9 +399,18 @@ const NoteEditor: React.FC = () => {
                 placeholder='Note title...'
               />
               <div className='flex items-center space-x-2'>
-                <button className='btn-ghost btn-sm flex items-center space-x-1'>
+                <button
+                  onClick={() => setIsTagModalOpen(true)}
+                  className='btn-ghost btn-sm flex items-center space-x-1'
+                  title='Manage Tags (Ctrl+T)'
+                >
                   <Tag className='h-4 w-4' />
                   <span>Tags</span>
+                  {currentNote.tags.length > 0 && (
+                    <span className='ml-1 px-2 py-0.5 bg-primary text-white text-xs rounded-full'>
+                      {currentNote.tags.length}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={enterFocusMode}
@@ -391,6 +465,16 @@ const NoteEditor: React.FC = () => {
         onConfirm={confirmDeleteNote}
         isLoading={isDeleting}
       />
+
+      {/* Tag Management Modal */}
+      {currentNote && (
+        <TagModal
+          isOpen={isTagModalOpen}
+          onClose={() => setIsTagModalOpen(false)}
+          tags={currentNote.tags}
+          onSave={handleSaveTags}
+        />
+      )}
 
       {/* Focus Mode Overlay */}
       {focusMode && currentNote && (
