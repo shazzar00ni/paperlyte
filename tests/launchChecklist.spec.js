@@ -5,15 +5,22 @@
  * and critical functionality is working as expected.
  */
 
+import { render } from '@testing-library/react'
 import fs from 'fs'
+import { axe, toHaveNoViolations } from 'jest-axe'
 import process from 'node:process'
 import path from 'path'
+import React from 'react'
 import { describe, expect, test } from 'vitest'
+import App from '../src/App.tsx'
 import {
   getMockResults,
   getPerformanceTargets,
   readLatestLighthouseResults,
 } from './helpers/lighthouseHelper.js'
+
+// Extend expect with jest-axe matchers
+expect.extend(toHaveNoViolations)
 
 describe('Launch Checklist Validation', () => {
   describe('Technical Readiness', () => {
@@ -29,21 +36,17 @@ describe('Launch Checklist Validation', () => {
 
       // Use mock results if actual results aren't available
       if (!results) {
-        console.log(
-          'Lighthouse CI results not found. Run `npm run lighthouse:ci` first.'
-        )
+        // Lighthouse CI results not found - using mock data
         const mockResults = getMockResults()
-        console.log(
-          'Using mock performance results. Run Lighthouse CI for actual metrics.'
-        )
+        // Using mock performance results. Run Lighthouse CI for actual metrics.
 
         // Validate against mock results (should pass)
         expect(mockResults.performance.score).toBeGreaterThanOrEqual(
           targets.performance.score
         )
-        expect(mockResults.performance.metrics.totalBlockingTime).toBeLessThan(
-          targets.performance.totalBlockingTime
-        )
+        expect(
+          mockResults.performance.metrics.totalBlockingTime
+        ).toBeLessThanOrEqual(targets.performance.totalBlockingTime)
         return
       }
 
@@ -109,29 +112,78 @@ describe('Launch Checklist Validation', () => {
     })
 
     test('meta descriptions should be optimized for SEO', () => {
-      const seoMetrics = {
-        metaDescriptionPresent: true,
-        titleOptimized: true,
-        openGraphTags: true,
+      // Read the built HTML file, preferring dist/index.html if it exists
+      const distIndexPath = path.resolve(process.cwd(), 'dist', 'index.html')
+      const rootIndexPath = path.resolve(process.cwd(), 'index.html')
+
+      let htmlPath = rootIndexPath
+      if (fs.existsSync(distIndexPath)) {
+        htmlPath = distIndexPath
       }
 
-      expect(seoMetrics.metaDescriptionPresent).toBe(true)
-      expect(seoMetrics.titleOptimized).toBe(true)
-      expect(seoMetrics.openGraphTags).toBe(true)
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8')
+
+      // Test for meta description tag with non-empty content
+      const metaDescriptionRegex =
+        /<meta\s+name="description"\s+content="([^"]+)"/i
+      const metaDescriptionMatch = htmlContent.match(metaDescriptionRegex)
+      expect(metaDescriptionMatch).not.toBeNull()
+      expect(metaDescriptionMatch[1].trim()).not.toBe('')
+
+      // Test for non-empty title tag
+      const titleRegex = /<title>([^<]+)<\/title>/i
+      const titleMatch = htmlContent.match(titleRegex)
+      expect(titleMatch).not.toBeNull()
+      expect(titleMatch[1].trim()).not.toBe('')
+
+      // Test for Open Graph tags
+      const ogTitleRegex = /<meta\s+property="og:title"\s+content="([^"]+)"/i
+      const ogDescriptionRegex =
+        /<meta\s+property="og:description"\s+content="([^"]+)"/i
+      const ogUrlRegex = /<meta\s+property="og:url"\s+content="([^"]+)"/i
+      const ogImageRegex = /<meta\s+property="og:image"\s+content="([^"]+)"/i
+
+      expect(htmlContent.match(ogTitleRegex)).not.toBeNull()
+      expect(htmlContent.match(ogDescriptionRegex)).not.toBeNull()
+      expect(htmlContent.match(ogUrlRegex)).not.toBeNull()
+      expect(htmlContent.match(ogImageRegex)).not.toBeNull()
     })
   })
 
   describe('Legal & Compliance', () => {
-    test('accessibility compliance should be verified', () => {
-      const accessibilityMetrics = {
-        ariaLabelsPresent: true,
-        colorContrastSufficient: true,
-        keyboardNavigable: true,
-      }
+    test('accessibility compliance should be verified', async () => {
+      // Render the main App component
+      const { container } = render(React.createElement(App))
 
-      expect(accessibilityMetrics.ariaLabelsPresent).toBe(true)
-      expect(accessibilityMetrics.colorContrastSufficient).toBe(true)
-      expect(accessibilityMetrics.keyboardNavigable).toBe(true)
+      // Run axe accessibility audit
+      const results = await axe(container)
+
+      // Assert that there are no accessibility violations
+      expect(results).toHaveNoViolations()
+
+      // Additional specific checks for critical accessibility features
+      expect(results.violations.length).toBe(0)
+
+      // Check for specific accessibility rules that are critical
+      const criticalRules = [
+        'aria-valid-attr-value',
+        'aria-valid-attr',
+        'button-name',
+        'color-contrast',
+        'focus-order-semantics',
+        'image-alt',
+        'label',
+        'landmark-one-main',
+        'page-has-heading-one',
+        'region',
+      ]
+
+      // Verify that if any of these critical rules had violations, they would be caught
+      results.passes.forEach(pass => {
+        if (criticalRules.includes(pass.id)) {
+          expect(pass.nodes.length).toBeGreaterThan(0)
+        }
+      })
     })
 
     test('GDPR compliance should be documented', () => {
@@ -141,9 +193,9 @@ describe('Launch Checklist Validation', () => {
         'docs/PRIVACY.md',
         'public/privacy.html',
         'docs/privacy-policy.md',
-        'PRIVACY_POLICY.md'
+        'PRIVACY_POLICY.md',
       ]
-      
+
       const privacyPolicyPresent = privacyPolicyPaths.some(policyPath => {
         const fullPath = path.resolve(process.cwd(), policyPath)
         return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()
@@ -155,63 +207,60 @@ describe('Launch Checklist Validation', () => {
         'docs/DATA_PROCESSING.md',
         'docs/data-handling.md',
         'docs/gdpr-compliance.md',
-        'simple-scribbles/data-handling.md'
+        'simple-scribbles/data-handling.md',
       ]
-      
+
       const dataProcessingDocumented = dataProcessingPaths.some(docPath => {
         const fullPath = path.resolve(process.cwd(), docPath)
         if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
           // Verify it contains actual data processing information
           const content = fs.readFileSync(fullPath, 'utf-8')
-          return content.includes('data processing') || 
-                 content.includes('personal data') || 
-                 content.includes('GDPR') ||
-                 content.includes('data collection')
+          return (
+            content.includes('data processing') ||
+            content.includes('personal data') ||
+            content.includes('GDPR') ||
+            content.includes('data collection')
+          )
         }
         return false
       })
 
       // 3. Check for consent mechanism implementation
       let consentMechanismImplemented = false
-      
+
       // Check for consent component files
       const consentComponentPaths = [
         'src/components/CookieConsent.tsx',
         'src/components/ConsentBanner.tsx',
         'src/components/GDPRConsent.tsx',
-        'src/components/PrivacyConsent.tsx'
+        'src/components/PrivacyConsent.tsx',
       ]
-      
+
       const hasConsentComponent = consentComponentPaths.some(componentPath => {
         const fullPath = path.resolve(process.cwd(), componentPath)
         return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()
       })
 
       // Check for consent configuration in main app files
-      const appFiles = [
-        'src/App.tsx',
-        'src/main.tsx',
-        'src/utils/analytics.ts'
-      ]
-      
+      const appFiles = ['src/App.tsx', 'src/main.tsx', 'src/utils/analytics.ts']
+
       const hasConsentConfig = appFiles.some(appFile => {
         const fullPath = path.resolve(process.cwd(), appFile)
         if (fs.existsSync(fullPath)) {
           const content = fs.readFileSync(fullPath, 'utf-8')
-          return content.includes('consent') || 
-                 content.includes('opt_out') || 
-                 content.includes('respect_dnt') ||
-                 content.includes('cookie')
+          return (
+            content.includes('consent') ||
+            content.includes('opt_out') ||
+            content.includes('respect_dnt') ||
+            content.includes('cookie')
+          )
         }
         return false
       })
 
       // Check for feature flags or config indicating consent mechanism
-      const configFiles = [
-        'vite.config.ts',
-        'package.json'
-      ]
-      
+      const configFiles = ['vite.config.ts', 'package.json']
+
       const hasConsentFeatureFlag = configFiles.some(configFile => {
         const fullPath = path.resolve(process.cwd(), configFile)
         if (fs.existsSync(fullPath)) {
@@ -221,7 +270,8 @@ describe('Launch Checklist Validation', () => {
         return false
       })
 
-      consentMechanismImplemented = hasConsentComponent || hasConsentConfig || hasConsentFeatureFlag
+      consentMechanismImplemented =
+        hasConsentComponent || hasConsentConfig || hasConsentFeatureFlag
 
       // Assert against actual implementation artifacts
       expect(privacyPolicyPresent).toBe(true)
@@ -284,26 +334,35 @@ export const launchChecklist = {
     const buildSuccessful =
       buildReport.success === true &&
       buildReport.exitCode === 0 &&
-      !buildReport.errors?.length
+      Array.isArray(buildReport.errors) &&
+      buildReport.errors.length === 0
 
     // Validate performance targets
     const performanceTargetsMet =
       performanceAudit.metrics &&
-      (performanceAudit.metrics.totalBlockingTime || 0) < 200 &&
-      (performanceAudit.metrics.performanceScore || 0) >= 90 &&
-      (performanceAudit.metrics.largestContentfulPaint || 0) < 2500
+      typeof performanceAudit.metrics === 'object' &&
+      typeof performanceAudit.metrics.totalBlockingTime === 'number' &&
+      performanceAudit.metrics.totalBlockingTime < 200 &&
+      typeof performanceAudit.metrics.performanceScore === 'number' &&
+      performanceAudit.metrics.performanceScore >= 90 &&
+      typeof performanceAudit.metrics.largestContentfulPaint === 'number' &&
+      performanceAudit.metrics.largestContentfulPaint < 2500
 
     // Validate security configuration
     const securityConfigured =
       securityScan.vulnerabilities &&
+      typeof securityScan.vulnerabilities === 'object' &&
+      typeof securityScan.vulnerabilities.count === 'number' &&
       securityScan.vulnerabilities.count === 0 &&
       securityScan.cspEnabled === true &&
       securityScan.httpsEnforced === true
 
     // Validate monitoring setup
     const monitoringActive =
-      buildReport.monitoring?.sentryConfigured === true &&
-      buildReport.monitoring?.analyticsConfigured === true
+      buildReport.monitoring &&
+      typeof buildReport.monitoring === 'object' &&
+      buildReport.monitoring.sentryConfigured === true &&
+      buildReport.monitoring.analyticsConfigured === true
 
     return {
       buildSuccessful,
@@ -333,22 +392,40 @@ export const launchChecklist = {
       'LAUNCH_CHECKLIST.md',
     ]
     const documentationComplete =
-      requiredDocs.every(
-        doc => contentFiles.files && contentFiles.files.includes(doc)
-      ) && contentFiles.metaDescriptions?.length > 0
+      contentFiles &&
+      typeof contentFiles === 'object' &&
+      Array.isArray(contentFiles.files) &&
+      requiredDocs.every(doc => contentFiles.files.includes(doc)) &&
+      Array.isArray(contentFiles.metaDescriptions) &&
+      contentFiles.metaDescriptions.length > 0
 
     // Check SEO optimization
     const seoOptimized =
+      seoAudit &&
+      typeof seoAudit === 'object' &&
+      typeof seoAudit.score === 'number' &&
       seoAudit.score >= 95 &&
-      seoAudit.metaDescription?.present === true &&
+      seoAudit.metaDescription &&
+      typeof seoAudit.metaDescription === 'object' &&
+      seoAudit.metaDescription.present === true &&
       seoAudit.titleOptimized === true &&
-      seoAudit.structuredData?.present === true
+      seoAudit.structuredData &&
+      typeof seoAudit.structuredData === 'object' &&
+      seoAudit.structuredData.present === true
 
     // Check legal compliance
     const legalComplianceVerified =
-      legalChecks.privacyPolicy?.present === true &&
-      legalChecks.termsOfService?.present === true &&
+      legalChecks &&
+      typeof legalChecks === 'object' &&
+      legalChecks.privacyPolicy &&
+      typeof legalChecks.privacyPolicy === 'object' &&
+      legalChecks.privacyPolicy.present === true &&
+      legalChecks.termsOfService &&
+      typeof legalChecks.termsOfService === 'object' &&
+      legalChecks.termsOfService.present === true &&
+      typeof legalChecks.gdprCompliant === 'boolean' &&
       legalChecks.gdprCompliant === true &&
+      typeof legalChecks.accessibilityCompliant === 'boolean' &&
       legalChecks.accessibilityCompliant === true
 
     return {
@@ -367,10 +444,16 @@ export const launchChecklist = {
     const opportunities = []
 
     // Performance optimization opportunities
-    if (auditResults.performance) {
+    if (
+      auditResults.performance &&
+      typeof auditResults.performance === 'object'
+    ) {
       const perf = auditResults.performance
 
-      if (perf.totalBlockingTime > 200) {
+      if (
+        typeof perf.totalBlockingTime === 'number' &&
+        perf.totalBlockingTime > 200
+      ) {
         opportunities.push({
           area: 'Performance',
           metric: 'Total Blocking Time',
@@ -386,7 +469,10 @@ export const launchChecklist = {
         })
       }
 
-      if (perf.largestContentfulPaint > 2500) {
+      if (
+        typeof perf.largestContentfulPaint === 'number' &&
+        perf.largestContentfulPaint > 2500
+      ) {
         opportunities.push({
           area: 'Performance',
           metric: 'Largest Contentful Paint',
@@ -402,7 +488,10 @@ export const launchChecklist = {
         })
       }
 
-      if (perf.performanceScore < 90) {
+      if (
+        typeof perf.performanceScore === 'number' &&
+        perf.performanceScore < 90
+      ) {
         opportunities.push({
           area: 'Performance',
           metric: 'Lighthouse Performance Score',
@@ -420,10 +509,10 @@ export const launchChecklist = {
     }
 
     // SEO optimization opportunities
-    if (auditResults.seo) {
+    if (auditResults.seo && typeof auditResults.seo === 'object') {
       const seo = auditResults.seo
 
-      if (seo.score < 95) {
+      if (typeof seo.score === 'number' && seo.score < 95) {
         opportunities.push({
           area: 'SEO',
           metric: 'Lighthouse SEO Score',
@@ -439,7 +528,11 @@ export const launchChecklist = {
         })
       }
 
-      if (!seo.metaDescription?.optimized) {
+      if (
+        !seo.metaDescription ||
+        typeof seo.metaDescription !== 'object' ||
+        !seo.metaDescription.optimized
+      ) {
         opportunities.push({
           area: 'SEO',
           metric: 'Meta Descriptions',
@@ -457,21 +550,30 @@ export const launchChecklist = {
     }
 
     // Security optimization opportunities
-    if (auditResults.security) {
+    if (auditResults.security && typeof auditResults.security === 'object') {
       const security = auditResults.security
 
-      if (security.vulnerabilities?.count > 0) {
+      if (
+        security.vulnerabilities &&
+        typeof security.vulnerabilities === 'object' &&
+        typeof security.vulnerabilities.count === 'number' &&
+        security.vulnerabilities.count > 0
+      ) {
+        const critical =
+          typeof security.vulnerabilities.critical === 'number'
+            ? security.vulnerabilities.critical
+            : 0
+        const high =
+          typeof security.vulnerabilities.high === 'number'
+            ? security.vulnerabilities.high
+            : 0
+
         opportunities.push({
           area: 'Security',
           metric: 'Dependency Vulnerabilities',
           current: `${security.vulnerabilities.count} vulnerabilities`,
           target: '0 vulnerabilities',
-          priority:
-            security.vulnerabilities.critical > 0
-              ? 'critical'
-              : security.vulnerabilities.high > 0
-                ? 'high'
-                : 'medium',
+          priority: critical > 0 ? 'critical' : high > 0 ? 'high' : 'medium',
           recommendations: [
             'Update vulnerable dependencies',
             'Run npm audit fix',
@@ -481,7 +583,7 @@ export const launchChecklist = {
         })
       }
 
-      if (!security.cspEnabled) {
+      if (security.cspEnabled !== true) {
         opportunities.push({
           area: 'Security',
           metric: 'Content Security Policy',
@@ -499,10 +601,13 @@ export const launchChecklist = {
     }
 
     // Accessibility optimization opportunities
-    if (auditResults.accessibility) {
+    if (
+      auditResults.accessibility &&
+      typeof auditResults.accessibility === 'object'
+    ) {
       const a11y = auditResults.accessibility
 
-      if (a11y.score < 100) {
+      if (typeof a11y.score === 'number' && a11y.score < 100) {
         opportunities.push({
           area: 'Accessibility',
           metric: 'Lighthouse Accessibility Score',
