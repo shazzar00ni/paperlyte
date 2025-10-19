@@ -1,19 +1,33 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  trackUserAction,
-  trackFeatureUsage,
-  trackEvent,
   analytics,
+  trackEvent,
+  trackFeatureUsage,
+  trackUserAction,
 } from '../../utils/analytics'
+
+// Mock PostHog
+vi.mock('posthog-js', () => ({
+  default: {
+    init: vi.fn(),
+    capture: vi.fn(),
+    identify: vi.fn(),
+    reset: vi.fn(),
+    opt_out_capturing: vi.fn(),
+    opt_in_capturing: vi.fn(),
+  },
+}))
 
 describe('Analytics Utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Initialize analytics for testing
+    analytics.init()
   })
 
   describe('trackUserAction', () => {
     it('should call analytics track method', () => {
-      const trackSpy = vi.spyOn(analytics, 'track')
+      const trackSpy = vi.spyOn(analytics, 'track').mockImplementation(() => {})
 
       trackUserAction('landing_page_view')
 
@@ -31,7 +45,9 @@ describe('Analytics Utilities', () => {
 
   describe('trackFeatureUsage', () => {
     it('should call analytics trackFeature method', () => {
-      const trackFeatureSpy = vi.spyOn(analytics, 'trackFeature')
+      const trackFeatureSpy = vi
+        .spyOn(analytics, 'trackFeature')
+        .mockImplementation(() => {})
 
       trackFeatureUsage('note_editor', 'create')
 
@@ -43,7 +59,9 @@ describe('Analytics Utilities', () => {
     })
 
     it('should pass through metadata', () => {
-      const trackFeatureSpy = vi.spyOn(analytics, 'trackFeature')
+      const trackFeatureSpy = vi
+        .spyOn(analytics, 'trackFeature')
+        .mockImplementation(() => {})
 
       trackFeatureUsage('search', 'query', { query_length: 10 })
 
@@ -55,7 +73,7 @@ describe('Analytics Utilities', () => {
 
   describe('trackEvent', () => {
     it('should call analytics track method', () => {
-      const trackSpy = vi.spyOn(analytics, 'track')
+      const trackSpy = vi.spyOn(analytics, 'track').mockImplementation(() => {})
 
       trackEvent('custom_event', { custom_prop: 'value' })
 

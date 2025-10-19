@@ -30,7 +30,14 @@ describe('DataService', () => {
 
       const notes = await dataService.getNotes()
       expect(notes).toHaveLength(1)
-      expect(notes[0]).toEqual(testNote)
+
+      // Check that note was saved with additional properties
+      expect(notes[0]).toMatchObject({
+        ...testNote,
+        wordCount: expect.any(Number),
+        version: 1,
+        updatedAt: expect.any(String), // updatedAt will be different
+      })
     })
 
     it('should update an existing note', async () => {
