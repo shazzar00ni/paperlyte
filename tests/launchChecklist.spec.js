@@ -1,3 +1,4 @@
+/* global process */
 /**
  * Launch Checklist Validation Tests
  *
@@ -8,7 +9,6 @@
 import { render } from '@testing-library/react'
 import fs from 'fs'
 import { axe, toHaveNoViolations } from 'jest-axe'
-import process from 'node:process'
 import path from 'path'
 import React from 'react'
 import { describe, expect, test } from 'vitest'
@@ -77,12 +77,35 @@ describe('Launch Checklist Validation', () => {
         ).toBe(true)
       })
 
-      // Verify CSP configuration exists in vite config
-      const viteConfig = fs.readFileSync(
-        path.resolve(process.cwd(), 'vite.config.ts'),
-        'utf-8'
-      )
-      expect(viteConfig).toContain('Content-Security-Policy')
+      // Helper to check for CSP header in Vite config (parse server/preview headers)
+      const viteConfigPath = path.resolve(process.cwd(), 'vite.config.ts')
+      const viteConfigContent = fs.readFileSync(viteConfigPath, 'utf-8')
+      // Simple parse: look for server.headers or preview.headers with CSP key
+      const cspRegex = /headers:\s*{[^}]*['"]Content-Security-Policy['"]\s*:/g
+      expect(cspRegex.test(viteConfigContent)).toBe(true)
+
+      // Check for CSP header in netlify.toml
+      const netlifyPath = path.resolve(process.cwd(), 'netlify.toml')
+      if (fs.existsSync(netlifyPath)) {
+        const netlifyContent = fs.readFileSync(netlifyPath, 'utf-8')
+        // Look for a [headers] block with Content-Security-Policy
+        const netlifyCsp =
+          /[headers][^[]+Content-Security-Policy\s*=\s*['"]/m.test(
+            netlifyContent
+          )
+        expect(netlifyCsp).toBe(true)
+      }
+
+      // Check for CSP header in vercel.json
+      const vercelPath = path.resolve(process.cwd(), 'vercel.json')
+      if (fs.existsSync(vercelPath)) {
+        const vercelContent = fs.readFileSync(vercelPath, 'utf-8')
+        // Look for a headers array with a key Content-Security-Policy
+        const vercelCsp = /"key"\s*:\s*"Content-Security-Policy"/.test(
+          vercelContent
+        )
+        expect(vercelCsp).toBe(true)
+      }
     })
   })
 
