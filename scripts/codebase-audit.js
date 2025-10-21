@@ -25,7 +25,18 @@ const projectRoot = path.resolve(__dirname, '..')
  */
 function getProjectInfo() {
   const packagePath = path.join(projectRoot, 'package.json')
-  const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
+  
+  if (!fs.existsSync(packagePath)) {
+    console.error('❌ package.json not found at project root')
+    process.exit(1)
+  }
+  
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
+  } catch (error) {
+    console.error('❌ Failed to parse package.json:', error.message)
+    process.exit(1)
+  }
 
   return {
     author: packageJson.author || 'Paperlyte Team <hello@paperlyte.com>',
