@@ -394,6 +394,52 @@ export const launchChecklist = {
       monitoringActive,
     }
   },
+// Integration test helper functions
+const launchChecklist = {
+  validateTechnicalReadiness: (buildReport, performanceAudit, securityScan) => {
+    // Input validation
+    if (!buildReport || typeof buildReport !== 'object') {
+      throw new Error('buildReport is required and must be an object')
+    }
+    if (!performanceAudit || typeof performanceAudit !== 'object') {
+      throw new Error('performanceAudit is required and must be an object')
+    }
+    if (!securityScan || typeof securityScan !== 'object') {
+      throw new Error('securityScan is required and must be an object')
+    }
+
+    // Validate build success
+    const buildSuccessful =
+      buildReport.success === true &&
+      buildReport.exitCode === 0 &&
+      !buildReport.errors?.length
+
+    // Validate performance targets
+    const performanceTargetsMet =
+      performanceAudit.metrics &&
+      (performanceAudit.metrics.totalBlockingTime || 0) < 200 &&
+      (performanceAudit.metrics.performanceScore || 0) >= 90 &&
+      (performanceAudit.metrics.largestContentfulPaint || 0) < 2500
+
+    // Validate security configuration
+    const securityConfigured =
+      securityScan.vulnerabilities &&
+      securityScan.vulnerabilities.count === 0 &&
+      securityScan.cspEnabled === true &&
+      securityScan.httpsEnforced === true
+
+    // Validate monitoring setup
+    const monitoringActive =
+      buildReport.monitoring?.sentryConfigured === true &&
+      buildReport.monitoring?.analyticsConfigured === true
+
+    return {
+      buildSuccessful,
+      performanceTargetsMet,
+      securityConfigured,
+      monitoringActive,
+    }
+  },
 
   validateContentReadiness: (contentFiles, seoAudit, legalChecks) => {
     // Input validation
@@ -415,40 +461,22 @@ export const launchChecklist = {
       'LAUNCH_CHECKLIST.md',
     ]
     const documentationComplete =
-      contentFiles &&
-      typeof contentFiles === 'object' &&
-      Array.isArray(contentFiles.files) &&
-      requiredDocs.every(doc => contentFiles.files.includes(doc)) &&
-      Array.isArray(contentFiles.metaDescriptions) &&
-      contentFiles.metaDescriptions.length > 0
+      requiredDocs.every(
+        doc => contentFiles.files && contentFiles.files.includes(doc)
+      ) && contentFiles.metaDescriptions?.length > 0
 
     // Check SEO optimization
     const seoOptimized =
-      seoAudit &&
-      typeof seoAudit === 'object' &&
-      typeof seoAudit.score === 'number' &&
       seoAudit.score >= 95 &&
-      seoAudit.metaDescription &&
-      typeof seoAudit.metaDescription === 'object' &&
-      seoAudit.metaDescription.present === true &&
+      seoAudit.metaDescription?.present === true &&
       seoAudit.titleOptimized === true &&
-      seoAudit.structuredData &&
-      typeof seoAudit.structuredData === 'object' &&
-      seoAudit.structuredData.present === true
+      seoAudit.structuredData?.present === true
 
     // Check legal compliance
     const legalComplianceVerified =
-      legalChecks &&
-      typeof legalChecks === 'object' &&
-      legalChecks.privacyPolicy &&
-      typeof legalChecks.privacyPolicy === 'object' &&
-      legalChecks.privacyPolicy.present === true &&
-      legalChecks.termsOfService &&
-      typeof legalChecks.termsOfService === 'object' &&
-      legalChecks.termsOfService.present === true &&
-      typeof legalChecks.gdprCompliant === 'boolean' &&
+      legalChecks.privacyPolicy?.present === true &&
+      legalChecks.termsOfService?.present === true &&
       legalChecks.gdprCompliant === true &&
-      typeof legalChecks.accessibilityCompliant === 'boolean' &&
       legalChecks.accessibilityCompliant === true
 
     return {
@@ -467,16 +495,10 @@ export const launchChecklist = {
     const opportunities = []
 
     // Performance optimization opportunities
-    if (
-      auditResults.performance &&
-      typeof auditResults.performance === 'object'
-    ) {
+    if (auditResults.performance) {
       const perf = auditResults.performance
 
-      if (
-        typeof perf.totalBlockingTime === 'number' &&
-        perf.totalBlockingTime > 200
-      ) {
+      if (perf.totalBlockingTime > 200) {
         opportunities.push({
           area: 'Performance',
           metric: 'Total Blocking Time',
@@ -492,10 +514,7 @@ export const launchChecklist = {
         })
       }
 
-      if (
-        typeof perf.largestContentfulPaint === 'number' &&
-        perf.largestContentfulPaint > 2500
-      ) {
+      if (perf.largestContentfulPaint > 2500) {
         opportunities.push({
           area: 'Performance',
           metric: 'Largest Contentful Paint',
@@ -511,10 +530,7 @@ export const launchChecklist = {
         })
       }
 
-      if (
-        typeof perf.performanceScore === 'number' &&
-        perf.performanceScore < 90
-      ) {
+      if (perf.performanceScore < 90) {
         opportunities.push({
           area: 'Performance',
           metric: 'Lighthouse Performance Score',
@@ -532,10 +548,10 @@ export const launchChecklist = {
     }
 
     // SEO optimization opportunities
-    if (auditResults.seo && typeof auditResults.seo === 'object') {
+    if (auditResults.seo) {
       const seo = auditResults.seo
 
-      if (typeof seo.score === 'number' && seo.score < 95) {
+      if (seo.score < 95) {
         opportunities.push({
           area: 'SEO',
           metric: 'Lighthouse SEO Score',
@@ -551,11 +567,7 @@ export const launchChecklist = {
         })
       }
 
-      if (
-        !seo.metaDescription ||
-        typeof seo.metaDescription !== 'object' ||
-        !seo.metaDescription.optimized
-      ) {
+      if (!seo.metaDescription?.optimized) {
         opportunities.push({
           area: 'SEO',
           metric: 'Meta Descriptions',
@@ -573,30 +585,21 @@ export const launchChecklist = {
     }
 
     // Security optimization opportunities
-    if (auditResults.security && typeof auditResults.security === 'object') {
+    if (auditResults.security) {
       const security = auditResults.security
 
-      if (
-        security.vulnerabilities &&
-        typeof security.vulnerabilities === 'object' &&
-        typeof security.vulnerabilities.count === 'number' &&
-        security.vulnerabilities.count > 0
-      ) {
-        const critical =
-          typeof security.vulnerabilities.critical === 'number'
-            ? security.vulnerabilities.critical
-            : 0
-        const high =
-          typeof security.vulnerabilities.high === 'number'
-            ? security.vulnerabilities.high
-            : 0
-
+      if (security.vulnerabilities?.count > 0) {
         opportunities.push({
           area: 'Security',
           metric: 'Dependency Vulnerabilities',
           current: `${security.vulnerabilities.count} vulnerabilities`,
           target: '0 vulnerabilities',
-          priority: critical > 0 ? 'critical' : high > 0 ? 'high' : 'medium',
+          priority:
+            security.vulnerabilities.critical > 0
+              ? 'critical'
+              : security.vulnerabilities.high > 0
+                ? 'high'
+                : 'medium',
           recommendations: [
             'Update vulnerable dependencies',
             'Run npm audit fix',
@@ -606,7 +609,7 @@ export const launchChecklist = {
         })
       }
 
-      if (security.cspEnabled !== true) {
+      if (!security.cspEnabled) {
         opportunities.push({
           area: 'Security',
           metric: 'Content Security Policy',
@@ -624,13 +627,10 @@ export const launchChecklist = {
     }
 
     // Accessibility optimization opportunities
-    if (
-      auditResults.accessibility &&
-      typeof auditResults.accessibility === 'object'
-    ) {
+    if (auditResults.accessibility) {
       const a11y = auditResults.accessibility
 
-      if (typeof a11y.score === 'number' && a11y.score < 100) {
+      if (a11y.score < 100) {
         opportunities.push({
           area: 'Accessibility',
           metric: 'Lighthouse Accessibility Score',
