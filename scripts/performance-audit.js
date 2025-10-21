@@ -123,11 +123,12 @@ class PerformanceAuditor {
       })
 
       // Fallback timeout
-      setTimeout(() => {
+      // Fallback timeout
+      setTimeout(5000).then(() => {
         if (!serverStarted) {
           resolve() // Continue to health check
         }
-      }, 5000)
+      })
     })
   }
 
