@@ -62,7 +62,7 @@
     "posthog-js": "^1.268.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^7.9.2"
+    "react-router-dom": "^7.9.3"
   },
   "devDependencies": {
     "@codecov/vite-plugin": "^1.9.1",
