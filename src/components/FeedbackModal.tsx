@@ -4,6 +4,7 @@ import { dataService } from '../services/dataService'
 import type { FeedbackType, ModalProps } from '../types'
 import { trackFeedbackEvent } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
+import { isValidEmail } from '../utils/validation'
 
 interface FeedbackFormData {
   type: FeedbackType
@@ -40,10 +41,7 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         throw new Error('Feedback message must be at least 10 characters')
       }
 
-      if (
-        formData.email &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-      ) {
+      if (formData.email && !isValidEmail(formData.email)) {
         throw new Error('Please enter a valid email address')
       }
 
@@ -196,6 +194,7 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                 placeholder='Tell us what you think...'
                 disabled={isSubmitting}
                 minLength={10}
+                maxLength={500}
               />
               <p className='text-xs text-gray-500 mt-1'>
                 {formData.message.length}/500 characters

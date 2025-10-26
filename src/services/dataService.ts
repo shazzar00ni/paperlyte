@@ -10,6 +10,7 @@ import {
   migrateToIndexedDB,
   isIndexedDBAvailable,
 } from '../utils/dataMigration'
+import { normalizeEmail } from '../utils/validation'
 
 /**
  * Data Service - Abstraction layer for data persistence
@@ -423,7 +424,7 @@ class DataService {
 
     try {
       // Normalize email for consistent comparison and storage
-      const normalizedEmail = request.email.toLowerCase().trim()
+      const normalizedEmail = normalizeEmail(request.email)
 
       // Check for duplicate email
       if (this.useIndexedDB) {
@@ -433,7 +434,7 @@ class DataService {
 
         if (
           existingRequests.some(
-            r => (r.email || '').toLowerCase().trim() === normalizedEmail
+            r => normalizeEmail(r.email || '') === normalizedEmail
           )
         ) {
           return {
@@ -460,7 +461,7 @@ class DataService {
 
         if (
           existingRequests.some(
-            r => (r.email || '').toLowerCase().trim() === normalizedEmail
+            r => normalizeEmail(r.email || '') === normalizedEmail
           )
         ) {
           return {

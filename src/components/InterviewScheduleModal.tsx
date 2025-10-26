@@ -4,6 +4,7 @@ import { dataService } from '../services/dataService'
 import type { InterviewAvailability, ModalProps } from '../types'
 import { trackInterviewEvent } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
+import { isValidEmail } from '../utils/validation'
 
 interface InterviewFormData {
   name: string
@@ -79,7 +80,7 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         throw new Error('Please fill in all required fields')
       }
 
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      if (!isValidEmail(formData.email)) {
         throw new Error('Please enter a valid email address')
       }
 

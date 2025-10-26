@@ -25,6 +25,14 @@ vi.mock('../../utils/monitoring', () => ({
   },
 }))
 
+// Mock validation utilities
+vi.mock('../../utils/validation', () => ({
+  isValidEmail: vi.fn((email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ),
+  normalizeEmail: vi.fn((email: string) => email.toLowerCase().trim()),
+}))
+
 describe('FeedbackModal', () => {
   const mockOnClose = vi.fn()
 
