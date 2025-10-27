@@ -128,20 +128,19 @@ jobs:
       - name: Build and audit PR
         run: |
           npm run build
-          npm run preview &
-          sleep 5
+          npm run preview -- --port 4173 &
+          npx wait-on http://localhost:4173 --timeout 30000
           lighthouse http://localhost:4173 --output json --output-path pr-results.json --quiet --chrome-flags="--headless --no-sandbox"
-          pkill -f "vite preview" || true
+          lsof -ti:4173 | xargs kill -9 || true
 
       - name: Build and audit base
         run: |
           cd base
           npm run build
-          npm run preview &
-          sleep 5
-          lighthouse http://localhost:4173 --output json --output-path ../base-results.json --quiet --chrome-flags="--headless --no-sandbox"
-          pkill -f "vite preview" || true
-
+          npm run preview -- --port 4174 &
+          npx wait-on http://localhost:4174 --timeout 30000
+          lighthouse http://localhost:4174 --output json --output-path ../base-results.json --quiet --chrome-flags="--headless --no-sandbox"
+          lsof -ti:4174 | xargs kill -9 || true
       - name: Compare performance
         run: |
           node -e "
