@@ -22,18 +22,21 @@ Complete launch checklist for Paperlyte including Product Hunt launch, app store
 - [x] ✅ Deployment configurations ready (Netlify, Vercel)
 - [x] ✅ Security headers configured
 - [x] ✅ Environment variables documented
-- [x] ✅ Performance testing completed
+- [x] ✅ Performance testing framework configured
   - Lighthouse CLI testing attempted on 27 Oct 2025 (both dev and production builds).
   - **Note:** Lighthouse headless mode encountered NO_FCP (No First Contentful Paint) errors with React app, preventing full automated audit completion.
-  - **Workaround:** Use Chrome DevTools Lighthouse instead:
-    1. Open http://localhost:3001 (dev) or http://localhost:4000 (production) in Chrome
+  - Application loads correctly in all browsers; issue is specific to Lighthouse headless automation.
+  - Security: `lighthouse-report.html` sanitization script in place to redact sensitive data (error stacks, user agents, file paths).
+  - [ ] **Manual Lighthouse audit via Chrome DevTools** (Required before final launch):
+    1. Open http://localhost:3000 (Vite dev server - `npm run dev`) or http://localhost:4173 (production preview - `npm run preview` after `npm run build`) in Chrome
+       - **Port Configuration:** Dev server port set in `vite.config.ts` (`server.port: 3000`); preview port in `vite.config.ts` (`preview.port: 4173`)
+       - See [SETUP.md](SETUP.md) for full development environment setup and port configuration details
     2. Open DevTools (Cmd+Option+I)
     3. Go to Lighthouse tab
     4. Run audit with "Desktop" preset
     5. This runs in visible browser window and successfully captures paint events
-  - Application loads correctly in all browsers; issue is specific to Lighthouse headless automation.
-  - Security: `lighthouse-report.html` sanitization script in place to redact sensitive data (error stacks, user agents, file paths).
-  - **Action Required:** Manual Lighthouse audit via DevTools before final launch.
+    6. Review all categories (Performance, Accessibility, Best Practices, SEO)
+    7. Document results and address any critical issues before launch
 - [-] Cross-browser compatibility testing
   - Testing in progress as of 27 Oct 2025.
   - See `docs/cross-browser-compatibility.md` for test matrix and notes.
