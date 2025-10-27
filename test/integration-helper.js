@@ -8,8 +8,9 @@ function runMarkdownTests() {
     console.log(out);
     return { success: true, output: out };
   } catch (e) {
-    console.error('Markdown tests failed:', e.stdout || e.message);
-    return { success: false, error: e.stdout || e.message };
+    const errorOutput = e.stderr || e.stdout || e.message;
+    console.error('Markdown tests failed:', errorOutput);
+    return { success: false, error: errorOutput };
   }
 }
 
