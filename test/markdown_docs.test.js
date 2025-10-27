@@ -249,8 +249,10 @@ tr.describe('Success Metrics', () => {
 
 tr.describe('Formatting & Quality', () => {
   tr.it('uses section emojis for categorization', () => {
-    const emojiCount = (markdown.match(/[🚀📋🏆📱📚🎯📊🛠️📞📝]/gu) || []).length;
+    const emojiRe = /(?:🚀|📋|🏆|📱|📚|🎯|📊|📞|📝|🛠️?)/gu;
+    const emojiCount = (markdown.match(emojiRe) || []).length;
     assertGt(emojiCount, 8, 'Expected multiple categorization emojis');
+  });
   });
   tr.it('has no obvious broken markdown syntax', () => {
     const patterns = [
