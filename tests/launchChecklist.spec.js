@@ -70,7 +70,8 @@ describe('Launch Checklist Validation', () => {
       expect(securityConfig.cspConfigured).toBe(true);
       expect(securityConfig.httpsReady).toBe(true);
       expect(securityConfig.errorMonitoring).toBe(true);
-      // Note: Moderate vulnerabilities are dev-only and acceptable for launch
+      // Dev-only vulnerabilities are acceptable for launch
+      expect(securityConfig.noVulnerabilities).toBe(false);
     });
   });
 
