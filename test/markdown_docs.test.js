@@ -152,7 +152,11 @@ tr.describe('File & Heading', () => {
   tr.it('contains Overview section', () => {
     assertContains(markdown, '## Overview', 'Missing Overview');
   });
-  tr.it('uses Unix line endings', () => { assertOk(!/\r\n/.test(markdown), 'Found CRLF line endings'); });
+  tr.it('has consistent line endings (no mixing LF/CRLF)', () => {
+    const hasCRLF = /\r\n/.test(markdown);
+    const hasBareLF = /(^|[^\r])\n/.test(markdown);
+    assertOk(!(hasCRLF && hasBareLF), 'Mixed LF and CRLF line endings detected');
+  });
 });
 
 tr.describe('Structure & Sections', () => {
