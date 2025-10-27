@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const path = require('path');
+const path = require('node:path');
 
 function runMarkdownTests() {
   const p = path.join(__dirname, 'run-markdown-tests.js');
