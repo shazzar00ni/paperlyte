@@ -22,8 +22,17 @@ Complete launch checklist for Paperlyte including Product Hunt launch, app store
 - [x] ✅ Deployment configurations ready (Netlify, Vercel)
 - [x] ✅ Security headers configured
 - [x] ✅ Environment variables documented
-- [ ] 🔄 Performance testing completed
-- [ ] 🔄 Cross-browser compatibility testing
+- [x] ✅ Performance testing completed
+  - Lighthouse report generated (`lighthouse-report.html`) on 27 Oct 2025.
+  - Key findings:
+    - App loads quickly and passes core web vitals (see report for details).
+    - No major performance bottlenecks detected.
+    - Minor opportunities: Review image optimization and consider reducing unused JavaScript for further gains.
+  - No critical issues found. See `lighthouse-report.html` for full details and scores.
+- [-] Cross-browser compatibility testing
+  - Testing in progress as of 27 Oct 2025.
+  - See `docs/cross-browser-compatibility.md` for test matrix and notes.
+  - No browser-specific issues or fixes documented yet. Matrix ready for updates as testing proceeds.
 - [ ] 🔄 Mobile responsiveness verification
 - [ ] 🔄 Final security audit
 
@@ -251,7 +260,7 @@ _Use this section to track progress, blockers, and important decisions during la
 
 🔄 **Next Priority Actions:**
 
-1. Performance testing and cross-browser compatibility verification
+1. Cross-browser compatibility verification (in progress)
 2. Create actual screenshots and demo videos from the plan
 3. Mobile responsiveness final testing
 4. Security audit completion
