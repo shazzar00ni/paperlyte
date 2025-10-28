@@ -254,4 +254,24 @@ describe('InterviewScheduleModal', () => {
       )
     })
   })
+
+  it('should enforce character limits with maxLength attributes', () => {
+    render(<InterviewScheduleModal isOpen={true} onClose={mockOnClose} />)
+
+    const nameInput = screen.getByLabelText('Full Name *') as HTMLInputElement
+    const notesInput = screen.getByLabelText(
+      'Additional Notes (Optional)'
+    ) as HTMLTextAreaElement
+
+    // Check maxLength attributes are set
+    expect(nameInput.maxLength).toBe(100)
+    expect(notesInput.maxLength).toBe(1000)
+  })
+
+  it('should show character counter for additional notes', () => {
+    render(<InterviewScheduleModal isOpen={true} onClose={mockOnClose} />)
+
+    // Should show initial counter
+    expect(screen.getByText('0/1000 characters')).toBeInTheDocument()
+  })
 })

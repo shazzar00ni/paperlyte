@@ -219,6 +219,7 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                 className='input'
                 placeholder='Your name'
                 disabled={isSubmitting}
+                maxLength={100}
               />
             </div>
 

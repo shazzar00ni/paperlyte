@@ -80,6 +80,10 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         throw new Error('Please fill in all required fields')
       }
 
+      if (formData.name.trim().length > 100) {
+        throw new Error('Name must be less than 100 characters')
+      }
+
       if (!isValidEmail(formData.email)) {
         throw new Error('Please enter a valid email address')
       }
@@ -90,6 +94,10 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
       if (formData.topics.length === 0) {
         throw new Error('Please select at least one topic to discuss')
+      }
+
+      if (formData.additionalNotes.trim().length > 1000) {
+        throw new Error('Additional notes must be less than 1000 characters')
       }
 
       // Use data service for persistence
@@ -228,6 +236,7 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                   className='input pl-11'
                   placeholder='Your name'
                   disabled={isSubmitting}
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -364,7 +373,11 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                 className='input min-h-[80px] resize-y'
                 placeholder='Any specific times, topics, or constraints we should know about?'
                 disabled={isSubmitting}
+                maxLength={1000}
               />
+              <p className='text-xs text-gray-500 mt-1'>
+                {formData.additionalNotes.length}/1000 characters
+              </p>
             </div>
 
             {/* Error Message */}
