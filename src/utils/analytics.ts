@@ -1,9 +1,5 @@
+import { config } from '@/config/env'
 import posthog from 'posthog-js'
-
-// Environment variables for analytics
-const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY
-const POSTHOG_HOST =
-  import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com'
 
 export interface AnalyticsEvent {
   event: string
@@ -28,15 +24,15 @@ class Analytics {
    * Initialize PostHog analytics
    */
   init(): void {
-    if (this.isInitialized || !POSTHOG_API_KEY) {
+    if (this.isInitialized || !config.posthog.apiKey) {
       console.warn('Analytics: PostHog not initialized - missing API key')
       this.isEnabled = false
       return
     }
 
     try {
-      posthog.init(POSTHOG_API_KEY, {
-        api_host: POSTHOG_HOST,
+      posthog.init(config.posthog.apiKey, {
+        api_host: config.posthog.host,
         // Privacy-focused configuration
         capture_pageview: true,
         capture_pageleave: true,

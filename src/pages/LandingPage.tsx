@@ -1,5 +1,6 @@
 import { CheckCircle, Search, Shield, Smartphone, Tag, Zap } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import DemoCarousel from '../components/DemoCarousel'
 import WaitlistModal from '../components/WaitlistModal'
 import {
@@ -78,17 +79,18 @@ const LandingPage: React.FC = () => {
             and your ideas.
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-            <button
-              onClick={handleWaitlistClick}
+            <Link
+              to='/editor'
               className='btn-primary btn-lg animation-glow'
+              onClick={() => trackUserAction('start_writing_clicked')}
             >
               Start Writing Now
-            </button>
+            </Link>
             <button
-              onClick={() => trackUserAction('demo_request')}
+              onClick={handleWaitlistClick}
               className='btn-secondary btn-lg'
             >
-              See 30-Second Demo
+              Join Waitlist
             </button>
           </div>
         </div>

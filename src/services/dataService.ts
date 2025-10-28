@@ -1,21 +1,29 @@
 import type {
   Note,
-  WaitlistEntry,
-  PaginationOptions,
   PaginatedResult,
+  PaginationOptions,
+  WaitlistEntry,
 } from '../types'
-import { monitoring } from '../utils/monitoring'
-import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
 import {
-  migrateToIndexedDB,
+  getErrorMessage,
+  isPaperlyteError,
+  StorageQuotaError,
+  StorageUnavailableError,
+  ValidationError,
+} from '../types/errors'
+import {
   isIndexedDBAvailable,
+  migrateToIndexedDB,
 } from '../utils/dataMigration'
+import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
+import { monitoring } from '../utils/monitoring'
 import {
   calculateWordCount,
-  sanitizeTitle,
   sanitizeContent,
+  sanitizeTitle,
   validateNote,
 } from '../utils/noteUtils'
+import { retryOnTransientError } from '../utils/retry'
 
 /**
  * Data Service - Abstraction layer for data persistence
@@ -46,36 +54,74 @@ class DataService {
       // Check if IndexedDB is available
       this.useIndexedDB = isIndexedDBAvailable()
 
-      if (this.useIndexedDB) {
-        // Initialize IndexedDB
-        await indexedDB.init()
-
-        // Run migration from localStorage if not already done
-        if (!this.migrationCompleted) {
-          const result = await migrateToIndexedDB()
-          this.migrationCompleted = result.success
-
-          if (result.notesCount > 0 || result.waitlistCount > 0) {
-            monitoring.addBreadcrumb('Data migrated to IndexedDB', 'info', {
-              notesCount: result.notesCount,
-              waitlistCount: result.waitlistCount,
-              errors: result.errors,
-            })
-          }
-        }
-      } else {
+      if (!this.useIndexedDB) {
         monitoring.addBreadcrumb(
           'IndexedDB not available, using localStorage fallback',
           'warning'
         )
+        return
+      }
+
+      // Initialize IndexedDB with retry on transient errors
+      await retryOnTransientError(
+        async () => {
+          await indexedDB.init()
+        },
+        {
+          maxAttempts: 3,
+          initialDelay: 100,
+          onRetry: (error, attempt) => {
+            monitoring.addBreadcrumb(
+              'Retrying IndexedDB initialization',
+              'info',
+              {
+                attempt,
+                error: getErrorMessage(error),
+              }
+            )
+          },
+        }
+      )
+
+      // Run migration from localStorage if not already done
+      if (!this.migrationCompleted) {
+        const result = await migrateToIndexedDB()
+        this.migrationCompleted = result.success
+
+        if (result.notesCount > 0 || result.waitlistCount > 0) {
+          monitoring.addBreadcrumb('Data migrated to IndexedDB', 'info', {
+            notesCount: result.notesCount,
+            waitlistCount: result.waitlistCount,
+            errors: result.errors,
+          })
+        }
       }
     } catch (error) {
+      // Check if it's a storage unavailable error
+      if (
+        error instanceof Error &&
+        (error.name === 'QuotaExceededError' || error.message.includes('quota'))
+      ) {
+        throw new StorageQuotaError(
+          'Storage quota exceeded during initialization',
+          {
+            originalError: getErrorMessage(error),
+          }
+        )
+      }
+
+      // Log the error and fall back to localStorage
       monitoring.logError(error as Error, {
         feature: 'data_service',
         action: 'initialize',
       })
-      // Fall back to localStorage
+
       this.useIndexedDB = false
+
+      throw new StorageUnavailableError('Failed to initialize storage', {
+        originalError: getErrorMessage(error),
+        fallbackUsed: true,
+      })
     }
   }
 
@@ -273,6 +319,8 @@ class DataService {
    *
    * @param note - The note to save
    * @returns Promise<boolean> - true if saved successfully
+   * @throws ValidationError if note data is invalid
+   * @throws StorageQuotaError if storage limit is exceeded
    */
   async saveNote(note: Note): Promise<boolean> {
     await this.initialize()
@@ -284,12 +332,15 @@ class DataService {
     })
 
     if (validationError) {
-      monitoring.logError(new Error(validationError), {
+      const error = new ValidationError(validationError, 'note', {
+        noteId: note.id,
+      })
+      monitoring.logError(error, {
         feature: 'data_service',
         action: 'save_note_validation',
         additionalData: { noteId: note.id },
       })
-      return false
+      throw error
     }
 
     // Sanitize input
@@ -328,8 +379,18 @@ class DataService {
     }
 
     try {
+      // Use retry logic for IndexedDB operations
       if (this.useIndexedDB) {
-        await indexedDB.put(STORE_NAMES.NOTES, sanitizedNote)
+        await retryOnTransientError(
+          async () => {
+            await indexedDB.put(STORE_NAMES.NOTES, sanitizedNote)
+          },
+          {
+            maxAttempts: 2,
+            initialDelay: 50,
+          }
+        )
+
         monitoring.addBreadcrumb(
           isUpdate ? 'Note updated in IndexedDB' : 'Note created in IndexedDB',
           'info',
@@ -354,6 +415,25 @@ class DataService {
         return this.saveToStorage('notes', notes)
       }
     } catch (error) {
+      // Check for quota errors
+      if (
+        error instanceof Error &&
+        (error.name === 'QuotaExceededError' || error.message.includes('quota'))
+      ) {
+        const quotaError = new StorageQuotaError(
+          'Storage quota exceeded while saving note',
+          {
+            noteId: sanitizedNote.id,
+            wordCount: sanitizedNote.wordCount,
+          }
+        )
+        monitoring.logError(quotaError, {
+          feature: 'data_service',
+          action: 'save_note',
+        })
+        throw quotaError
+      }
+
       monitoring.logError(error as Error, {
         feature: 'data_service',
         action: 'save_note',
@@ -371,9 +451,26 @@ class DataService {
           notes.unshift(sanitizedNote)
         }
 
-        return this.saveToStorage('notes', notes)
-      } catch {
-        return false
+        const success = this.saveToStorage('notes', notes)
+        if (!success) {
+          throw new StorageUnavailableError(
+            'Failed to save note to localStorage fallback',
+            {
+              noteId: sanitizedNote.id,
+            }
+          )
+        }
+        return success
+      } catch (fallbackError) {
+        // If fallback also fails, throw the error
+        if (isPaperlyteError(fallbackError)) {
+          throw fallbackError
+        }
+        throw new StorageUnavailableError('All storage methods failed', {
+          noteId: sanitizedNote.id,
+          originalError: getErrorMessage(error),
+          fallbackError: getErrorMessage(fallbackError),
+        })
       }
     }
   }

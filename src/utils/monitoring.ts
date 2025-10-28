@@ -1,9 +1,6 @@
+import { config } from '@/config/env'
 import * as Sentry from '@sentry/react'
 import { analytics } from './analytics'
-
-// Environment variables for monitoring
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
-const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.1.0'
 
 export interface ErrorContext {
   userId?: string
@@ -28,19 +25,19 @@ class Monitoring {
    * Initialize Sentry error monitoring
    */
   init(): void {
-    if (this.isInitialized || !SENTRY_DSN) {
+    if (this.isInitialized || !config.sentry.dsn) {
       console.warn('Monitoring: Sentry not initialized - missing DSN')
       return
     }
 
     try {
       Sentry.init({
-        dsn: SENTRY_DSN,
-        environment: import.meta.env.MODE,
-        release: APP_VERSION,
+        dsn: config.sentry.dsn,
+        environment: config.sentry.environment,
+        release: config.app.version,
 
         // Performance monitoring
-        tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
+        tracesSampleRate: config.sentry.tracesSampleRate,
 
         // Session replay for debugging
         replaysSessionSampleRate: 0.1,
@@ -49,10 +46,7 @@ class Monitoring {
         // Error filtering
         beforeSend(event, hint) {
           // Don't send errors in development unless explicitly enabled
-          if (
-            import.meta.env.MODE === 'development' &&
-            !import.meta.env.VITE_SENTRY_DEV_ENABLED
-          ) {
+          if (!config.sentry.enabled) {
             return null
           }
 

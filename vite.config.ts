@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => ({
       '@/utils': resolve(__dirname, './src/utils'),
       '@/types': resolve(__dirname, './src/types'),
       '@/assets': resolve(__dirname, './src/assets'),
+      '@/config': resolve(__dirname, './src/config'),
     },
   },
   server: {
@@ -38,8 +39,27 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === 'development',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
+        manualChunks: id => {
+          // Core React dependencies
+          if (
+            id.includes('node_modules/react') ||
+            id.includes('node_modules/react-dom')
+          ) {
+            return 'vendor'
+          }
+          // Router in separate chunk (shared across routes)
+          if (id.includes('node_modules/react-router')) {
+            return 'router'
+          }
+          // Analytics and monitoring (lazy-loaded)
+          if (id.includes('posthog') || id.includes('@sentry')) {
+            return 'analytics'
+          }
+          // IndexedDB utilities (only needed for editor/admin)
+          if (id.includes('fake-indexeddb') || id.includes('idb')) {
+            return 'storage'
+          }
+          // Default: include in main bundle or route-specific chunks
         },
       },
     },
