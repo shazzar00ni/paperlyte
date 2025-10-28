@@ -28,9 +28,8 @@ Complete launch checklist for Paperlyte including Product Hunt launch, app store
   - Application loads correctly in all browsers; issue is specific to Lighthouse headless automation.
   - Security: `lighthouse-report.html` sanitization script in place to redact sensitive data (error stacks, user agents, file paths).
   - [ ] **Manual Lighthouse audit via Chrome DevTools** (Required before final launch):
-    1. Open http://localhost:3000 (Vite dev server - `npm run dev`) or http://localhost:4173 (production preview - `npm run preview` after `npm run build`) in Chrome
-       - **Port Configuration:** Dev server port set in `vite.config.ts` (`server.port: 3000`); preview port in `vite.config.ts` (`preview.port: 4173`)
-       - See [SETUP.md](SETUP.md) for full development environment setup and port configuration details
+    1. Start the dev server (`npm run dev`) or production preview server (`npm run preview` after `npm run build`) and open the local URL displayed in your terminal in Chrome
+       - See [SETUP.md](SETUP.md) for port configuration details and development environment setup
     2. Open DevTools (Cmd+Option+I)
     3. Go to Lighthouse tab
     4. Run audit with "Desktop" preset

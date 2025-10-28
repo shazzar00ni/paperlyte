@@ -1,11 +1,25 @@
 import '@testing-library/jest-dom'
-import { vi, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
+import { beforeEach, vi } from 'vitest'
 
 // Mock global crypto for tests
 Object.defineProperty(global, 'crypto', {
   value: {
-    randomUUID: vi.fn(() => 'test-uuid-123'),
+    randomUUID: vi.fn(() => {
+      // Generate a more realistic UUID for each call
+      return `${Math.random().toString(36).substr(2, 9)}-${Date.now().toString(36)}`
+    }),
+    subtle: {
+      digest: vi.fn(async (_algorithm: string, data: ArrayBuffer) => {
+        // Mock SHA-256 digest - return a consistent hash for testing
+        const text = new TextDecoder().decode(data)
+        const hash = text
+          .split('')
+          .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+        const hashArray = new Uint8Array(32).fill(hash % 256)
+        return hashArray.buffer
+      }),
+    },
   },
 })
 

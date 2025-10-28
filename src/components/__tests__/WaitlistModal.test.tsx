@@ -15,6 +15,7 @@ vi.mock('../../services/dataService', () => ({
 // Mock analytics
 vi.mock('../../utils/analytics', () => ({
   trackUserAction: vi.fn(),
+  trackWaitlistEvent: vi.fn(),
 }))
 
 describe('WaitlistModal', () => {
@@ -52,18 +53,32 @@ describe('WaitlistModal', () => {
     const user = userEvent.setup()
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
-    const emailInput = screen.getByLabelText('Email Address *')
+    const emailInput = screen.getByLabelText(
+      'Email Address *'
+    ) as HTMLInputElement
     const nameInput = screen.getByLabelText('Name *')
     const submitButton = screen.getByText('Join Waitlist')
 
-    // Enter invalid email but valid name
-    await user.type(emailInput, 'invalid-email')
+    // Enter email without domain (passes HTML5 but fails our regex)
+    await user.type(emailInput, 'test@test')
     await user.type(nameInput, 'Test User')
-    await user.click(submitButton)
 
-    expect(
-      screen.getByText('Please enter a valid email address')
-    ).toBeInTheDocument()
+    // Override HTML5 validation by submitting the form programmatically
+    const form = emailInput.closest('form')
+    if (form) {
+      // Trigger form submission which will call our validation
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      )
+    }
+
+    // Wait for error message to appear
+    await waitFor(() => {
+      expect(
+        screen.getByText('Please enter a valid email address')
+      ).toBeInTheDocument()
+    })
+
     expect(dataService.addToWaitlist).not.toHaveBeenCalled()
   })
 
@@ -75,11 +90,13 @@ describe('WaitlistModal', () => {
 
     const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
+    const interestSelect = screen.getByLabelText("I'm interested as a...")
     const submitButton = screen.getByText('Join Waitlist')
 
     // Fill form with valid data
     await user.type(emailInput, 'test@example.com')
     await user.type(nameInput, 'Test User')
+    await user.selectOptions(interestSelect, 'other')
     await user.click(submitButton)
 
     await waitFor(() => {
@@ -122,9 +139,11 @@ describe('WaitlistModal', () => {
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
     const emailInput = screen.getByLabelText('Email Address *')
+    const nameInput = screen.getByLabelText('Name *')
     const submitButton = screen.getByText('Join Waitlist')
 
     await user.type(emailInput, 'success@example.com')
+    await user.type(nameInput, 'Success User')
     await user.click(submitButton)
 
     await waitFor(() => {
