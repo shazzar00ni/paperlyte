@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import NoteEditor from '../../src/pages/NoteEditor'
@@ -7,15 +7,8 @@ import { dataService } from '../../src/services/dataService'
 import type { Note } from '../../src/types'
 
 describe('Note Workflow Integration', () => {
-  beforeEach(async () => {
-    // Aggressively clear all storage
+  beforeEach(() => {
     localStorage.clear()
-    localStorage.removeItem('paperlyte_notes')
-    localStorage.removeItem('paperlyte_waitlist_entries')
-
-    // Wait for storage to clear
-    await new Promise(resolve => setTimeout(resolve, 10))
-
     vi.clearAllMocks()
   })
 
@@ -40,11 +33,12 @@ describe('Note Workflow Integration', () => {
         expect(screen.getByDisplayValue(/untitled/i)).toBeInTheDocument()
       })
 
-      // Find the title input and edit it using fireEvent for controlled inputs
+      // Find the title input and edit it with userEvent
       const titleInput = screen.getByDisplayValue(
         /untitled/i
       ) as HTMLInputElement
-      fireEvent.change(titleInput, { target: { value: 'Test Note Title' } })
+      await user.clear(titleInput)
+      await user.type(titleInput, 'Test Note Title')
 
       // Wait for note to be saved with new title
       await waitFor(
@@ -84,8 +78,9 @@ describe('Note Workflow Integration', () => {
         'Existing Note'
       ) as HTMLInputElement
 
-      // Use fireEvent.change for controlled React inputs
-      fireEvent.change(titleInput, { target: { value: 'Updated Note Title' } })
+      // Use userEvent for realistic user interaction
+      await user.clear(titleInput)
+      await user.type(titleInput, 'Updated Note Title')
 
       // Verify title update was saved
       await waitFor(async () => {
@@ -97,14 +92,6 @@ describe('Note Workflow Integration', () => {
 
     it('should handle note deletion', async () => {
       const user = userEvent.setup()
-
-      // Explicitly clear ALL localStorage keys to ensure clean state
-      localStorage.clear()
-      localStorage.removeItem('paperlyte_notes')
-      localStorage.removeItem('paperlyte_waitlist_entries')
-
-      // Wait for storage operations to complete
-      await new Promise(resolve => setTimeout(resolve, 50))
 
       // Create multiple notes
       const note1: Note = {

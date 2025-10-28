@@ -53,24 +53,18 @@ describe('WaitlistModal', () => {
     const user = userEvent.setup()
     render(<WaitlistModal isOpen={true} onClose={mockOnClose} />)
 
-    const emailInput = screen.getByLabelText(
-      'Email Address *'
-    ) as HTMLInputElement
+    const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
+    const interestSelect = screen.getByLabelText("I'm interested as a...")
     const submitButton = screen.getByText('Join Waitlist')
 
-    // Enter email without domain (passes HTML5 but fails our regex)
+    // Enter email without proper domain (passes HTML5 but fails our regex)
     await user.type(emailInput, 'test@test')
     await user.type(nameInput, 'Test User')
+    await user.selectOptions(interestSelect, 'other')
 
-    // Override HTML5 validation by submitting the form programmatically
-    const form = emailInput.closest('form')
-    if (form) {
-      // Trigger form submission which will call our validation
-      form.dispatchEvent(
-        new Event('submit', { bubbles: true, cancelable: true })
-      )
-    }
+    // Submit form via user interaction to trigger validation naturally
+    await user.click(submitButton)
 
     // Wait for error message to appear
     await waitFor(() => {

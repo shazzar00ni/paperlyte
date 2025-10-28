@@ -30,7 +30,7 @@ Complete launch checklist for Paperlyte including Product Hunt launch, app store
   - [ ] **Manual Lighthouse audit via Chrome DevTools** (Required before final launch):
     1. Start the dev server (`npm run dev`) or production preview server (`npm run preview` after `npm run build`) and open the local URL displayed in your terminal in Chrome
        - See [SETUP.md](SETUP.md) for port configuration details and development environment setup
-    2. Open DevTools (Cmd+Option+I)
+    2. Open DevTools (F12 or Cmd+Option+I on Mac / Ctrl+Shift+I on Windows/Linux)
     3. Go to Lighthouse tab
     4. Run audit with "Desktop" preset
     5. This runs in visible browser window and successfully captures paint events

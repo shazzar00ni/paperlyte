@@ -1,12 +1,23 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { syncEngine } from '../syncEngine'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Note, SyncConflict } from '../../types'
+import { syncEngine } from '../syncEngine'
+
+// Mock IndexedDB to force localStorage usage in tests
+vi.mock('../../utils/dataMigration', () => ({
+  isIndexedDBAvailable: () => false,
+}))
 
 describe('SyncEngine', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear()
     vi.clearAllMocks()
+
+    // Reset sync engine state
+    // @ts-expect-error - accessing private property for testing
+    syncEngine.useIndexedDB = false
+    // @ts-expect-error - accessing private property for testing
+    syncEngine.syncInProgress = false
   })
 
   describe('Sync Metadata', () => {
@@ -137,32 +148,41 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      // First sync the base note
-      await syncEngine.syncNotes([baseNote])
+      // First sync the base note to establish baseline
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
-      // Create local and remote versions that both modified after sync
+      // Get the synced note with metadata from cloud storage
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+      const originalSyncTime = '2025-01-01T10:30:00.000Z' // Fixed timestamp for baseline
+
+      // Create local version modified after sync
       const localNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Local Version',
         content: 'Local changes',
-        updatedAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z', // Modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Create remote version modified after sync independently
       const remoteNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Remote Version',
         content: 'Remote changes',
-        updatedAt: '2025-01-01T11:00:00.000Z',
+        updatedAt: '2025-01-01T11:30:00.000Z', // Also modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
-      // Manually set up remote note in cloud storage
-      const cloudNotes = [remoteNote]
+      // Manually set up remote note in cloud storage to simulate remote changes
       localStorage.setItem(
         'paperlyte_sync_cloud_notes',
-        JSON.stringify(cloudNotes)
+        JSON.stringify([remoteNote])
       )
 
       // Sync local note with manual strategy to capture conflicts
@@ -181,15 +201,21 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
       // First sync
-      await syncEngine.syncNotes([baseNote])
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
-      // Only modify local
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+
+      // Only modify local - PRESERVE lastSyncedAt
       const localNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Local Version',
         updatedAt: '2025-01-01T12:00:00.000Z',
       }
@@ -209,17 +235,25 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      // First sync
-      await syncEngine.syncNotes([baseNote])
+      // First sync to establish baseline
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
-      // Modify local
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+      const originalSyncTime = '2025-01-01T10:30:00.000Z' // Fixed timestamp for baseline
+
+      // Modify local after sync - use fixed lastSyncedAt
       const localNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Local Version',
-        updatedAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z', // Modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
       // Simulate remote deletion by having empty cloud
@@ -240,17 +274,25 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      // First sync
-      await syncEngine.syncNotes([baseNote])
+      // First sync to establish baseline
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
-      // Modify remote
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+      const originalSyncTime = '2025-01-01T10:30:00.000Z' // Fixed timestamp for baseline
+
+      // Modify remote after sync - use fixed lastSyncedAt
       const remoteNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Remote Version',
-        updatedAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z', // Modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
       // Simulate remote update
@@ -277,23 +319,36 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      await syncEngine.syncNotes([baseNote])
+      // First sync to establish baseline
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+      const originalSyncTime = '2025-01-01T10:30:00.000Z' // Fixed timestamp for baseline
+
+      // Create local version modified after sync
       const localNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Local Version',
-        updatedAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z', // Modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Create remote version modified after sync independently
       const remoteNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Remote Version',
-        updatedAt: '2025-01-01T11:00:00.000Z',
+        updatedAt: '2025-01-01T11:30:00.000Z', // Also modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Simulate remote changes
       localStorage.setItem(
         'paperlyte_sync_cloud_notes',
         JSON.stringify([remoteNote])
@@ -308,8 +363,8 @@ describe('SyncEngine', () => {
       const cloudNotes = JSON.parse(
         localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
       )
-      const syncedNote = cloudNotes.find((n: Note) => n.id === 'note-1')
-      expect(syncedNote.title).toBe('Local Version')
+      const resolvedNote = cloudNotes.find((n: Note) => n.id === 'note-1')
+      expect(resolvedNote.title).toBe('Local Version')
     })
 
     it('should resolve conflict with remote strategy', async () => {
@@ -320,23 +375,36 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      await syncEngine.syncNotes([baseNote])
+      // First sync to establish baseline
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+      const originalSyncTime = '2025-01-01T10:30:00.000Z' // Fixed timestamp for baseline
+
+      // Create local version modified after sync
       const localNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Local Version',
-        updatedAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z', // Modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Create remote version modified after sync independently
       const remoteNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Remote Version',
-        updatedAt: '2025-01-01T11:00:00.000Z',
+        updatedAt: '2025-01-01T11:30:00.000Z', // Also modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Simulate remote changes
       localStorage.setItem(
         'paperlyte_sync_cloud_notes',
         JSON.stringify([remoteNote])
@@ -351,8 +419,8 @@ describe('SyncEngine', () => {
       const cloudNotes = JSON.parse(
         localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
       )
-      const syncedNote = cloudNotes.find((n: Note) => n.id === 'note-1')
-      expect(syncedNote.title).toBe('Remote Version')
+      const resolvedNote = cloudNotes.find((n: Note) => n.id === 'note-1')
+      expect(resolvedNote.title).toBe('Remote Version')
     })
 
     it('should mark conflicts for manual resolution', async () => {
@@ -363,23 +431,36 @@ describe('SyncEngine', () => {
         tags: [],
         createdAt: '2025-01-01T10:00:00.000Z',
         updatedAt: '2025-01-01T10:00:00.000Z',
-        lastSyncedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      await syncEngine.syncNotes([baseNote])
+      // First sync to establish baseline
+      const firstSync = await syncEngine.syncNotes([baseNote])
+      expect(firstSync.success).toBe(true)
 
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+      const originalSyncTime = '2025-01-01T10:30:00.000Z' // Fixed timestamp for baseline
+
+      // Create local version modified after sync
       const localNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Local Version',
-        updatedAt: '2025-01-01T12:00:00.000Z',
+        updatedAt: '2025-01-01T12:00:00.000Z', // Modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Create remote version modified after sync independently
       const remoteNote: Note = {
-        ...baseNote,
+        ...syncedNote,
         title: 'Remote Version',
-        updatedAt: '2025-01-01T11:00:00.000Z',
+        updatedAt: '2025-01-01T11:30:00.000Z', // Also modified after lastSyncedAt
+        lastSyncedAt: originalSyncTime,
       }
 
+      // Simulate remote changes
       localStorage.setItem(
         'paperlyte_sync_cloud_notes',
         JSON.stringify([remoteNote])
@@ -403,24 +484,44 @@ describe('SyncEngine', () => {
 
   describe('Manual Conflict Resolution', () => {
     it('should resolve conflict manually and save selected note', async () => {
+      // First create and sync a base note
+      const baseNote: Note = {
+        id: 'note-1',
+        title: 'Original',
+        content: 'Original',
+        tags: [],
+        createdAt: '2025-01-01T10:00:00.000Z',
+        updatedAt: '2025-01-01T10:00:00.000Z',
+      }
+
+      // Sync the base note first
+      await syncEngine.syncNotes([baseNote])
+
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+
+      // Create local and remote versions with lastSyncedAt preserved
+      const localNote: Note = {
+        ...syncedNote,
+        title: 'Local',
+        content: 'Local',
+        updatedAt: '2025-01-01T12:00:00.000Z',
+      }
+
+      const remoteNote: Note = {
+        ...syncedNote,
+        title: 'Remote',
+        content: 'Remote',
+        updatedAt: '2025-01-01T11:00:00.000Z',
+      }
+
       const conflict: SyncConflict = {
         noteId: 'note-1',
-        localNote: {
-          id: 'note-1',
-          title: 'Local',
-          content: 'Local',
-          tags: [],
-          createdAt: '2025-01-01T10:00:00.000Z',
-          updatedAt: '2025-01-01T12:00:00.000Z',
-        },
-        remoteNote: {
-          id: 'note-1',
-          title: 'Remote',
-          content: 'Remote',
-          tags: [],
-          createdAt: '2025-01-01T10:00:00.000Z',
-          updatedAt: '2025-01-01T11:00:00.000Z',
-        },
+        localNote,
+        remoteNote,
         conflictType: 'update',
         detectedAt: '2025-01-01T13:00:00.000Z',
       }
@@ -431,10 +532,10 @@ describe('SyncEngine', () => {
         JSON.stringify([conflict])
       )
 
-      // Store initial cloud state with remote note
+      // Store remote note in cloud
       localStorage.setItem(
         'paperlyte_sync_cloud_notes',
-        JSON.stringify([conflict.remoteNote])
+        JSON.stringify([remoteNote])
       )
 
       // Update metadata with conflict count
@@ -447,7 +548,7 @@ describe('SyncEngine', () => {
 
       const success = await syncEngine.resolveConflictManually(
         'note-1',
-        conflict.localNote
+        localNote
       )
 
       expect(success).toBe(true)
@@ -472,24 +573,43 @@ describe('SyncEngine', () => {
     })
 
     it('should retrieve pending conflicts', async () => {
+      // First create and sync a base note
+      const baseNote: Note = {
+        id: 'note-1',
+        title: 'Original',
+        content: 'Original',
+        tags: [],
+        createdAt: '2025-01-01T10:00:00.000Z',
+        updatedAt: '2025-01-01T10:00:00.000Z',
+      }
+
+      await syncEngine.syncNotes([baseNote])
+
+      // Get the synced note with metadata
+      const cloudNotesAfterSync = JSON.parse(
+        localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
+      )
+      const syncedNote = cloudNotesAfterSync[0]
+
+      // Create local and remote versions
+      const localNote: Note = {
+        ...syncedNote,
+        title: 'Local',
+        content: 'Local',
+        updatedAt: '2025-01-01T12:00:00.000Z',
+      }
+
+      const remoteNote: Note = {
+        ...syncedNote,
+        title: 'Remote',
+        content: 'Remote',
+        updatedAt: '2025-01-01T11:00:00.000Z',
+      }
+
       const conflict: SyncConflict = {
         noteId: 'note-1',
-        localNote: {
-          id: 'note-1',
-          title: 'Local',
-          content: 'Local',
-          tags: [],
-          createdAt: '2025-01-01T10:00:00.000Z',
-          updatedAt: '2025-01-01T12:00:00.000Z',
-        },
-        remoteNote: {
-          id: 'note-1',
-          title: 'Remote',
-          content: 'Remote',
-          tags: [],
-          createdAt: '2025-01-01T10:00:00.000Z',
-          updatedAt: '2025-01-01T11:00:00.000Z',
-        },
+        localNote,
+        remoteNote,
         conflictType: 'update',
         detectedAt: '2025-01-01T13:00:00.000Z',
       }
@@ -517,13 +637,15 @@ describe('SyncEngine', () => {
         updatedAt: '2025-01-01T10:00:00.000Z',
       }
 
-      await syncEngine.syncNotes([testNote])
+      const result = await syncEngine.syncNotes([testNote])
+      expect(result.success).toBe(true)
 
       const cloudNotes = JSON.parse(
         localStorage.getItem('paperlyte_sync_cloud_notes') || '[]'
       )
       const syncedNote = cloudNotes.find((n: Note) => n.id === 'note-1')
 
+      expect(syncedNote).toBeDefined()
       expect(syncedNote.localVersion).toBe(1)
       expect(syncedNote.remoteVersion).toBe(1)
       expect(syncedNote.lastSyncedAt).toBeDefined()

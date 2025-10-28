@@ -6,17 +6,35 @@ import { beforeEach, vi } from 'vitest'
 Object.defineProperty(global, 'crypto', {
   value: {
     randomUUID: vi.fn(() => {
-      // Generate a more realistic UUID for each call
-      return `${Math.random().toString(36).substr(2, 9)}-${Date.now().toString(36)}`
+      // Generate RFC 4122 UUID v4 (xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx)
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = (Math.random() * 16) | 0
+        const v = c === 'x' ? r : (r & 0x3) | 0x8
+        return v.toString(16)
+      })
     }),
     subtle: {
       digest: vi.fn(async (_algorithm: string, data: ArrayBuffer) => {
-        // Mock SHA-256 digest - return a consistent hash for testing
+        // Mock SHA-256 digest - deterministic but high-entropy for testing
         const text = new TextDecoder().decode(data)
-        const hash = text
-          .split('')
-          .reduce((acc, char) => acc + char.charCodeAt(0), 0)
-        const hashArray = new Uint8Array(32).fill(hash % 256)
+
+        // Generate a numeric seed from the input string
+        let seed = 0
+        for (let i = 0; i < text.length; i++) {
+          seed = (seed * 31 + text.charCodeAt(i)) | 0 // Use |0 to keep as 32-bit int
+        }
+
+        // Simple PRNG (Linear Congruential Generator) to generate varied bytes
+        const hashArray = new Uint8Array(32)
+        let state = Math.abs(seed) || 1 // Ensure non-zero seed
+
+        for (let i = 0; i < 32; i++) {
+          // LCG formula: state = (a * state + c) % m
+          // Using common constants: a=1664525, c=1013904223, m=2^32
+          state = (state * 1664525 + 1013904223) >>> 0
+          hashArray[i] = (state >>> 24) & 0xff // Take high byte for better distribution
+        }
+
         return hashArray.buffer
       }),
     },
