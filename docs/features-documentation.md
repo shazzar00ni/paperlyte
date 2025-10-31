@@ -8,7 +8,7 @@ Complete guide to all Paperlyte features with visual examples.
 
 ## 🎯 Overview
 
-Paperlyte combines simplicity with powerful features to create the perfect note-taking experience. This guide covers every feature in detail with examples and best practices.
+Paperlyte is designed for a clean, fast, and straightforward note-taking experience. It combines powerful features with a minimalist interface, allowing you to focus on your thoughts. This guide covers every feature in detail with examples and best practices to help you get the most out of Paperlyte.
 
 ---
 
@@ -20,21 +20,20 @@ Paperlyte combines simplicity with powerful features to create the perfect note-
 
 _[📸 Screenshot needed: New Note button in the interface]_
 
-1. Click the **"+ New Note"** button in the sidebar
-2. The note editor opens with a blank note
-3. Start typing in the title field
-4. Click or tab to the content area to begin writing
+1.  Click the **"+ New Note"** button located at the top of the sidebar.
+2.  A new, blank note will appear in the editor.
+3.  The cursor will automatically focus on the title field, so you can start typing the title immediately.
+4.  Press `Tab` or click into the content area to begin writing your note.
 
 **Method 2: Keyboard Shortcut**
 
-- Press `Ctrl+N` (Windows/Linux) or `Cmd+N` (Mac)
-- Works from anywhere in the application
-- Fastest method for power users
+-   Press `Ctrl+N` (Windows/Linux) or `Cmd+N` (Mac).
+-   This shortcut works from anywhere within the application, making it the fastest way to create a new note.
 
 **Method 3: Quick Creation**
 
-- When no note is selected, click anywhere in the editor area
-- Automatically creates a new note and focuses the title field
+-   If you don't have a note selected, simply click anywhere in the main editor area.
+-   This action automatically creates a new note and places your cursor in the title field.
 
 ### Note Title Management
 
@@ -134,8 +133,8 @@ _[📸 Screenshot needed: Search box with results]_
 
 - **Real-time results:** See matches as you type
 - **Content search:** Searches both titles and note content
-- **Partial matching:** "meet" finds "meeting", "meetings", etc.
-- **Case-insensitive:** No need to worry about capitalization
+-   **Partial Matching:** "meet" will find "meeting," "meetings," etc.
+-   **Case-Insensitive:** No need to worry about capitalization.
 
 **Search Tips:**
 
@@ -144,6 +143,8 @@ _[📸 Screenshot needed: Search box with results]_
 ✅ Try partial words: "choco" to find "chocolate recipe"
 ✅ Use unique phrases: "quarterly review" instead of just "review"
 ```
+
+---
 
 ### Quick Navigation
 
@@ -165,13 +166,12 @@ _[📸 Screenshot needed: Save status indicator]_
 - **Automatic:** Saves changes as you type (every 2-3 seconds)
 - **Real-time:** No need to manually save
 - **Status Indicator:** Visual feedback shows save status
-- **Reliable:** Built-in error handling prevents data loss
+-   **Reliable:** Built-in error handling prevents data loss. The system uses a queue to manage save requests, ensuring that even if you type quickly, all changes are captured and saved in order.
 
 ### Manual Save Options
 
-- **Keyboard:** Press `Ctrl+S` / `Cmd+S` for immediate save
-- **Peace of Mind:** Manual save works even when auto-save is active
-- **Visual Confirmation:** Get immediate feedback when saving manually
+-   **Keyboard:** Press `Ctrl+S` / `Cmd+S` to trigger an immediate save.
+-   **Peace of Mind:** Manual save works even when auto-save is active and provides instant visual confirmation.
 
 ### Save Status Indicators
 
@@ -245,7 +245,7 @@ _[📸 Screenshot needed: Editor with formatting toolbar]_
 - **Title Field:** Edit note titles inline
 - **Rich Text Area:** Full-featured content editor
 - **Formatting Toolbar:** One-click text formatting
-- **Word Count:** See document statistics (coming soon)
+-   **Word Count:** See document statistics (coming soon).
 
 ---
 
@@ -294,7 +294,7 @@ Future features will include:
 - **Export All Notes:** Download all notes as files
 - **Import Notes:** Restore from backup files
 - **Sync Options:** Optional cloud sync for multi-device use
-- **Migration Tools:** Move between browsers or devices
+-   **Migration Tools:** Move between browsers or devices.
 
 ---
 
@@ -304,9 +304,10 @@ Future features will include:
 
 _[📸 Screenshot placeholder: Tag interface mockup]_
 
-- Add tags to organize notes by topic
-- Filter notes by tags
-- Visual tag indicators
+-   Add tags to organize notes by topic.
+-   Filter notes by tags.
+-   Visual tag indicators.
+-   *Note: The UI component for this feature is implemented, but it is not yet fully integrated into the application.*
 
 ### Advanced Search
 
@@ -397,45 +398,44 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 
 ### Formatting Issues
 
-**Problem:** Formatting toolbar not working
+**Problem:** The formatting toolbar is not working.
 
 **Solutions:**
 
-1. Refresh the page to reset the editor
-2. Try using keyboard shortcuts instead
-3. Check browser compatibility
-4. Clear browser cache
+1.  Refresh the page to reset the editor.
+2.  Try using keyboard shortcuts instead (`Ctrl+B` for bold, etc.).
+3.  Ensure your browser is on the list of supported browsers.
+4.  Clear your browser's cache.
 
-**Problem:** Markdown not rendering
+**Problem:** Markdown syntax is not rendering correctly.
 
 **Solutions:**
 
-1. Check syntax is correct
-2. Try typing the markdown fresh
-3. Use toolbar for formatting instead
-4. Report issue if persistent
+1.  Double-check that the syntax is correct (e.g., `**bold**`, `*italic*`).
+2.  Try re-typing the markdown syntax.
+3.  Use the toolbar for formatting as an alternative.
 
 ### Search Problems
 
-**Problem:** Search not finding notes
+**Problem:** Search isn't finding the notes I'm looking for.
 
 **Solutions:**
 
-1. Check spelling of search terms
-2. Try searching for partial words
-3. Clear any filters that might be active
-4. Refresh the application
+1.  Check for typos in your search terms.
+2.  Try searching for partial words (e.g., "imple" for "implementation").
+3.  Make sure you don't have any active filters that might be hiding results.
+4.  Refresh the application.
 
 ### Save Issues
 
-**Problem:** Notes not saving
+**Problem:** My notes are not saving.
 
 **Solutions:**
 
-1. Check browser storage permissions
-2. Try manual save with Ctrl+S / Cmd+S
-3. Ensure browser has enough storage space
-4. Try incognito mode to test
+1.  Check your browser's storage permissions for this site.
+2.  Try a manual save with `Ctrl+S` / `Cmd+S`.
+3.  Ensure your browser has enough available storage space.
+4.  Test in incognito mode to see if a browser extension is interfering.
 
 ---
 
