@@ -344,13 +344,16 @@ describe('Security Utilities', () => {
     })
 
     describe('sanitizeText', () => {
-      it('should remove all HTML tags', () => {
+      it('should remove all HTML tags and scripts', () => {
         const text = '<p>Hello</p><script>alert("XSS")</script>'
         const sanitized = sanitization.sanitizeText(text)
 
-        expect(sanitized).toBe('Helloalert("XSS")')
+        // DOMPurify removes script tags and their content for safety
+        expect(sanitized).toBe('Hello')
         expect(sanitized).not.toContain('<')
         expect(sanitized).not.toContain('>')
+        expect(sanitized).not.toContain('script')
+        expect(sanitized).not.toContain('alert')
       })
 
       it('should remove control characters', () => {

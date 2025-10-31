@@ -383,21 +383,30 @@ export const sanitization = {
 
   /**
    * Sanitize text by removing all HTML and dangerous characters
+   * Note: For HTML content, use sanitizeHTML() with DOMPurify instead
    * @param text Text to sanitize
    * @returns Plain text with dangerous content removed
    */
   sanitizeText(text: string): string {
     if (!text || typeof text !== 'string') return ''
 
-    // Remove all HTML tags
-    let sanitized = text.replace(/<[^>]*>/g, '')
+    // Use DOMPurify to strip all HTML first (most secure approach)
+    let sanitized = DOMPurify.sanitize(text, {
+      ALLOWED_TAGS: [], // Strip all tags
+      ALLOWED_ATTR: [], // Strip all attributes
+    })
 
     // Remove control characters
     // eslint-disable-next-line no-control-regex
     sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '')
 
-    // Remove any remaining script/style content
-    sanitized = sanitized.replace(/javascript:/gi, '')
+    // Remove dangerous URL schemes (including data:, javascript:, vbscript:)
+    sanitized = sanitized.replace(
+      /(?:javascript|vbscript|data|file|about):/gi,
+      ''
+    )
+
+    // Remove event handler patterns
     sanitized = sanitized.replace(/on\w+\s*=/gi, '')
 
     return sanitized.trim()
@@ -436,7 +445,8 @@ export const sanitization = {
     const trimmed = url.trim()
     const lowerURL = trimmed.toLowerCase()
 
-    // Block dangerous protocols
+    // Block dangerous protocols (javascript:, vbscript:, file:, about:)
+    // Note: data: URLs are handled separately below with strict validation
     const dangerousProtocols = ['javascript:', 'vbscript:', 'file:', 'about:']
     if (dangerousProtocols.some(protocol => lowerURL.startsWith(protocol))) {
       monitoring.addBreadcrumb('Dangerous URL protocol blocked', 'security', {
@@ -445,7 +455,7 @@ export const sanitization = {
       return null
     }
 
-    // Handle data URLs with caution
+    // Handle data: URLs with strict validation (controlled by allowDataURLs parameter)
     if (lowerURL.startsWith('data:')) {
       if (!allowDataURLs) {
         monitoring.addBreadcrumb('Data URL blocked', 'security', {
