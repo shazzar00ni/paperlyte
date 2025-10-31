@@ -439,11 +439,41 @@ describe('Security Utilities', () => {
 
       it('should block dangerous protocols', () => {
         expect(sanitization.sanitizeURL('javascript:alert("XSS")')).toBeNull()
+        expect(sanitization.sanitizeURL('vbscript:msgbox()')).toBeNull()
+        expect(sanitization.sanitizeURL('file:///etc/passwd')).toBeNull()
+      })
+
+      it('should block data URLs by default', () => {
         expect(
           sanitization.sanitizeURL('data:text/html,<script>alert()</script>')
         ).toBeNull()
-        expect(sanitization.sanitizeURL('vbscript:msgbox()')).toBeNull()
-        expect(sanitization.sanitizeURL('file:///etc/passwd')).toBeNull()
+        expect(
+          sanitization.sanitizeURL('data:image/png;base64,iVBORw0KGgo=')
+        ).toBeNull()
+      })
+
+      it('should allow safe data URLs when explicitly enabled', () => {
+        expect(
+          sanitization.sanitizeURL('data:image/png;base64,iVBORw0KGgo=', true)
+        ).toBe('data:image/png;base64,iVBORw0KGgo=')
+        expect(
+          sanitization.sanitizeURL('data:image/svg+xml,<svg></svg>', true)
+        ).toBe('data:image/svg+xml,<svg></svg>')
+        expect(sanitization.sanitizeURL('data:svg+xml,<svg></svg>', true)).toBe(
+          'data:svg+xml,<svg></svg>'
+        )
+      })
+
+      it('should block dangerous data URLs even when data URLs are enabled', () => {
+        expect(
+          sanitization.sanitizeURL(
+            'data:text/html,<script>alert()</script>',
+            true
+          )
+        ).toBeNull()
+        expect(
+          sanitization.sanitizeURL('data:application/javascript,alert(1)', true)
+        ).toBeNull()
       })
 
       it('should handle case-insensitive protocol blocking', () => {

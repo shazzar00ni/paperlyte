@@ -145,9 +145,8 @@ class CSRFTokenManager {
         feature: 'security',
         action: 'csrf_token_generation',
       })
-      // Fallback to in-memory storage if sessionStorage fails
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(window as any).__csrfToken = tokenData
+      // No fallback - CSRF protection requires secure storage
+      throw new Error('Unable to generate CSRF token: Storage unavailable')
     }
 
     return token
@@ -161,12 +160,6 @@ class CSRFTokenManager {
     try {
       const stored = sessionStorage.getItem(CSRFTokenManager.TOKEN_KEY)
       if (!stored) {
-        // Check in-memory fallback
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const fallback = (window as any).__csrfToken
-        if (fallback && fallback.expiry > Date.now()) {
-          return fallback.token
-        }
         return null
       }
 
@@ -212,8 +205,6 @@ class CSRFTokenManager {
   clearToken(): void {
     try {
       sessionStorage.removeItem(CSRFTokenManager.TOKEN_KEY)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (window as any).__csrfToken
     } catch (error) {
       monitoring.logError(error as Error, {
         feature: 'security',
@@ -439,20 +430,14 @@ export const sanitization = {
    * @param url URL to sanitize
    * @returns Sanitized URL or null if invalid/dangerous
    */
-  sanitizeURL(url: string): string | null {
+  sanitizeURL(url: string, allowDataURLs: boolean = false): string | null {
     if (!url || typeof url !== 'string') return null
 
     const trimmed = url.trim()
+    const lowerURL = trimmed.toLowerCase()
 
     // Block dangerous protocols
-    const dangerousProtocols = [
-      'javascript:',
-      'data:',
-      'vbscript:',
-      'file:',
-      'about:',
-    ]
-    const lowerURL = trimmed.toLowerCase()
+    const dangerousProtocols = ['javascript:', 'vbscript:', 'file:', 'about:']
     if (dangerousProtocols.some(protocol => lowerURL.startsWith(protocol))) {
       monitoring.addBreadcrumb('Dangerous URL protocol blocked', 'security', {
         url: trimmed.substring(0, 20),
@@ -460,10 +445,28 @@ export const sanitization = {
       return null
     }
 
-    // Only allow http, https, and relative URLs
+    // Handle data URLs with caution
+    if (lowerURL.startsWith('data:')) {
+      if (!allowDataURLs) {
+        monitoring.addBreadcrumb('Data URL blocked', 'security', {
+          url: trimmed.substring(0, 30),
+        })
+        return null
+      }
+      // Allow only safe data URL types (images, SVG)
+      if (
+        !lowerURL.startsWith('data:image/') &&
+        !lowerURL.startsWith('data:svg+xml,')
+      ) {
+        return null
+      }
+    }
+
+    // Only allow http, https, data (conditionally), and relative URLs
     if (
       !trimmed.startsWith('http://') &&
       !trimmed.startsWith('https://') &&
+      !trimmed.startsWith('data:') &&
       !trimmed.startsWith('/') &&
       !trimmed.startsWith('./')
     ) {

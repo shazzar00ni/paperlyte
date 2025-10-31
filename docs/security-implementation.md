@@ -50,6 +50,12 @@ Content-Security-Policy: default-src 'self';
 - `frame-ancestors 'none'` - Prevents clickjacking
 - `upgrade-insecure-requests` - Auto-upgrade HTTP to HTTPS
 
+**Development vs Production CSP:**
+
+- Development includes `'unsafe-inline'` and `'unsafe-eval'` for Vite HMR
+- Production uses strict CSP without unsafe directives
+- Consider implementing nonce-based CSP for even stronger protection
+
 #### Permissions Policy
 
 ```
@@ -63,8 +69,10 @@ Restricts access to browser APIs to prevent fingerprinting and privacy violation
 
 - `X-Frame-Options: DENY` - Prevents clickjacking
 - `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
-- `X-XSS-Protection: 1; mode=block` - Enables browser XSS protection
+- `X-XSS-Protection: 1; mode=block` - Legacy XSS protection (deprecated, CSP is the modern approach)
 - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
+
+**Note on X-XSS-Protection:** This header is deprecated and potentially harmful in modern browsers. We include it for legacy browser support, but rely primarily on our strict CSP for XSS protection.
 
 ### Verification
 
@@ -328,7 +336,15 @@ const safeURL = sanitization.sanitizeURL('https://example.com')
 const dangerousURL = sanitization.sanitizeURL('javascript:alert("XSS")')
 // Result: null (blocked)
 
-// Allowed protocols: http://, https://, /, ./
+// Allow data URLs for images (e.g., inline SVGs)
+const dataURL = sanitization.sanitizeURL('data:image/svg+xml,...', true)
+// Result: sanitized data URL (if valid image type)
+
+// Dangerous data URLs are still blocked
+const badDataURL = sanitization.sanitizeURL('data:text/html,...', true)
+// Result: null (blocked)
+
+// Allowed protocols: http://, https://, /, ./, data: (conditionally)
 ```
 
 ---
