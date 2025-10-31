@@ -2,7 +2,7 @@
 
 ## Architectural Overview
 
-Paperlyte is a client-side React application built with TypeScript. It uses Vite for fast builds and Vitest for testing. All data is stored locally in the browser using IndexedDB, which means there is no backend server. This architecture ensures that the application is fast, private, and can be used offline.
+Paperlyte is a client-side React application built with TypeScript. It uses Vite for fast builds and Vitest for testing. All data is stored locally in the browser, using IndexedDB as the primary storage mechanism with a localStorage fallback when IndexedDB is unavailable. This means there is no backend server. This architecture ensures that the application is fast, private, and can be used offline.
 
 ## Getting Started
 
