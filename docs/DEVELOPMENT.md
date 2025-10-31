@@ -54,24 +54,24 @@ npm run security-fix
 - **ESLint**: Configured for TypeScript and React
 - **Prettier**: Code formatting with consistent style
 - **TypeScript**: Strict type checking enabled
--   **Husky**: Git hooks for pre-commit validation.
+- **Husky**: Git hooks for pre-commit validation.
 
 ### Branch Naming Conventions
 
 To keep our repository organized, please follow these branch naming conventions:
 
--   `feature/<description>`: For new features (e.g., `feature/add-tagging-system`).
--   `fix/<description>`: For bug fixes (e.g., `fix/resolve-search-bug`).
--   `docs/<description>`: For documentation updates (e.g., `docs/update-readme`).
--   `chore/<description>`: For routine maintenance tasks (e.g., `chore/update-dependencies`).
+- `feature/<description>`: For new features (e.g., `feature/add-tagging-system`).
+- `fix/<description>`: For bug fixes (e.g., `fix/resolve-search-bug`).
+- `docs/<description>`: For documentation updates (e.g., `docs/update-readme`).
+- `chore/<description>`: For routine maintenance tasks (e.g., `chore/update-dependencies`).
 
 ### Git Hooks
 
 Pre-commit hooks automatically run:
 
--   ESLint (with auto-fix)
--   Prettier formatting
--   TypeScript type checking
+- ESLint (with auto-fix)
+- Prettier formatting
+- TypeScript type checking
 
 Commit message validation ensures [Conventional Commits](https://www.conventionalcommits.org/) format:
 
@@ -116,15 +116,15 @@ GitHub Actions automatically run on push and PR:
 - **Type Checking**: TypeScript compilation validation
 - **Build**: Production build verification
 - **Security Audit**: Dependency vulnerability scanning
--   **Commit Message Linting**: Validates that commit messages follow the Conventional Commits standard.
+- **Commit Message Linting**: Validates that commit messages follow the Conventional Commits standard.
 
 ## Testing
 
 This project uses Vitest for unit and integration testing and Playwright for end-to-end testing.
 
--   **Unit Tests**: Located in `src/components/__tests__`, these tests verify the functionality of individual components.
--   **Integration Tests**: These tests ensure that multiple components work together as expected.
--   **End-to-End Tests**: Located in the `tests/` directory, these tests simulate user interactions to validate the application's functionality from start to finish.
+- **Unit Tests**: Located in `src/components/__tests__`, these tests verify the functionality of individual components.
+- **Integration Tests**: These tests ensure that multiple components work together as expected.
+- **End-to-End Tests**: Located in the `tests/` directory, these tests simulate user interactions to validate the application's functionality from start to finish.
 
 To run the tests, use the following commands:
 
