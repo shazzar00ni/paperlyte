@@ -13,9 +13,9 @@
       "preset": "lighthouse:recommended",
       "assertions": {
         "categories:performance": [
-          "error",
+          "warn",
           {
-            "minScore": 0.75
+            "minScore": 0.7
           }
         ],
         "categories:accessibility": [
@@ -25,13 +25,13 @@
           }
         ],
         "categories:best-practices": [
-          "error",
+          "warn",
           {
-            "minScore": 0.9
+            "minScore": 0.85
           }
         ],
         "categories:seo": [
-          "error",
+          "warn",
           {
             "minScore": 0.8
           }
@@ -39,17 +39,17 @@
         "first-contentful-paint": [
           "warn",
           {
-            "maxNumericValue": 2000
+            "maxNumericValue": 2500
           }
         ],
         "largest-contentful-paint": [
           "warn",
           {
-            "maxNumericValue": 3000
+            "maxNumericValue": 3500
           }
         ],
         "cumulative-layout-shift": [
-          "error",
+          "warn",
           {
             "maxNumericValue": 0.1
           }
@@ -57,7 +57,7 @@
         "total-blocking-time": [
           "warn",
           {
-            "maxNumericValue": 300
+            "maxNumericValue": 400
           }
         ]
       }

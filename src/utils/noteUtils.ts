@@ -69,7 +69,12 @@ export function sanitizeContent(content: string): string {
   )
 
   // Remove event handlers (onclick, onerror, etc.)
-  sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+  // Repeat the replacement until no changes are made
+  let prevSanitized;
+  do {
+    prevSanitized = sanitized;
+    sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
+  } while (prevSanitized !== sanitized);
 
   // Remove javascript: protocol
   sanitized = sanitized.replace(/javascript:/gi, '')

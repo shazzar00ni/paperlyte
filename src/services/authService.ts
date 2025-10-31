@@ -1,4 +1,3 @@
-// Import necessary types and utilities.
 import type {
   AuthUser,
   AuthToken,
@@ -15,20 +14,30 @@ import type {
 import { monitoring } from '../utils/monitoring'
 
 /**
- * @class AuthService
- * @description Provides an abstraction layer for all authentication-related functionality.
+ * Authentication Service - Abstraction layer for authentication
  *
- * @summary
- * This service is designed to simulate a full-featured authentication system using `localStorage`.
- * It's intended for MVP development and will be replaced with actual API calls in the future.
- * The abstraction ensures that component code will not need to change when migrating to a real backend.
+ * CURRENT IMPLEMENTATION: localStorage simulation (MVP phase)
+ * FUTURE MIGRATION: Will be replaced with API calls in Q4 2025
  *
- * @property {string} storagePrefix - Prefix for all `localStorage` keys to avoid collisions.
- * @property {string} sessionKey - Key for storing the current user session.
- * @property {string} usersKey - Key for storing the list of registered users.
- * @property {string} rateLimitKey - Prefix for rate limiting keys.
+ * This abstraction layer ensures easy migration from localStorage to API
+ * without changing component code.
+ *
+ * API Endpoints (Future):
+ * - POST /api/auth/signup
+ * - POST /api/auth/login
+ * - POST /api/auth/logout
+ * - POST /api/auth/refresh
+ * - POST /api/auth/reset-password
+ * - POST /api/auth/oauth/google
+ * - POST /api/auth/oauth/apple
  */
-// Rate limiting configuration
+
+/**
+ * @interface RateLimitEntry
+ * @description Tracks rate limiting attempts for authentication operations
+ * @property {number} count - Number of authentication attempts made
+ * @property {number} resetAt - Timestamp when rate limit resets (milliseconds since epoch)
+ */
 interface RateLimitEntry {
   count: number
   resetAt: number
@@ -40,18 +49,21 @@ class AuthService {
   private usersKey = `${this.storagePrefix}users`
   private rateLimitKey = `${this.storagePrefix}rate_limit_`
 
-  // Constants for rate limiting and token expiry.
+  // Rate limiting: 5 attempts per 15 minutes
   private readonly MAX_ATTEMPTS = 5
   private readonly RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes in ms
+
+  // Token expiry: 24 hours for access token, 7 days for refresh token
   private readonly ACCESS_TOKEN_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
   private readonly REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000 // 7 days
 
   /**
+   * @function getFromStorage
+   * @description Retrieves and parses data from localStorage
+   * @template T - Type of data to retrieve
+   * @param {string} key - localStorage key
+   * @returns {T | null} Parsed data or null if not found/error
    * @private
-   * @method getFromStorage
-   * @description Safely retrieves and parses data from `localStorage`.
-   * @param {string} key - The key to retrieve.
-   * @returns {T | null} The parsed data or null if not found or an error occurs.
    */
   private getFromStorage<T>(key: string): T | null {
     try {
@@ -68,12 +80,13 @@ class AuthService {
   }
 
   /**
+   * @function saveToStorage
+   * @description Serializes and saves data to localStorage
+   * @template T - Type of data to save
+   * @param {string} key - localStorage key
+   * @param {T} data - Data to serialize and save
+   * @returns {boolean} True if saved successfully, false otherwise
    * @private
-   * @method saveToStorage
-   * @description Safely saves data to `localStorage`.
-   * @param {string} key - The key to save to.
-   * @param {T} data - The data to be stored.
-   * @returns {boolean} - True if successful, false otherwise.
    */
   private saveToStorage<T>(key: string, data: T): boolean {
     try {
@@ -90,10 +103,10 @@ class AuthService {
   }
 
   /**
+   * @function removeFromStorage
+   * @description Removes data from localStorage with error handling
+   * @param {string} key - localStorage key to remove
    * @private
-   * @method removeFromStorage
-   * @description Safely removes an item from `localStorage`.
-   * @param {string} key - The key to remove.
    */
   private removeFromStorage(key: string): void {
     try {
@@ -108,11 +121,12 @@ class AuthService {
   }
 
   /**
+   * @function checkRateLimit
+   * @description Implements rate limiting to prevent brute force attacks
+   * Allows MAX_ATTEMPTS (5) within RATE_LIMIT_WINDOW (15 minutes)
+   * @param {string} identifier - User identifier (email or username)
+   * @returns {boolean} True if rate limit not exceeded, false otherwise
    * @private
-   * @method checkRateLimit
-   * @description Implements a simple rate limiting mechanism.
-   * @param {string} identifier - A unique identifier for the action being rate-limited (e.g., 'login_email@example.com').
-   * @returns {boolean} - True if the action is allowed, false if it's rate-limited.
    */
   private checkRateLimit(identifier: string): boolean {
     const key = `${this.rateLimitKey}${identifier}`
@@ -120,7 +134,7 @@ class AuthService {
     const rateLimit = this.getFromStorage<RateLimitEntry>(key)
 
     if (!rateLimit || now > rateLimit.resetAt) {
-      // If it's the first attempt or the window has expired, reset the limit.
+      // First attempt or window expired
       this.saveToStorage(key, {
         count: 1,
         resetAt: now + this.RATE_LIMIT_WINDOW,
@@ -129,11 +143,10 @@ class AuthService {
     }
 
     if (rateLimit.count >= this.MAX_ATTEMPTS) {
-      // If the attempt count is exceeded, block the request.
       return false
     }
 
-    // Increment the attempt count.
+    // Increment attempt count
     this.saveToStorage(key, {
       count: rateLimit.count + 1,
       resetAt: rateLimit.resetAt,
@@ -142,28 +155,18 @@ class AuthService {
   }
 
   /**
-   * @private
-   * @method hashPassword
-   * @description Simulates password hashing. In a real application, this would be done on the server with a library like bcrypt.
-   * @param {string} password - The password to hash.
-   * @returns {Promise<string>} The hashed password.
+   * Password hashing simulation (bcrypt will be used in backend)
    */
   private async hashPassword(password: string): Promise<string> {
+    // Simulate bcrypt hashing - in production, this happens server-side
+    // Using a simple hash for MVP simulation
     const encoder = new TextEncoder()
-    const data = encoder.encode(password + 'paperlyte_salt') // Simple salting for simulation.
+    const data = encoder.encode(password + 'paperlyte_salt')
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
   }
 
-  /**
-   * @private
-   * @method verifyPassword
-   * @description Verifies a password against a simulated hash.
-   * @param {string} password - The plain-text password.
-   * @param {string} hash - The hash to compare against.
-   * @returns {Promise<boolean>} - True if the password is valid.
-   */
   private async verifyPassword(
     password: string,
     hash: string
@@ -173,21 +176,12 @@ class AuthService {
   }
 
   /**
-   * @private
-   * @method generateToken
-   * @description Generates a unique, random token.
-   * @returns {string} A new token.
+   * Token generation
    */
   private generateToken(): string {
     return crypto.randomUUID() + '.' + Date.now().toString(36)
   }
 
-  /**
-   * @private
-   * @method createAuthToken
-   * @description Creates a new set of authentication tokens.
-   * @returns {AuthToken} An object containing the access and refresh tokens.
-   */
   private createAuthToken(): AuthToken {
     const now = Date.now()
     return {
@@ -199,11 +193,7 @@ class AuthService {
   }
 
   /**
-   * @private
-   * @method validateEmail
-   * @description Validates an email address format.
-   * @param {string} email - The email to validate.
-   * @returns {AuthError | null} An error object if validation fails, otherwise null.
+   * Input validation
    */
   private validateEmail(email: string): AuthError | null {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -224,13 +214,6 @@ class AuthService {
     return null
   }
 
-  /**
-   * @private
-   * @method validatePassword
-   * @description Validates password strength and length.
-   * @param {string} password - The password to validate.
-   * @returns {AuthError | null} An error object if validation fails, otherwise null.
-   */
   private validatePassword(password: string): AuthError | null {
     if (!password || password.length < 8) {
       return {
@@ -250,13 +233,6 @@ class AuthService {
     return null
   }
 
-  /**
-   * @private
-   * @method validateName
-   * @description Validates the user's name.
-   * @param {string} name - The name to validate.
-   * @returns {AuthError | null} An error object if validation fails, otherwise null.
-   */
   private validateName(name: string): AuthError | null {
     if (!name || name.trim().length === 0) {
       return {
@@ -275,8 +251,9 @@ class AuthService {
     return null
   }
 
-  // --- User Management Helper Methods ---
-
+  /**
+   * User management helpers
+   */
   private getUsers(): AuthUser[] {
     return this.getFromStorage<AuthUser[]>(this.usersKey) || []
   }
@@ -293,10 +270,7 @@ class AuthService {
   }
 
   /**
-   * @method signup
-   * @description Registers a new user with email and password.
-   * @param {SignupCredentials} credentials - The user's name, email, and password.
-   * @returns {Promise<{ session?: AuthSession; error?: AuthError }>} The new session or an error.
+   * Public API: Sign up with email/password
    */
   async signup(
     credentials: SignupCredentials
@@ -308,7 +282,7 @@ class AuthService {
             email: credentials.email,
           })
 
-          // Apply rate limiting to prevent brute-force attacks.
+          // Rate limiting
           if (!this.checkRateLimit(`signup_${credentials.email}`)) {
             resolve({
               error: {
@@ -319,7 +293,7 @@ class AuthService {
             return
           }
 
-          // Validate all input fields.
+          // Validate inputs
           const emailError = this.validateEmail(credentials.email)
           if (emailError) {
             resolve({ error: emailError })
@@ -338,7 +312,7 @@ class AuthService {
             return
           }
 
-          // Check if a user with the same email already exists.
+          // Check if user already exists
           if (this.findUserByEmail(credentials.email)) {
             resolve({
               error: {
@@ -350,41 +324,46 @@ class AuthService {
             return
           }
 
-          // Hash the password before storing.
+          // Hash password
           const passwordHash = await this.hashPassword(credentials.password)
 
-          // Create a new user object.
+          // Create user
           const now = new Date().toISOString()
           const newUser: AuthUser = {
             id: crypto.randomUUID(),
             email: credentials.email.toLowerCase(),
             name: credentials.name.trim(),
             provider: 'email',
-            emailVerified: false, // In a real app, an email verification would be sent.
+            emailVerified: false, // Would send verification email in production
             createdAt: now,
             updatedAt: now,
             lastLoginAt: now,
           }
 
-          // Save the new user and their password hash.
+          // Store user with password hash (separate storage for security)
           const users = this.getUsers()
           users.push(newUser)
           this.saveUsers(users)
+
+          // Store password hash separately
           const passwordKey = `${this.storagePrefix}password_${newUser.id}`
           this.saveToStorage(passwordKey, passwordHash)
 
-          // Create and save a new session.
+          // Create session
           const token = this.createAuthToken()
           const session: AuthSession = {
             user: newUser,
             token,
             isAuthenticated: true,
           }
+
+          // Save session
           this.saveToStorage(this.sessionKey, session)
 
           monitoring.addBreadcrumb('Signup successful', 'auth', {
             userId: newUser.id,
           })
+
           resolve({ session })
         } catch (error) {
           monitoring.logError(error as Error, {
@@ -398,15 +377,12 @@ class AuthService {
             },
           })
         }
-      }, 100) // Simulate network delay.
+      }, 100) // Simulate network delay
     })
   }
 
   /**
-   * @method login
-   * @description Logs a user in with their email and password.
-   * @param {LoginCredentials} credentials - The user's email and password.
-   * @returns {Promise<{ session?: AuthSession; error?: AuthError }>} The new session or an error.
+   * Public API: Login with email/password
    */
   async login(
     credentials: LoginCredentials
@@ -418,7 +394,7 @@ class AuthService {
             email: credentials.email,
           })
 
-          // Apply rate limiting.
+          // Rate limiting
           if (!this.checkRateLimit(`login_${credentials.email}`)) {
             resolve({
               error: {
@@ -429,12 +405,13 @@ class AuthService {
             return
           }
 
-          // Validate inputs.
+          // Validate inputs
           const emailError = this.validateEmail(credentials.email)
           if (emailError) {
             resolve({ error: emailError })
             return
           }
+
           if (!credentials.password) {
             resolve({
               error: {
@@ -446,7 +423,7 @@ class AuthService {
             return
           }
 
-          // Find the user by email.
+          // Find user
           const user = this.findUserByEmail(credentials.email)
           if (!user) {
             resolve({
@@ -458,9 +435,10 @@ class AuthService {
             return
           }
 
-          // Verify the password.
+          // Verify password
           const passwordKey = `${this.storagePrefix}password_${user.id}`
           const passwordHash = this.getFromStorage<string>(passwordKey)
+
           if (!passwordHash) {
             resolve({
               error: {
@@ -470,10 +448,12 @@ class AuthService {
             })
             return
           }
+
           const isValidPassword = await this.verifyPassword(
             credentials.password,
             passwordHash
           )
+
           if (!isValidPassword) {
             resolve({
               error: {
@@ -484,11 +464,12 @@ class AuthService {
             return
           }
 
-          // Update the user's last login timestamp.
+          // Update last login
           const updatedUser: AuthUser = {
             ...user,
             lastLoginAt: new Date().toISOString(),
           }
+
           const users = this.getUsers()
           const userIndex = users.findIndex(u => u.id === user.id)
           if (userIndex >= 0) {
@@ -496,18 +477,21 @@ class AuthService {
             this.saveUsers(users)
           }
 
-          // Create and save a new session.
+          // Create session
           const token = this.createAuthToken()
           const session: AuthSession = {
             user: updatedUser,
             token,
             isAuthenticated: true,
           }
+
+          // Save session
           this.saveToStorage(this.sessionKey, session)
 
           monitoring.addBreadcrumb('Login successful', 'auth', {
             userId: updatedUser.id,
           })
+
           resolve({ session })
         } catch (error) {
           monitoring.logError(error as Error, {
@@ -521,16 +505,12 @@ class AuthService {
             },
           })
         }
-      }, 100) // Simulate network delay.
+      }, 100) // Simulate network delay
     })
   }
 
   /**
-   * @method oauthSignIn
-   * @description Initiates an OAuth sign-in process.
-   * @param {'google' | 'apple'} provider - The OAuth provider.
-   * @param {OAuthConfig} config - The OAuth configuration.
-   * @returns {Promise<{ url: string; state: string }>} The authorization URL and state parameter.
+   * Public API: OAuth sign-in (Google/Apple)
    */
   async oauthSignIn(
     provider: 'google' | 'apple',
@@ -543,10 +523,10 @@ class AuthService {
             provider,
           })
 
-          // Generate a state token for CSRF protection.
+          // Generate CSRF state token
           const state = crypto.randomUUID()
 
-          // Construct the OAuth URL.
+          // Build OAuth URL (would be actual provider URLs in production)
           const params = new URLSearchParams({
             client_id: config.clientId,
             redirect_uri: config.redirectUri,
@@ -554,13 +534,15 @@ class AuthService {
             scope: config.scopes.join(' '),
             state,
           })
+
           const baseUrl =
             provider === 'google'
               ? 'https://accounts.google.com/o/oauth2/v2/auth'
               : 'https://appleid.apple.com/auth/authorize'
+
           const url = `${baseUrl}?${params.toString()}`
 
-          // Store the state for verification upon callback.
+          // Store state for verification
           this.saveToStorage(`${this.storagePrefix}oauth_state`, {
             state,
             provider,
@@ -580,10 +562,7 @@ class AuthService {
   }
 
   /**
-   * @method oauthCallback
-   * @description Handles the callback from an OAuth provider.
-   * @param {OAuthResponse} response - The response from the provider.
-   * @returns {Promise<{ session?: AuthSession; error?: AuthError }>} The new session or an error.
+   * Public API: Handle OAuth callback
    */
   async oauthCallback(
     response: OAuthResponse
@@ -593,12 +572,13 @@ class AuthService {
         try {
           monitoring.addBreadcrumb('OAuth callback received', 'auth')
 
-          // Verify the state to prevent CSRF attacks.
+          // Verify state (CSRF protection)
           const storedState = this.getFromStorage<{
             state: string
             provider: AuthProvider
             timestamp: number
           }>(`${this.storagePrefix}oauth_state`)
+
           if (!storedState || storedState.state !== response.state) {
             resolve({
               error: {
@@ -609,7 +589,7 @@ class AuthService {
             return
           }
 
-          // Check if the state has expired.
+          // Check state expiry (5 minutes)
           if (Date.now() - storedState.timestamp > 5 * 60 * 1000) {
             resolve({
               error: {
@@ -620,8 +600,8 @@ class AuthService {
             return
           }
 
-          // In a real app, the authorization code would be exchanged for tokens.
-          // Here, we simulate this by creating a mock user.
+          // In production, exchange code for tokens with provider
+          // For MVP simulation, create a mock user
           const now = new Date().toISOString()
           const mockUser: AuthUser = {
             id: crypto.randomUUID(),
@@ -634,14 +614,17 @@ class AuthService {
             lastLoginAt: now,
           }
 
-          // If the user doesn't exist, create them. Otherwise, update their last login time.
+          // Check if user exists (by provider ID in production)
           let user = this.findUserByEmail(mockUser.email)
+
           if (!user) {
+            // Create new user
             const users = this.getUsers()
             users.push(mockUser)
             this.saveUsers(users)
             user = mockUser
           } else {
+            // Update last login
             user.lastLoginAt = now
             const users = this.getUsers()
             const userIndex = users.findIndex(u => u.id === user!.id)
@@ -651,20 +634,25 @@ class AuthService {
             }
           }
 
-          // Create and save a new session.
+          // Create session
           const token = this.createAuthToken()
           const session: AuthSession = {
             user,
             token,
             isAuthenticated: true,
           }
+
+          // Save session
           this.saveToStorage(this.sessionKey, session)
+
+          // Clean up state
           this.removeFromStorage(`${this.storagePrefix}oauth_state`)
 
           monitoring.addBreadcrumb('OAuth login successful', 'auth', {
             userId: user.id,
             provider: storedState.provider,
           })
+
           resolve({ session })
         } catch (error) {
           monitoring.logError(error as Error, {
@@ -683,10 +671,7 @@ class AuthService {
   }
 
   /**
-   * @method requestPasswordReset
-   * @description Initiates a password reset request for a user.
-   * @param {PasswordResetRequest} request - The user's email.
-   * @returns {Promise<{ success: boolean; error?: AuthError }>} Success status or an error.
+   * Public API: Request password reset
    */
   async requestPasswordReset(
     request: PasswordResetRequest
@@ -698,7 +683,7 @@ class AuthService {
             email: request.email,
           })
 
-          // Apply rate limiting.
+          // Rate limiting
           if (!this.checkRateLimit(`reset_${request.email}`)) {
             resolve({
               success: false,
@@ -710,24 +695,30 @@ class AuthService {
             return
           }
 
-          // Validate the email format.
+          // Validate email
           const emailError = this.validateEmail(request.email)
           if (emailError) {
             resolve({ success: false, error: emailError })
             return
           }
 
-          // To prevent email enumeration, always return success.
-          // In a real application, an email would be sent only if the user exists.
+          // Check if user exists
           const user = this.findUserByEmail(request.email)
+
+          // Always return success for security (don't reveal if email exists)
+          // In production, would send email if user exists
           if (user && user.provider === 'email') {
+            // Generate reset token
             const resetToken = crypto.randomUUID()
             const resetKey = `${this.storagePrefix}reset_${resetToken}`
+
+            // Store reset token with 1-hour expiry
             this.saveToStorage(resetKey, {
               userId: user.id,
               email: user.email,
-              expiresAt: Date.now() + 60 * 60 * 1000, // 1-hour expiry.
+              expiresAt: Date.now() + 60 * 60 * 1000,
             })
+
             monitoring.addBreadcrumb('Password reset token generated', 'auth', {
               userId: user.id,
             })
@@ -752,10 +743,7 @@ class AuthService {
   }
 
   /**
-   * @method confirmPasswordReset
-   * @description Confirms a password reset using a token.
-   * @param {PasswordResetConfirm} confirm - The reset token and new password.
-   * @returns {Promise<{ success: boolean; error?: AuthError }>} Success status or an error.
+   * Public API: Confirm password reset
    */
   async confirmPasswordReset(
     confirm: PasswordResetConfirm
@@ -765,20 +753,21 @@ class AuthService {
         try {
           monitoring.addBreadcrumb('Password reset confirmation', 'auth')
 
-          // Validate the new password.
+          // Validate new password
           const passwordError = this.validatePassword(confirm.newPassword)
           if (passwordError) {
             resolve({ success: false, error: passwordError })
             return
           }
 
-          // Verify the reset token.
+          // Verify reset token
           const resetKey = `${this.storagePrefix}reset_${confirm.token}`
           const resetData = this.getFromStorage<{
             userId: string
             email: string
             expiresAt: number
           }>(resetKey)
+
           if (!resetData) {
             resolve({
               success: false,
@@ -789,6 +778,8 @@ class AuthService {
             })
             return
           }
+
+          // Check expiry
           if (Date.now() > resetData.expiresAt) {
             this.removeFromStorage(resetKey)
             resolve({
@@ -801,9 +792,10 @@ class AuthService {
             return
           }
 
-          // Find the user and update their password.
+          // Find user
           const users = this.getUsers()
           const userIndex = users.findIndex(u => u.id === resetData.userId)
+
           if (userIndex < 0) {
             resolve({
               success: false,
@@ -814,18 +806,23 @@ class AuthService {
             })
             return
           }
+
+          // Update password
           const newPasswordHash = await this.hashPassword(confirm.newPassword)
           const passwordKey = `${this.storagePrefix}password_${resetData.userId}`
           this.saveToStorage(passwordKey, newPasswordHash)
 
-          // Update the user's timestamp and clean up the reset token.
+          // Update user timestamp
           users[userIndex].updatedAt = new Date().toISOString()
           this.saveUsers(users)
+
+          // Remove reset token
           this.removeFromStorage(resetKey)
 
           monitoring.addBreadcrumb('Password reset successful', 'auth', {
             userId: resetData.userId,
           })
+
           resolve({ success: true })
         } catch (error) {
           monitoring.logError(error as Error, {
@@ -845,10 +842,7 @@ class AuthService {
   }
 
   /**
-   * @method refreshToken
-   * @description Refreshes an access token using a refresh token.
-   * @param {string} refreshToken - The refresh token.
-   * @returns {Promise<{ token?: AuthToken; error?: AuthError }>} The new tokens or an error.
+   * Public API: Refresh access token
    */
   async refreshToken(
     refreshToken: string
@@ -858,8 +852,9 @@ class AuthService {
         try {
           monitoring.addBreadcrumb('Token refresh requested', 'auth')
 
-          // Verify the provided refresh token.
+          // Get current session
           const session = this.getFromStorage<AuthSession>(this.sessionKey)
+
           if (!session || session.token.refreshToken !== refreshToken) {
             resolve({
               error: {
@@ -870,7 +865,7 @@ class AuthService {
             return
           }
 
-          // Check if the refresh token has expired.
+          // Check if refresh token is expired (7 days)
           const tokenIssuedAt = parseInt(
             session.token.refreshToken.split('.')[1],
             36
@@ -885,11 +880,15 @@ class AuthService {
             return
           }
 
-          // Issue new tokens and update the session.
+          // Generate new tokens
           const newToken = this.createAuthToken()
           session.token = newToken
+
+          // Update session
           this.saveToStorage(this.sessionKey, session)
+
           monitoring.addBreadcrumb('Token refreshed successfully', 'auth')
+
           resolve({ token: newToken })
         } catch (error) {
           monitoring.logError(error as Error, {
@@ -908,21 +907,20 @@ class AuthService {
   }
 
   /**
-   * @method getSession
-   * @description Retrieves the current authenticated session.
-   * @returns {Promise<AuthSession | null>} The current session or null if not authenticated.
+   * Public API: Get current session
    */
   async getSession(): Promise<AuthSession | null> {
     return new Promise(resolve => {
       setTimeout(() => {
         try {
           const session = this.getFromStorage<AuthSession>(this.sessionKey)
+
           if (!session || !session.isAuthenticated) {
             resolve(null)
             return
           }
 
-          // Check if the access token is expired.
+          // Check if access token is expired
           const expiresAt = new Date(session.token.expiresAt).getTime()
           if (Date.now() > expiresAt) {
             monitoring.addBreadcrumb('Session expired', 'auth')
@@ -943,22 +941,25 @@ class AuthService {
   }
 
   /**
-   * @method logout
-   * @description Logs out the current user and clears their session.
-   * @returns {Promise<{ success: boolean }>} Success status.
+   * Public API: Logout
    */
   async logout(): Promise<{ success: boolean }> {
     return new Promise(resolve => {
       setTimeout(() => {
         try {
           const session = this.getFromStorage<AuthSession>(this.sessionKey)
+
           if (session) {
             monitoring.addBreadcrumb('User logged out', 'auth', {
               userId: session.user.id,
             })
           }
+
+          // Remove session
           this.removeFromStorage(this.sessionKey)
-          // In a real app, the token would also be invalidated on the server.
+
+          // In production, would also invalidate token server-side
+
           resolve({ success: true })
         } catch (error) {
           monitoring.logError(error as Error, {
@@ -972,20 +973,20 @@ class AuthService {
   }
 
   /**
-   * @method validateToken
-   * @description Validates an access token.
-   * @param {string} token - The access token to validate.
-   * @returns {Promise<boolean>} True if the token is valid and not expired.
+   * Public API: Validate token
    */
   async validateToken(token: string): Promise<boolean> {
     return new Promise(resolve => {
       setTimeout(() => {
         try {
           const session = this.getFromStorage<AuthSession>(this.sessionKey)
+
           if (!session || session.token.accessToken !== token) {
             resolve(false)
             return
           }
+
+          // Check expiry
           const expiresAt = new Date(session.token.expiresAt).getTime()
           resolve(Date.now() <= expiresAt)
         } catch (error) {
@@ -1000,26 +1001,32 @@ class AuthService {
   }
 
   /**
-   * @method clearAllAuthData
-   * @description A utility function for testing and development to clear all authentication data.
-   * @returns {Promise<void>}
+   * Admin/Testing: Clear all auth data
    */
   async clearAllAuthData(): Promise<void> {
     return new Promise(resolve => {
       setTimeout(() => {
         try {
+          // Clear session
           this.removeFromStorage(this.sessionKey)
+
+          // Clear users
           this.removeFromStorage(this.usersKey)
+
+          // Clear all password hashes
           const users = this.getUsers()
           users.forEach(user => {
             const passwordKey = `${this.storagePrefix}password_${user.id}`
             this.removeFromStorage(passwordKey)
           })
+
+          // Clear rate limits
           Object.keys(localStorage).forEach(key => {
             if (key.startsWith(this.rateLimitKey)) {
               localStorage.removeItem(key)
             }
           })
+
           monitoring.addBreadcrumb('All auth data cleared', 'auth')
           resolve()
         } catch (error) {
@@ -1034,8 +1041,8 @@ class AuthService {
   }
 }
 
-// Export a singleton instance of the service.
+// Export singleton instance
 export const authService = new AuthService()
 
-// Export the default for backward compatibility and for use in testing.
+// Export for backward compatibility and testing
 export default authService

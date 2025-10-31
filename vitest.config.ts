@@ -8,6 +8,18 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
+    // Memory optimization settings
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true, // Reduce memory usage by using single thread
+      },
+    },
+    // Test execution timeout
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    // Disable isolation for better memory usage
+    isolate: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

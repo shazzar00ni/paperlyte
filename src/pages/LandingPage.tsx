@@ -1,36 +1,45 @@
 import { CheckCircle, Search, Shield, Smartphone, Tag, Zap } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import DemoCarousel from '../components/DemoCarousel'
 import WaitlistModal from '../components/WaitlistModal'
-import { trackUserAction, trackWaitlistEvent } from '../utils/analytics'
+import {
+  trackFeatureUsage,
+  trackUserAction,
+  trackWaitlistEvent,
+} from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 
 /**
  * @component LandingPage
- * @description The main landing page for the application. It showcases the features,
- * includes a demo carousel, and provides multiple calls-to-action to join the waitlist.
- * @returns {React.ReactElement} The rendered landing page.
+ * @description Main marketing page for Paperlyte MVP
+ * Features:
+ * - Hero section with value proposition
+ * - Feature showcase with icons
+ * - Demo carousel showing app in action
+ * - Waitlist signup modal
+ * - Analytics tracking for all interactions
+ * @returns {React.ReactElement} Landing page with waitlist functionality
  */
 const LandingPage: React.FC = () => {
-  // State to control the visibility of the waitlist modal.
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
 
-  // Effect to track the landing page view and add a monitoring breadcrumb on mount.
+  // Track page view for analytics
   useEffect(() => {
+    trackFeatureUsage('landing_page', 'view')
     trackUserAction('landing_page_view')
     monitoring.addBreadcrumb('Landing page loaded', 'navigation')
   }, [])
 
   /**
    * @function handleWaitlistClick
-   * @description Opens the waitlist modal and tracks the event.
+   * @description Opens waitlist modal and tracks interaction
    */
   const handleWaitlistClick = () => {
     setIsWaitlistOpen(true)
     trackWaitlistEvent('view')
   }
 
-  // An array of features to be displayed in the features section.
   const features = [
     {
       icon: <Zap className='h-6 w-6' />,
@@ -72,7 +81,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className='flex flex-col'>
-      {/* Hero Section: The main introduction to the product. */}
+      {/* Hero Section */}
       <section className='bg-gradient-to-br from-primary/10 to-accent/10 py-20'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <h1 className='text-4xl md:text-6xl font-bold text-dark mb-6'>
@@ -85,25 +94,24 @@ const LandingPage: React.FC = () => {
             and your ideas.
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-            {/* CTA to open the waitlist modal. */}
-            <button
-              onClick={handleWaitlistClick}
+            <Link
+              to='/editor'
               className='btn-primary btn-lg animation-glow'
+              onClick={() => trackUserAction('start_writing_clicked')}
             >
               Start Writing Now
-            </button>
-            {/* Button to track interest in the demo. */}
+            </Link>
             <button
-              onClick={() => trackUserAction('demo_request')}
+              onClick={handleWaitlistClick}
               className='btn-secondary btn-lg'
             >
-              See 30-Second Demo
+              Join Waitlist
             </button>
           </div>
         </div>
       </section>
 
-      {/* Demo Section: Showcases the product in action. */}
+      {/* Demo Section */}
       <section className='py-20 bg-gray-50'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='text-center mb-12'>
@@ -118,7 +126,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Section: Highlights the key benefits of the product. */}
+      {/* Features Section */}
       <section className='py-20 bg-white'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='text-center mb-16'>
@@ -131,7 +139,6 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {/* Map over the features array to display each feature card. */}
             {features.map((feature, index) => (
               <div
                 key={index}
@@ -148,7 +155,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section: A final call-to-action to encourage sign-ups. */}
+      {/* CTA Section */}
       <section className='py-20 bg-gray-50'>
         <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <h2 className='text-3xl md:text-4xl font-bold text-dark mb-4'>
@@ -164,7 +171,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Waitlist Modal: Hidden by default, shown when `isWaitlistOpen` is true. */}
+      {/* Waitlist Modal */}
       <WaitlistModal
         isOpen={isWaitlistOpen}
         onClose={() => setIsWaitlistOpen(false)}
