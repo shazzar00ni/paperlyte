@@ -412,7 +412,7 @@ Paperlyte collects minimal, anonymous usage data to improve the product:
 **Solutions:**
 
 1.  Double-check that the syntax is correct (e.g., `**bold**`, `*italic*`).
-2.  Try re-typing the markdown syntax.
+2.  Try re-typing the Markdown syntax.
 3.  Use the toolbar for formatting as an alternative.
 
 ### Search Problems
