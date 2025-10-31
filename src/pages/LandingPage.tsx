@@ -98,6 +98,10 @@ const LandingPage: React.FC = () => {
 
           {/* Hero Image */}
           <div className='max-w-4xl mx-auto mt-12'>
+            {/* 
+              Note: Consider hosting this image in public/assets for production use.
+              GitHub user-attachments URLs may not be stable for production environments.
+            */}
             <img
               src='https://github.com/user-attachments/assets/52996ac0-61dd-4ab1-a9a3-a78fb5515d82'
               alt='Network visualization showing interconnected notes including project tags, ideas, meeting notes, search functionality, and task management in a mind-map style layout'
