@@ -141,7 +141,7 @@ npm run test:e2e
 
 ## Database Management
 
-For testing purposes, this project uses `fake-indexeddb` to create an in-memory version of the IndexedDB database. This allows us to run tests in a clean, isolated environment without affecting the actual browser database. The setup for this can be found in `src/test/test-setup.ts`.
+For testing purposes, this project uses `fake-indexeddb` to create an in-memory version of the IndexedDB database. This allows us to run tests in a clean, isolated environment without affecting the actual browser database. The setup for this can be found in `src/test-setup.ts`.
 
 ## Dependency Management
 
