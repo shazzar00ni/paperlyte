@@ -68,30 +68,42 @@ const LandingPage: React.FC = () => {
     <div className='flex flex-col'>
       {/* Hero Section */}
       <section className='bg-gradient-to-br from-primary/10 to-accent/10 py-20'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h1 className='text-4xl md:text-6xl font-bold text-dark mb-6'>
-            Finally, note-taking that feels
-            <span className='text-gradient'> effortless</span>
-          </h1>
-          <p className='text-xl text-gray-600 mb-8 max-w-3xl mx-auto'>
-            Paperlyte is the lightning-fast, beautifully minimal note app that
-            gets out of your way. No accounts, no complexity, no bloat—just you
-            and your ideas.
-          </p>
-          <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-            <Link
-              to='/editor'
-              className='btn-primary btn-lg animation-glow'
-              onClick={() => trackUserAction('start_writing_clicked')}
-            >
-              Start Writing Now
-            </Link>
-            <button
-              onClick={handleWaitlistClick}
-              className='btn-secondary btn-lg'
-            >
-              Join Waitlist
-            </button>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='text-center mb-12'>
+            <h1 className='text-4xl md:text-6xl font-bold text-dark mb-6'>
+              Finally, note-taking that feels
+              <span className='text-gradient'> effortless</span>
+            </h1>
+            <p className='text-xl text-gray-600 mb-8 max-w-3xl mx-auto'>
+              Paperlyte is the lightning-fast, beautifully minimal note app that
+              gets out of your way. No accounts, no complexity, no bloat—just
+              you and your ideas.
+            </p>
+            <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+              <Link
+                to='/editor'
+                className='btn-primary btn-lg animation-glow'
+                onClick={() => trackUserAction('start_writing_clicked')}
+              >
+                Start Writing Now
+              </Link>
+              <button
+                onClick={handleWaitlistClick}
+                className='btn-secondary btn-lg'
+              >
+                Join Waitlist
+              </button>
+            </div>
+          </div>
+
+          {/* Hero Image */}
+          <div className='max-w-4xl mx-auto mt-12'>
+            <img
+              src='https://github.com/user-attachments/assets/52996ac0-61dd-4ab1-a9a3-a78fb5515d82'
+              alt='Network visualization showing interconnected notes including project tags, ideas, meeting notes, search functionality, and task management in a mind-map style layout'
+              className='w-full h-auto rounded-lg shadow-xl'
+              loading='eager'
+            />
           </div>
         </div>
       </section>
