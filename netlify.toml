@@ -23,7 +23,23 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    # Enforce HTTPS for 1 year, including all subdomains
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    
+    # Prevent clickjacking attacks
     X-Frame-Options = "DENY"
+    
+    # Enable browser XSS protection
     X-XSS-Protection = "1; mode=block"
+    
+    # Prevent MIME type sniffing
     X-Content-Type-Options = "nosniff"
+    
+    # Control referrer information
     Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Restrict browser features
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+    
+    # Content Security Policy - Strict for production
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://app.posthog.com https://*.ingest.sentry.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://app.posthog.com https://*.ingest.sentry.io https://*.sentry.io; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"

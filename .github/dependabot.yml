@@ -20,6 +20,7 @@ updates:
     labels:
       - 'dependencies'
       - 'automated-pr'
+      - 'security'
     # Group minor and patch updates together to reduce PR noise
     groups:
       # Group all React-related updates
@@ -82,9 +83,11 @@ updates:
       separator: '/'
     # Rebase strategy for PRs
     rebase-strategy: 'auto'
-    # Enable security updates
+    # Enable security updates with priority
     allow:
       - dependency-type: 'all'
+    # Prioritize security updates
+    target-branch: 'main'
     # Vendored dependencies (none for this project)
     vendor: false
 
