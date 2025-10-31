@@ -27,13 +27,13 @@ _[📸 Screenshot needed: New Note button in the interface]_
 
 **Method 2: Keyboard Shortcut**
 
--   Press `Ctrl+N` (Windows/Linux) or `Cmd+N` (Mac).
--   This shortcut works from anywhere within the application, making it the fastest way to create a new note.
+- Press `Ctrl+N` (Windows/Linux) or `Cmd+N` (Mac).
+- This shortcut works from anywhere within the application, making it the fastest way to create a new note.
 
 **Method 3: Quick Creation**
 
--   If you don't have a note selected, simply click anywhere in the main editor area.
--   This action automatically creates a new note and places your cursor in the title field.
+- If you don't have a note selected, simply click anywhere in the main editor area.
+- This action automatically creates a new note and places your cursor in the title field.
 
 ### Note Title Management
 
@@ -133,8 +133,8 @@ _[📸 Screenshot needed: Search box with results]_
 
 - **Real-time results:** See matches as you type
 - **Content search:** Searches both titles and note content
--   **Partial Matching:** "meet" will find "meeting," "meetings," etc.
--   **Case-Insensitive:** No need to worry about capitalization.
+- **Partial Matching:** "meet" will find "meeting," "meetings," etc.
+- **Case-Insensitive:** No need to worry about capitalization.
 
 **Search Tips:**
 
@@ -166,12 +166,12 @@ _[📸 Screenshot needed: Save status indicator]_
 - **Automatic:** Saves changes as you type (every 2-3 seconds)
 - **Real-time:** No need to manually save
 - **Status Indicator:** Visual feedback shows save status
--   **Reliable:** Built-in error handling prevents data loss. The system uses a queue to manage save requests, ensuring that even if you type quickly, all changes are captured and saved in order.
+- **Reliable:** Built-in error handling prevents data loss. The system uses a queue to manage save requests, ensuring that even if you type quickly, all changes are captured and saved in order.
 
 ### Manual Save Options
 
--   **Keyboard:** Press `Ctrl+S` / `Cmd+S` to trigger an immediate save.
--   **Peace of Mind:** Manual save works even when auto-save is active and provides instant visual confirmation.
+- **Keyboard:** Press `Ctrl+S` / `Cmd+S` to trigger an immediate save.
+- **Peace of Mind:** Manual save works even when auto-save is active and provides instant visual confirmation.
 
 ### Save Status Indicators
 
@@ -245,7 +245,7 @@ _[📸 Screenshot needed: Editor with formatting toolbar]_
 - **Title Field:** Edit note titles inline
 - **Rich Text Area:** Full-featured content editor
 - **Formatting Toolbar:** One-click text formatting
--   **Word Count:** See document statistics (coming soon).
+- **Word Count:** See document statistics (coming soon).
 
 ---
 
@@ -294,7 +294,7 @@ Future features will include:
 - **Export All Notes:** Download all notes as files
 - **Import Notes:** Restore from backup files
 - **Sync Options:** Optional cloud sync for multi-device use
--   **Migration Tools:** Move between browsers or devices.
+- **Migration Tools:** Move between browsers or devices.
 
 ---
 
@@ -304,10 +304,10 @@ Future features will include:
 
 _[📸 Screenshot placeholder: Tag interface mockup]_
 
--   Add tags to organize notes by topic.
--   Filter notes by tags.
--   Visual tag indicators.
--   *Note: The UI component for this feature is implemented, but it is not yet fully integrated into the application.*
+- Add tags to organize notes by topic.
+- Filter notes by tags.
+- Visual tag indicators.
+- _Note: The UI component for this feature is implemented, but it is not yet fully integrated into the application._
 
 ### Advanced Search
 
