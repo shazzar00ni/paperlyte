@@ -4,6 +4,7 @@ import { dataService } from '../services/dataService'
 import type { ModalProps } from '../types'
 import { trackWaitlistEvent } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
+import { rateLimiter, sanitization, RATE_LIMITS } from '../utils/security'
 
 interface WaitlistFormData {
   email: string
@@ -29,19 +30,34 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     setError(null)
 
     try {
-      // Validate form
+      // Check rate limiting to prevent abuse
+      if (!rateLimiter.isAllowed('waitlist_signup', RATE_LIMITS.FORM_SUBMIT)) {
+        throw new Error(
+          'Too many signup attempts. Please try again in a few minutes.'
+        )
+      }
+
+      // Validate and sanitize form inputs
       if (!formData.email || !formData.name) {
         throw new Error('Please fill in all required fields')
       }
 
-      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      // Sanitize email with built-in validation
+      const sanitizedEmail = sanitization.sanitizeEmail(formData.email)
+      if (!sanitizedEmail) {
         throw new Error('Please enter a valid email address')
+      }
+
+      // Sanitize name to remove any dangerous content
+      const sanitizedName = sanitization.sanitizeText(formData.name)
+      if (!sanitizedName || sanitizedName.length < 2) {
+        throw new Error('Please enter a valid name')
       }
 
       // Use data service for persistence (currently localStorage, will be API in Q4 2025)
       const result = await dataService.addToWaitlist({
-        email: formData.email,
-        name: formData.name,
+        email: sanitizedEmail,
+        name: sanitizedName,
         interest: formData.interest,
       })
 
