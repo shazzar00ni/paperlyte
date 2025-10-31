@@ -30,7 +30,7 @@ describe('Note Workflow Integration', () => {
 
       // Find the title input
       const titleInput =
-        screen.getByDisplayValue(/untitled/i) ||
+        screen.queryByDisplayValue(/untitled/i) ??
         screen.getByRole('textbox', { name: /title/i })
       await user.clear(titleInput)
       await user.type(titleInput, 'Test Note Title')
