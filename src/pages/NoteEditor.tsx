@@ -394,7 +394,12 @@ const NoteEditor: React.FC = () => {
 
       {/* Focus Mode Overlay */}
       {focusMode && currentNote && (
-        <div className='fixed inset-0 bg-background z-50 flex items-center justify-center p-4'>
+        <div
+          className='fixed inset-0 bg-background z-50 flex items-center justify-center p-4'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='focus-mode-title'
+        >
           <div
             ref={focusModeRef}
             className='w-full max-w-4xl h-full flex flex-col bg-white rounded-lg shadow-lg p-8'
@@ -403,6 +408,7 @@ const NoteEditor: React.FC = () => {
             <div className='flex items-center justify-between mb-6'>
               <input
                 type='text'
+                id='focus-mode-title'
                 value={currentNote.title}
                 onChange={e => updateCurrentNote({ title: e.target.value })}
                 className='text-3xl font-bold text-dark bg-transparent border-none outline-none flex-1'
