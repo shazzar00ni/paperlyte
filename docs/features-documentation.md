@@ -307,7 +307,7 @@ _[📸 Screenshot placeholder: Tag interface mockup]_
 -   Add tags to organize notes by topic.
 -   Filter notes by tags.
 -   Visual tag indicators.
--   *Note: The UI component for this feature is implemented, but it is not yet fully integrated into the application.*
+-   _Note: The UI component for this feature is implemented, but it is not yet fully integrated into the application._
 
 ### Advanced Search
 
