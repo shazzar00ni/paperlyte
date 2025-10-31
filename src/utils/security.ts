@@ -232,7 +232,6 @@ class SecureSessionManager {
   private static readonly SESSION_TIMEOUT_MS = 86400000 // 24 hours
   private static readonly IDLE_TIMEOUT_MS = 1800000 // 30 minutes
 
-  private lastActivity: number = Date.now()
   private sessionData: Record<string, unknown> | null = null
 
   /**
@@ -255,7 +254,6 @@ class SecureSessionManager {
         )
 
         this.sessionData = data
-        this.lastActivity = Date.now()
         return true
       }
 
@@ -291,7 +289,6 @@ class SecureSessionManager {
       )
 
       this.sessionData = sessionInfo.data
-      this.lastActivity = now
       return true
     } catch (error) {
       monitoring.logError(error as Error, {
@@ -318,8 +315,6 @@ class SecureSessionManager {
         SecureSessionManager.SESSION_KEY,
         JSON.stringify(sessionInfo)
       )
-
-      this.lastActivity = Date.now()
     } catch (error) {
       monitoring.logError(error as Error, {
         feature: 'security',
