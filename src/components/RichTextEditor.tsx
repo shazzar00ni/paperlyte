@@ -1,7 +1,15 @@
 import DOMPurify from 'dompurify'
 import { Bold, Italic, List, ListOrdered } from 'lucide-react'
 import React, { useCallback, useEffect, useRef } from 'react'
-
+/**
+ * @interface RichTextEditorProps
+ * @description Defines the props for the RichTextEditor component.
+ * @property {string} content - The initial HTML content of the editor.
+ * @property {(content: string) => void} onChange - Callback function triggered when the editor content changes.
+ * @property {string} [placeholder] - Optional placeholder text to display when the editor is empty.
+ * @property {string} [className] - Optional CSS class name for custom styling.
+ * @property {boolean} [disabled] - Optional flag to disable the editor.
+ */
 interface RichTextEditorProps {
   content: string
   onChange: (content: string) => void
@@ -11,8 +19,12 @@ interface RichTextEditorProps {
 }
 
 /**
- * Lightning-fast rich text editor using contenteditable
- * Supports bold, italic, and list formatting with keyboard shortcuts
+ * @component RichTextEditor
+ * @description A lightning-fast rich text editor built with contenteditable.
+ * It supports bold, italic, and list formatting, along with keyboard shortcuts.
+ * The editor sanitizes input to prevent XSS attacks.
+ * @param {RichTextEditorProps} props - The props for the component.
+ * @returns {React.ReactElement} - The rendered rich text editor.
  */
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
   content,
@@ -24,10 +36,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null)
   const isUpdatingRef = useRef(false)
 
-  // Update editor content when prop changes (but not during user input)
+  // Synchronize the editor's content with the `content` prop.
+  // This effect runs when the `content` prop changes.
+  // It avoids updating the DOM if the user is currently typing.
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       const currentContent = editorRef.current.innerHTML
+      // Sanitize the incoming content to prevent XSS vulnerabilities.
       const sanitizedContent = DOMPurify.sanitize(content || '', {
         ALLOWED_TAGS: [
           'b',
@@ -45,17 +60,24 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         ],
         ALLOWED_ATTR: ['style'],
       })
+      // Only update the DOM if the content has actually changed.
       if (currentContent !== sanitizedContent) {
         editorRef.current.innerHTML = sanitizedContent
       }
     }
   }, [content])
 
-  // Handle content changes with sanitization
+  /**
+   * @function handleInput
+   * @description Handles the `onInput` event of the contenteditable element.
+   * It reads the raw HTML, sanitizes it, and then calls the `onChange` callback.
+   * A ref `isUpdatingRef` is used to prevent race conditions with the `useEffect`.
+   */
   const handleInput = useCallback(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       isUpdatingRef.current = true
       const rawContent = editorRef.current.innerHTML
+      // Sanitize the user's input to ensure it's safe.
       const sanitizedContent = DOMPurify.sanitize(rawContent, {
         ALLOWED_TAGS: [
           'b',
@@ -74,14 +96,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         ALLOWED_ATTR: ['style'],
       })
       onChange(sanitizedContent)
-      // Reset flag after a short delay to allow for external updates
+      // Use a short timeout to reset the update flag, allowing external changes.
       setTimeout(() => {
         isUpdatingRef.current = false
       }, 10)
     }
   }, [onChange])
 
-  // Helper to wrap selection with a tag
+  /**
+   * @function wrapSelectionWithTag
+   * @description A helper function to wrap the current text selection with a given HTML tag.
+   * @param {string} tag - The HTML tag to wrap the selection with (e.g., 'b', 'i').
+   */
   const wrapSelectionWithTag = (tag: string) => {
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) return
@@ -90,7 +116,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const wrapper = document.createElement(tag)
     wrapper.appendChild(range.extractContents())
     range.insertNode(wrapper)
-    // Move selection to after the inserted node
+    // Restore the selection to the end of the newly wrapped content.
     selection.removeAllRanges()
     const newRange = document.createRange()
     newRange.selectNodeContents(wrapper)
@@ -98,7 +124,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     selection.addRange(newRange)
   }
 
-  // Format text using Selection API
+  /**
+   * @function formatText
+   * @description Applies text formatting commands to the selection.
+   * This function uses the `wrapSelectionWithTag` helper for basic formatting.
+   * @param {string} command - The formatting command to apply (e.g., 'bold', 'italic').
+   * @param {string} [value] - An optional value for commands that require it (e.g., 'formatBlock').
+   */
   const formatText = useCallback(
     (command: string, value?: string) => {
       if (disabled) return
@@ -114,17 +146,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         case 'underline':
           wrapSelectionWithTag('u')
           break
-        // Minimal stubs for outdent and formatBlock
+        // Stubs for more complex list handling.
         case 'outdent':
-          // No-op or implement custom logic if needed
+          // This can be expanded with custom logic for list indentation.
           break
         case 'formatBlock':
-          // For 'div', replace parent block element with <div>
+          // Handles changing the block-level element, e.g., to a 'div'.
           if (value === 'div') {
             const selection = window.getSelection()
             if (selection && selection.rangeCount > 0) {
               const range = selection.getRangeAt(0)
               let block = range.startContainer
+              // Find the parent block element.
               while (block && block.nodeType === 3 && block.parentNode) {
                 block = block.parentNode
               }
@@ -144,17 +177,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           break
       }
       editorRef.current.focus()
-      handleInput()
+      handleInput() // Trigger an update after formatting.
     },
     [disabled, handleInput]
   )
 
-  // Handle keyboard shortcuts
+  /**
+   * @function handleKeyDown
+   * @description Handles keyboard shortcuts for text formatting (Ctrl+B, Ctrl+I, Ctrl+U).
+   * It also includes logic for handling the Enter key within list items.
+   * @param {React.KeyboardEvent} e - The keyboard event.
+   */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (disabled) return
 
-      // Handle keyboard shortcuts
+      // Standard formatting shortcuts.
       if (e.ctrlKey || e.metaKey) {
         switch (e.key.toLowerCase()) {
           case 'b':
@@ -172,7 +210,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         }
       }
 
-      // Handle Enter key for lists
+      // Handle the Enter key to exit an empty list item.
       if (e.key === 'Enter') {
         const selection = window.getSelection()
         if (selection && selection.rangeCount > 0) {
@@ -180,7 +218,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           const listItem = range.startContainer.parentElement?.closest('li')
 
           if (listItem && listItem.textContent?.trim() === '') {
-            // If we're in an empty list item, exit the list
+            // If the list item is empty, pressing Enter will exit the list.
             e.preventDefault()
             formatText('outdent')
             formatText('formatBlock', 'div')
@@ -191,7 +229,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     [disabled, formatText]
   )
 
-  // Handle paste to clean up formatting
+  /**
+   * @function handlePaste
+   * @description Intercepts the paste event to sanitize and insert plain text.
+   * This prevents pasting of complex HTML and potential XSS vectors.
+   * @param {React.ClipboardEvent} e - The clipboard event.
+   */
   const handlePaste = useCallback(
     (e: React.ClipboardEvent) => {
       if (disabled) return
@@ -204,7 +247,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         range.deleteContents()
         const textNode = document.createTextNode(text)
         range.insertNode(textNode)
-        // Move the cursor after the inserted text node
+        // Move the cursor to the end of the pasted content.
         range.setStartAfter(textNode)
         range.collapse(true)
         selection.removeAllRanges()
@@ -215,19 +258,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     [disabled, handleInput]
   )
 
-  // Toolbar button states
+  /**
+   * @function isActive
+   * @description Checks if a given formatting command is active at the current selection.
+   * It traverses the DOM tree upwards from the selection to find matching tags or styles.
+   * @param {string} command - The command to check (e.g., 'bold', 'italic').
+   * @returns {boolean} - True if the command is active, false otherwise.
+   */
   const isActive = useCallback(
     (command: string): boolean => {
       if (disabled) return false
       const selection = window.getSelection()
       if (!selection || selection.rangeCount === 0) return false
       let node = selection.focusNode
-      // If the selection is a text node, get its parent element
+      // Start from the parent element if the selection is a text node.
       if (node && node.nodeType === Node.TEXT_NODE) {
         node = node.parentElement
       }
       if (!node) return false
-      // Traverse up the DOM tree to check for formatting tags
+      // Check for the active state by walking up the DOM tree.
       switch (command) {
         case 'bold':
           while (node && node !== editorRef.current) {
@@ -290,7 +339,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <div className='rich-text-editor'>
-      {/* Minimal Toolbar */}
+      {/* The toolbar provides buttons for formatting the text. */}
       <div className='flex items-center space-x-1 p-2 border-b border-gray-200 bg-gray-50'>
         <button
           type='button'
@@ -347,7 +396,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </button>
       </div>
 
-      {/* Content Editable Area */}
+      {/* The main content area, which is a contenteditable div. */}
       <div
         ref={editorRef}
         contentEditable={!disabled}

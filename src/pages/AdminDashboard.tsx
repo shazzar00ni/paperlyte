@@ -13,6 +13,10 @@ import { trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 
+/**
+ * @interface AnalyticsData
+ * @description Defines the structure for the analytics data displayed on the dashboard.
+ */
 interface AnalyticsData {
   totalUsers: number
   totalNotes: number
@@ -36,36 +40,51 @@ interface AnalyticsData {
   }>
 }
 
+/**
+ * @component AdminDashboard
+ * @description A dashboard for administrators to view analytics, performance metrics, and error reports.
+ * It fetches and displays both real and simulated data for demonstration purposes.
+ * @returns {React.ReactElement} The rendered admin dashboard component.
+ */
 const AdminDashboard: React.FC = () => {
+  // State for storing analytics data.
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  // State to manage the loading status.
   const [isLoading, setIsLoading] = useState(true)
+  // State for the selected time range (e.g., '7d', '30d').
   const [timeRange, setTimeRange] = useState('7d')
 
+  // Effect to load data when the component mounts or the time range changes.
   useEffect(() => {
     trackFeatureUsage('admin_dashboard', 'view')
     monitoring.addBreadcrumb('Admin dashboard loaded', 'navigation')
     loadAnalyticsData()
   }, [timeRange])
 
+  /**
+   * @function loadAnalyticsData
+   * @description Fetches analytics data from the data service and simulates API calls for other metrics.
+   * It combines real data (like note and waitlist counts) with mock data for a comprehensive view.
+   */
   const loadAnalyticsData = async () => {
     setIsLoading(true)
     try {
-      // Get real data from storage for notes and waitlist counts
+      // Fetch real storage information from the data service.
       const storageInfo = await dataService.getStorageInfo()
 
-      // Simulate API call for other metrics - in real app, this would fetch from PostHog/Sentry APIs
+      // Simulate a network delay for fetching other metrics.
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Mock data with real storage counts
+      // Set the analytics data with a combination of real and mock data.
       setAnalyticsData({
-        totalUsers: 1247 + storageInfo.waitlistCount, // Include actual waitlist signups
-        totalNotes: storageInfo.notesCount, // Use real notes count
+        totalUsers: 1247 + storageInfo.waitlistCount, // Includes actual waitlist signups.
+        totalNotes: storageInfo.notesCount, // Uses the real notes count.
         activeUsers: 342,
         errorCount: 23,
         performanceMetrics: {
           avgLoadTime: 1.2,
           avgRenderTime: 0.3,
-          memoryUsage: storageInfo.storageUsed / (1024 * 1024), // Convert to MB
+          memoryUsage: storageInfo.storageUsed / (1024 * 1024), // Convert bytes to MB.
         },
         topFeatures: [
           { name: 'Note Editor', usage: 78, trend: 'up' },
@@ -99,6 +118,7 @@ const AdminDashboard: React.FC = () => {
         ],
       })
     } catch (error) {
+      // Log any errors that occur during data fetching.
       monitoring.logError(error as Error, {
         feature: 'admin_dashboard',
         action: 'load_data',
@@ -108,13 +128,18 @@ const AdminDashboard: React.FC = () => {
     }
   }
 
+  /**
+   * @function exportData
+   * @description Exports notes and waitlist data to a JSON file.
+   * It uses the data service to fetch the data and then constructs a downloadable blob.
+   */
   const exportData = async () => {
     trackFeatureUsage('admin_dashboard', 'export_data')
     try {
-      // Use data service to export real data
+      // Fetch the data to be exported from the data service.
       const data = await dataService.exportData()
 
-      // Create downloadable JSON file
+      // Structure the data for the JSON file.
       const exportData = {
         exportDate: new Date().toISOString(),
         notes: data.notes,
@@ -125,6 +150,7 @@ const AdminDashboard: React.FC = () => {
         },
       }
 
+      // Create a blob and trigger a download.
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
         type: 'application/json',
       })
@@ -137,6 +163,7 @@ const AdminDashboard: React.FC = () => {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (error) {
+      // Log errors and notify the user if the export fails.
       monitoring.logError(error as Error, {
         feature: 'admin_dashboard',
         action: 'export_data_failed',
@@ -145,6 +172,7 @@ const AdminDashboard: React.FC = () => {
     }
   }
 
+  // Display a loading skeleton while the data is being fetched.
   if (isLoading) {
     return (
       <div className='min-h-screen bg-background p-6'>
@@ -171,7 +199,7 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className='min-h-screen bg-background p-6'>
       <div className='max-w-7xl mx-auto'>
-        {/* Header */}
+        {/* Dashboard Header */}
         <div className='flex justify-between items-center mb-8'>
           <div>
             <h1 className='text-3xl font-bold text-dark'>
@@ -182,6 +210,7 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <div className='flex items-center space-x-4'>
+            {/* Time range selector */}
             <select
               value={timeRange}
               onChange={e => setTimeRange(e.target.value)}
@@ -192,6 +221,7 @@ const AdminDashboard: React.FC = () => {
               <option value='30d'>Last 30 days</option>
               <option value='90d'>Last 90 days</option>
             </select>
+            {/* Export data button */}
             <button
               onClick={exportData}
               className='btn-secondary btn-md flex items-center space-x-2'
@@ -202,7 +232,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Metrics Cards */}
+        {/* Key Metrics Cards */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
           <div className='card'>
             <div className='flex items-center justify-between'>
@@ -253,9 +283,9 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Charts and Details */}
+        {/* Detailed Charts and Reports */}
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8'>
-          {/* Feature Usage */}
+          {/* Feature Usage Section */}
           <div className='card'>
             <div className='flex items-center space-x-2 mb-4'>
               <BarChart3 className='h-5 w-5 text-primary' />
@@ -269,6 +299,7 @@ const AdminDashboard: React.FC = () => {
                       {feature.name}
                     </span>
                     <div className='flex items-center space-x-1'>
+                      {/* Trend indicator icon */}
                       <TrendingUp
                         className={`h-4 w-4 ${
                           feature.trend === 'up'
@@ -281,6 +312,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
+                    {/* Usage progress bar */}
                     <div className='w-20 bg-gray-200 rounded-full h-2'>
                       <div
                         className='h-2 bg-primary rounded-full'
@@ -296,7 +328,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Performance Metrics */}
+          {/* Performance Metrics Section */}
           <div className='card'>
             <div className='flex items-center space-x-2 mb-4'>
               <Activity className='h-5 w-5 text-primary' />
@@ -318,14 +350,14 @@ const AdminDashboard: React.FC = () => {
               <div className='flex justify-between items-center'>
                 <span className='text-gray-600'>Memory Usage</span>
                 <span className='font-medium text-dark'>
-                  {analyticsData?.performanceMetrics.memoryUsage}MB
+                  {analyticsData?.performanceMetrics.memoryUsage.toFixed(2)}MB
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Error Reports */}
+        {/* Error Reports Table */}
         <div className='card'>
           <div className='flex items-center space-x-2 mb-4'>
             <AlertTriangle className='h-5 w-5 text-red-500' />
