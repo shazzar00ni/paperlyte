@@ -251,7 +251,8 @@ export async function migrateToIndexedDB(): Promise<{
  */
 export function isIndexedDBAvailable(): boolean {
   try {
-    return typeof indexedDB !== 'undefined' && indexedDB !== null
+    // Use globalThis to avoid shadowing and support non-window environments
+    return typeof globalThis !== 'undefined' && !!(globalThis as any).indexedDB
   } catch {
     return false
   }
