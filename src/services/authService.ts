@@ -1009,22 +1009,41 @@ class AuthService {
     return new Promise(resolve => {
       setTimeout(() => {
         try {
+          // Snapshot users before removal (needed to clear password hashes)
+          const users = this.getUsers()
+
           // Clear session
           this.removeFromStorage(this.sessionKey)
 
-          // Clear users
-          this.removeFromStorage(this.usersKey)
-
-          // Clear all password hashes
-          const users = this.getUsers()
+          // Clear all password hashes (by user id snapshot)
           users.forEach(user => {
             const passwordKey = `${this.storagePrefix}password_${user.id}`
             this.removeFromStorage(passwordKey)
           })
 
+          // Also remove any stray password_* keys
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith(`${this.storagePrefix}password_`)) {
+              localStorage.removeItem(key)
+            }
+          })
+
+          // Clear users list last
+          this.removeFromStorage(this.usersKey)
+
           // Clear rate limits
           Object.keys(localStorage).forEach(key => {
             if (key.startsWith(this.rateLimitKey)) {
+              localStorage.removeItem(key)
+            }
+          })
+
+          // Clear reset tokens and oauth state
+          Object.keys(localStorage).forEach(key => {
+            if (
+              key.startsWith(`${this.storagePrefix}reset_`) ||
+              key === `${this.storagePrefix}oauth_state`
+            ) {
               localStorage.removeItem(key)
             }
           })
@@ -1039,6 +1058,8 @@ class AuthService {
           resolve()
         }
       }, 0)
+    })
+  }
     })
   }
 }
