@@ -1,33 +1,26 @@
 import { monitoring } from './monitoring'
 
 /**
- * @fileoverview
- * This file provides a singleton wrapper around the IndexedDB API to simplify its usage.
- * It handles database initialization, schema creation/migration, and provides promisified
- * methods for common database operations (CRUD).
+ * IndexedDB Storage Utility
+ *
+ * Provides a robust wrapper around IndexedDB with:
+ * - Error handling and fallbacks
+ * - Data migration support
+ * - Offline-first behavior
+ * - Support for large notes
  */
 
-// Define database constants to ensure consistency.
 const DB_NAME = 'paperlyte_db'
 const DB_VERSION = 1
 const NOTES_STORE = 'notes'
 const WAITLIST_STORE = 'waitlist'
 const METADATA_STORE = 'metadata'
 
-/**
- * @interface IDBConfig
- * @description Optional configuration for the IndexedDBStorage instance.
- */
 export interface IDBConfig {
   dbName?: string
   version?: number
 }
 
-/**
- * @class IndexedDBStorage
- * @description A wrapper class for IndexedDB that simplifies database operations.
- * It manages the database connection, schema, and provides easy-to-use async methods.
- */
 class IndexedDBStorage {
   private db: IDBDatabase | null = null
   private dbName: string
@@ -40,16 +33,15 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method init
-   * @description Initializes and opens the IndexedDB database.
-   * This method is idempotent; it can be called multiple times but will only initialize the database once.
-   * It also handles the creation and upgrading of the database schema.
-   * @returns {Promise<void>} A promise that resolves when the database is successfully opened.
+   * Initialize the database connection
    */
   async init(): Promise<void> {
+    // Return existing initialization promise if already in progress
     if (this.initPromise) {
       return this.initPromise
     }
+
+    // Return immediately if already initialized
     if (this.db) {
       return Promise.resolve()
     }
@@ -77,11 +69,10 @@ class IndexedDBStorage {
         resolve()
       }
 
-      // This event is triggered only when the database version changes.
       request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
         const db = (event.target as IDBOpenDBRequest).result
 
-        // Create the object stores (tables) and their indexes.
+        // Create object stores if they don't exist
         if (!db.objectStoreNames.contains(NOTES_STORE)) {
           const notesStore = db.createObjectStore(NOTES_STORE, {
             keyPath: 'id',
@@ -117,10 +108,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method getAll
-   * @description Retrieves all items from a specified object store.
-   * @param {string} storeName - The name of the object store.
-   * @returns {Promise<T[]>} A promise that resolves with an array of items.
+   * Get all items from a store
    */
   async getAll<T>(storeName: string): Promise<T[]> {
     await this.init()
@@ -163,11 +151,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method get
-   * @description Retrieves a single item from an object store by its key.
-   * @param {string} storeName - The name of the object store.
-   * @param {string} key - The key of the item to retrieve.
-   * @returns {Promise<T | undefined>} A promise that resolves with the item, or undefined if not found.
+   * Get a single item by key
    */
   async get<T>(storeName: string, key: string): Promise<T | undefined> {
     await this.init()
@@ -210,11 +194,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method put
-   * @description Adds a new item or updates an existing item in an object store.
-   * @param {string} storeName - The name of the object store.
-   * @param {T} item - The item to add or update.
-   * @returns {Promise<void>} A promise that resolves when the operation is complete.
+   * Put (add or update) an item in a store
    */
   async put<T>(storeName: string, item: T): Promise<void> {
     await this.init()
@@ -257,11 +237,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method delete
-   * @description Deletes an item from an object store by its key.
-   * @param {string} storeName - The name of the object store.
-   * @param {string} key - The key of the item to delete.
-   * @returns {Promise<void>} A promise that resolves when the operation is complete.
+   * Delete an item from a store
    */
   async delete(storeName: string, key: string): Promise<void> {
     await this.init()
@@ -304,10 +280,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method clear
-   * @description Clears all items from an object store.
-   * @param {string} storeName - The name of the object store to clear.
-   * @returns {Promise<void>} A promise that resolves when the operation is complete.
+   * Clear all items from a store
    */
   async clear(storeName: string): Promise<void> {
     await this.init()
@@ -350,10 +323,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method count
-   * @description Counts the number of items in an object store.
-   * @param {string} storeName - The name of the object store.
-   * @returns {Promise<number>} A promise that resolves with the total number of items.
+   * Count items in a store
    */
   async count(storeName: string): Promise<number> {
     await this.init()
@@ -396,10 +366,7 @@ class IndexedDBStorage {
   }
 
   /**
-   * @method getStorageEstimate
-   * @description Estimates the storage usage and quota for the application's origin.
-   * Uses the `navigator.storage.estimate()` API if available.
-   * @returns {Promise<{ usage: number; quota: number; usagePercentage: number }>} An object with storage details.
+   * Get storage estimate
    */
   async getStorageEstimate(): Promise<{
     usage: number
@@ -412,21 +379,31 @@ class IndexedDBStorage {
         const usage = estimate.usage || 0
         const quota = estimate.quota || 0
         const usagePercentage = quota > 0 ? (usage / quota) * 100 : 0
+
         return { usage, quota, usagePercentage }
       }
-      return { usage: 0, quota: 0, usagePercentage: 0 }
+
+      // Fallback if storage estimation is not available
+      return {
+        usage: 0,
+        quota: 0,
+        usagePercentage: 0,
+      }
     } catch (error) {
       monitoring.logError(error as Error, {
         feature: 'indexeddb',
         action: 'getStorageEstimate',
       })
-      return { usage: 0, quota: 0, usagePercentage: 0 }
+      return {
+        usage: 0,
+        quota: 0,
+        usagePercentage: 0,
+      }
     }
   }
 
   /**
-   * @method close
-   * @description Closes the database connection.
+   * Close database connection
    */
   close(): void {
     if (this.db) {
@@ -438,10 +415,10 @@ class IndexedDBStorage {
   }
 }
 
-// Export a singleton instance of the storage wrapper to be used throughout the application.
+// Export singleton instance
 export const indexedDB = new IndexedDBStorage()
 
-// Export store names as a constant object to ensure consistency and prevent typos.
+// Export store names for consistency
 export const STORE_NAMES = {
   NOTES: NOTES_STORE,
   WAITLIST: WAITLIST_STORE,

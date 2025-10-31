@@ -3,20 +3,15 @@ import { monitoring } from './monitoring'
 import type { Note, WaitlistEntry } from '../types'
 
 /**
- * @fileoverview
- * This utility handles the one-time migration of data from `localStorage` to IndexedDB.
- * It is designed to be run when the application initializes, ensuring that data from
- * older versions of the application is seamlessly moved to the more robust IndexedDB storage.
+ * Data Migration Utility
+ *
+ * Handles migration from localStorage to IndexedDB
+ * Ensures data integrity and rollback on failure
  */
 
-// Constants for managing migration status and finding data in localStorage.
 const MIGRATION_KEY = 'paperlyte_migration_status'
 const STORAGE_PREFIX = 'paperlyte_'
 
-/**
- * @interface MigrationStatus
- * @description Defines the structure of the migration status object stored in `localStorage`.
- */
 export interface MigrationStatus {
   completed: boolean
   version: string
@@ -25,9 +20,7 @@ export interface MigrationStatus {
 }
 
 /**
- * @function getMigrationStatus
- * @description Checks `localStorage` to see if the migration has already been completed.
- * @returns {MigrationStatus | null} The migration status object, or null if not found.
+ * Check if migration has already been completed
  */
 function getMigrationStatus(): MigrationStatus | null {
   try {
@@ -43,9 +36,7 @@ function getMigrationStatus(): MigrationStatus | null {
 }
 
 /**
- * @function setMigrationStatus
- * @description Saves the migration status to `localStorage`.
- * @param {MigrationStatus} status - The status object to save.
+ * Set migration status
  */
 function setMigrationStatus(status: MigrationStatus): void {
   try {
@@ -59,10 +50,7 @@ function setMigrationStatus(status: MigrationStatus): void {
 }
 
 /**
- * @function getFromLocalStorage
- * @description A generic function to retrieve and parse data from `localStorage`.
- * @param {string} key - The key of the data to retrieve (without the prefix).
- * @returns {T[]} The parsed data, or an empty array if an error occurs.
+ * Get data from localStorage
  */
 function getFromLocalStorage<T>(key: string): T[] {
   try {
@@ -79,10 +67,7 @@ function getFromLocalStorage<T>(key: string): T[] {
 }
 
 /**
- * @async
- * @function migrateNotes
- * @description Migrates all notes from `localStorage` to the IndexedDB notes store.
- * @returns {Promise<{ count: number; errors: number }>} The number of migrated notes and any errors.
+ * Migrate notes from localStorage to IndexedDB
  */
 async function migrateNotes(): Promise<{ count: number; errors: number }> {
   const notes = getFromLocalStorage<Note>('notes')
@@ -107,10 +92,7 @@ async function migrateNotes(): Promise<{ count: number; errors: number }> {
 }
 
 /**
- * @async
- * @function migrateWaitlist
- * @description Migrates all waitlist entries from `localStorage` to the IndexedDB waitlist store.
- * @returns {Promise<{ count: number; errors: number }>} The number of migrated entries and any errors.
+ * Migrate waitlist entries from localStorage to IndexedDB
  */
 async function migrateWaitlist(): Promise<{ count: number; errors: number }> {
   const entries = getFromLocalStorage<WaitlistEntry>('waitlist')
@@ -135,10 +117,7 @@ async function migrateWaitlist(): Promise<{ count: number; errors: number }> {
 }
 
 /**
- * @async
- * @function migrateSyncMetadata
- * @description Migrates sync-related metadata from `localStorage` to the IndexedDB metadata store.
- * This includes sync status, conflicts, and cached cloud notes.
+ * Migrate sync metadata from localStorage to IndexedDB
  */
 async function migrateSyncMetadata(): Promise<void> {
   try {
@@ -175,11 +154,8 @@ async function migrateSyncMetadata(): Promise<void> {
 }
 
 /**
- * @async
- * @function migrateToIndexedDB
- * @description The main function that orchestrates the entire migration process.
- * It checks if a migration is needed, then migrates all data types and records the result.
- * @returns {Promise<{ success: boolean; notesCount: number; waitlistCount: number; errors: number }>} A summary of the migration result.
+ * Main migration function
+ * Migrates all data from localStorage to IndexedDB
  */
 export async function migrateToIndexedDB(): Promise<{
   success: boolean
@@ -187,36 +163,48 @@ export async function migrateToIndexedDB(): Promise<{
   waitlistCount: number
   errors: number
 }> {
+  // Check if migration already completed
   const status = getMigrationStatus()
   if (status?.completed) {
     monitoring.addBreadcrumb('Migration already completed', 'info', {
       timestamp: status.timestamp,
     })
-    return { success: true, notesCount: 0, waitlistCount: 0, errors: 0 }
+    return {
+      success: true,
+      notesCount: 0,
+      waitlistCount: 0,
+      errors: 0,
+    }
   }
 
   monitoring.addBreadcrumb('Starting data migration to IndexedDB', 'info')
 
   try {
+    // Initialize IndexedDB
     await indexedDB.init()
 
+    // Migrate notes
     const notesResult = await migrateNotes()
     monitoring.addBreadcrumb('Notes migrated', 'info', notesResult)
 
+    // Migrate waitlist
     const waitlistResult = await migrateWaitlist()
     monitoring.addBreadcrumb('Waitlist migrated', 'info', waitlistResult)
 
+    // Migrate sync metadata
     await migrateSyncMetadata()
     monitoring.addBreadcrumb('Sync metadata migrated', 'info')
 
     const totalErrors = notesResult.errors + waitlistResult.errors
+
+    // Mark migration as complete only if no errors
     if (totalErrors === 0) {
-      // If the migration is successful, mark it as completed.
       setMigrationStatus({
         completed: true,
         version: '1.0',
         timestamp: new Date().toISOString(),
       })
+
       monitoring.addBreadcrumb('Migration completed successfully', 'info', {
         notesCount: notesResult.count,
         waitlistCount: waitlistResult.count,
@@ -241,20 +229,25 @@ export async function migrateToIndexedDB(): Promise<{
       feature: 'data_migration',
       action: 'migrate_to_indexeddb',
     })
+
     setMigrationStatus({
       completed: false,
       version: '1.0',
       timestamp: new Date().toISOString(),
       error: err.message,
     })
-    return { success: false, notesCount: 0, waitlistCount: 0, errors: 1 }
+
+    return {
+      success: false,
+      notesCount: 0,
+      waitlistCount: 0,
+      errors: 1,
+    }
   }
 }
 
 /**
- * @function isIndexedDBAvailable
- * @description Checks if the IndexedDB API is available in the current browser environment.
- * @returns {boolean} True if IndexedDB is available.
+ * Check if IndexedDB is available in the browser
  */
 export function isIndexedDBAvailable(): boolean {
   try {
@@ -265,9 +258,7 @@ export function isIndexedDBAvailable(): boolean {
 }
 
 /**
- * @function resetMigrationStatus
- * @description A utility function for testing purposes to reset the migration status,
- * allowing the migration to be run again.
+ * Reset migration status (for testing)
  */
 export function resetMigrationStatus(): void {
   try {

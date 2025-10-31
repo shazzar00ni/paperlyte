@@ -105,6 +105,52 @@ GitHub Actions automatically run on push and PR:
 - **Security Audit**: Dependency vulnerability scanning
 - **Commit Message Linting**: Conventional Commits validation
 
+## Dependency Management
+
+Paperlyte uses automated dependency updates to maintain security and keep packages current:
+
+### Automated Updates
+
+- **Dependabot**: Configured in `.github/dependabot.yml` for weekly updates
+- **Security Updates**: Automatic security patches via GitHub Actions
+- **Grouped Updates**: Related packages updated together to reduce PR noise
+
+### Manual Dependency Commands
+
+```bash
+# Check for outdated packages
+npm run deps:outdated
+
+# Check for dependency updates
+npm run deps:check
+
+# Update dependencies manually
+npm run deps:update
+
+# Run security audit
+npm run deps:audit
+
+# Validate dependency updates
+npm run deps:test-updates
+
+# Full validation pipeline
+npm run deps:validate
+```
+
+### Reviewing Dependency PRs
+
+When Dependabot creates dependency update PRs:
+
+1. **Automated Checks**: CI pipeline runs automatically
+2. **Manual Validation**: Run `npm run deps:test-updates` locally
+3. **Review Changes**: Check changelogs for breaking changes
+4. **Merge Strategy**:
+   - Security updates: Merge immediately after basic testing
+   - Minor updates: Merge weekly during maintenance window
+   - Major updates: Review carefully and test thoroughly
+
+📖 **Full Documentation**: See [dependency-automation.md](dependency-automation.md) for complete setup details.
+
 ## Environment Setup
 
 ### VS Code (Recommended)

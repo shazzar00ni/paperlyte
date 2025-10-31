@@ -1,48 +1,74 @@
-import React, { useState, useEffect } from 'react'
-import { Save, Tag, Search, PlusCircle, Trash2 } from 'lucide-react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import {
+  Save,
+  Tag,
+  Search,
+  PlusCircle,
+  Trash2,
+  Maximize2,
+  X,
+} from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
 import ConfirmationModal from '../components/ConfirmationModal'
+import TagModal from '../components/TagModal'
 import type { Note } from '../types'
 
-/**
- * @component NoteEditor
- * @description The main interface for creating, editing, and managing notes.
- * It features a sidebar for note navigation and a rich text editor for content.
- * @returns {React.ReactElement} The rendered note editor component.
- */
 const NoteEditor: React.FC = () => {
-  // State for the list of all notes.
   const [notes, setNotes] = useState<Note[]>([])
-  // State for the currently selected note.
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
-  // State for the search input.
   const [searchQuery, setSearchQuery] = useState('')
-  // State to indicate loading, e.g., during a save operation.
   const [isLoading, setIsLoading] = useState(false)
-  // State to control the delete confirmation modal.
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  // State to hold the note that is about to be deleted.
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
-  // State to indicate that a delete operation is in progress.
   const [isDeleting, setIsDeleting] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false)
+  const focusModeRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Effect to load notes when the component mounts.
   useEffect(() => {
+    // Track editor page view
     trackFeatureUsage('note_editor', 'view')
     monitoring.addBreadcrumb('Note editor loaded', 'navigation')
+
+    // Load notes from localStorage
     loadNotes()
   }, [])
 
-  /**
-   * @function loadNotes
-   * @description Fetches all notes from the data service and populates the state.
-   * It sets the first note as the current note if available.
-   */
+  // Focus Mode event handlers
+  useEffect(() => {
+    if (!focusMode) return
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        exitFocusMode()
+      }
+    }
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        focusModeRef.current &&
+        !focusModeRef.current.contains(e.target as Node)
+      ) {
+        exitFocusMode()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscapeKey)
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [focusMode])
+
   const loadNotes = async () => {
     try {
+      // Use data service for persistence (currently localStorage, will be API in Q4 2025)
       const savedNotes = await dataService.getNotes()
       setNotes(savedNotes)
       if (savedNotes.length > 0) {
@@ -56,12 +82,7 @@ const NoteEditor: React.FC = () => {
     }
   }
 
-  /**
-   * @function createNewNote
-   * @description Creates a new, empty note and saves it.
-   * The new note is then set as the current note.
-   */
-  const createNewNote = async () => {
+  const createNewNote = useCallback(async () => {
     const newNote: Note = {
       id: crypto.randomUUID(),
       title: 'Untitled Note',
@@ -71,11 +92,13 @@ const NoteEditor: React.FC = () => {
       updatedAt: new Date().toISOString(),
     }
 
+    // Save the new note using data service
     const success = await dataService.saveNote(newNote)
     if (success) {
       const updatedNotes = [newNote, ...notes]
       setNotes(updatedNotes)
       setCurrentNote(newNote)
+
       trackNoteEvent('create', { noteId: newNote.id })
     } else {
       monitoring.logError(new Error('Failed to create new note'), {
@@ -83,13 +106,8 @@ const NoteEditor: React.FC = () => {
         action: 'create_note_failed',
       })
     }
-  }
+  }, [notes])
 
-  /**
-   * @function updateCurrentNote
-   * @description Updates the properties of the current note and saves the changes.
-   * @param {Partial<Note>} updates - An object with the note properties to update.
-   */
   const updateCurrentNote = async (updates: Partial<Note>) => {
     if (!currentNote) return
 
@@ -99,6 +117,7 @@ const NoteEditor: React.FC = () => {
       updatedAt: new Date().toISOString(),
     }
 
+    // Save individual note using data service
     const success = await dataService.saveNote(updatedNote)
     if (success) {
       const updatedNotes = notes.map(note =>
@@ -106,6 +125,7 @@ const NoteEditor: React.FC = () => {
       )
       setNotes(updatedNotes)
       setCurrentNote(updatedNote)
+
       trackNoteEvent('edit', {
         noteId: currentNote.id,
         field: Object.keys(updates)[0],
@@ -119,17 +139,14 @@ const NoteEditor: React.FC = () => {
     }
   }
 
-  /**
-   * @function saveCurrentNote
-   * @description A placeholder for a manual save action.
-   * Simulates a save delay and logs the event.
-   */
-  const saveCurrentNote = async () => {
+  const saveCurrentNote = useCallback(async () => {
     if (!currentNote) return
 
     setIsLoading(true)
     try {
+      // Simulate save delay
       await new Promise(resolve => setTimeout(resolve, 500))
+
       trackNoteEvent('save', { noteId: currentNote.id })
       monitoring.addBreadcrumb('Note saved', 'user_action', {
         noteId: currentNote.id,
@@ -143,25 +160,64 @@ const NoteEditor: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentNote])
 
-  /**
-   * @function handleDeleteNote
-   * @description Initiates the note deletion process by opening a confirmation modal.
-   * @param {Note} note - The note to be deleted.
-   * @param {React.MouseEvent} e - The mouse event, used to stop propagation.
-   */
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in an input/textarea
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        // Allow Ctrl+S and Ctrl+F even in contenteditable
+        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'f')) {
+          // Continue to handle these shortcuts
+        } else {
+          return
+        }
+      }
+
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        saveCurrentNote()
+      }
+
+      // Ctrl/Cmd + F to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+
+      // Ctrl/Cmd + N to create new note
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault()
+        createNewNote()
+      }
+
+      // Ctrl/Cmd + T to open tag modal
+      if ((e.ctrlKey || e.metaKey) && e.key === 't' && currentNote) {
+        e.preventDefault()
+        setIsTagModalOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyboardShortcuts)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts)
+    }
+  }, [currentNote, createNewNote, saveCurrentNote])
+
   const handleDeleteNote = (note: Note, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevents the note from being selected when clicking the delete button.
+    e.stopPropagation() // Prevent note selection when clicking delete
     setNoteToDelete(note)
     setIsDeleteModalOpen(true)
   }
 
-  /**
-   * @function confirmDeleteNote
-   * @description Deletes the selected note after confirmation.
-   * It updates the notes list and selects a new current note.
-   */
   const confirmDeleteNote = async () => {
     if (!noteToDelete) return
 
@@ -172,7 +228,7 @@ const NoteEditor: React.FC = () => {
         const updatedNotes = notes.filter(note => note.id !== noteToDelete.id)
         setNotes(updatedNotes)
 
-        // If the deleted note was the current one, select the next available note.
+        // If we deleted the current note, select the first remaining note or clear selection
         if (currentNote?.id === noteToDelete.id) {
           setCurrentNote(updatedNotes.length > 0 ? updatedNotes[0] : null)
         }
@@ -182,7 +238,7 @@ const NoteEditor: React.FC = () => {
           noteId: noteToDelete.id,
         })
 
-        // Reset the delete modal state.
+        // Close modal and reset state
         setIsDeleteModalOpen(false)
         setNoteToDelete(null)
       } else {
@@ -203,16 +259,34 @@ const NoteEditor: React.FC = () => {
     }
   }
 
-  /**
-   * @function cancelDeleteNote
-   * @description Closes the delete confirmation modal without deleting the note.
-   */
   const cancelDeleteNote = () => {
     setIsDeleteModalOpen(false)
     setNoteToDelete(null)
   }
 
-  // Filter the notes based on the search query.
+  const handleSaveTags = async (tags: string[]) => {
+    if (!currentNote) return
+
+    await updateCurrentNote({ tags })
+    trackNoteEvent('edit', {
+      noteId: currentNote.id,
+      field: 'tags',
+      tagCount: tags.length,
+    })
+  }
+
+  const enterFocusMode = () => {
+    setFocusMode(true)
+    trackFeatureUsage('focus_mode', 'enter')
+    monitoring.addBreadcrumb('Focus Mode entered', 'user_action')
+  }
+
+  const exitFocusMode = () => {
+    setFocusMode(false)
+    trackFeatureUsage('focus_mode', 'exit')
+    monitoring.addBreadcrumb('Focus Mode exited', 'user_action')
+  }
+
   const filteredNotes = notes.filter(
     note =>
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -224,9 +298,9 @@ const NoteEditor: React.FC = () => {
 
   return (
     <div className='h-screen flex bg-background'>
-      {/* Sidebar for note navigation and creation. */}
+      {/* Sidebar */}
       <div className='w-80 bg-white border-r border-gray-200 flex flex-col'>
-        {/* Search Input */}
+        {/* Search */}
         <div className='p-4 border-b border-gray-200'>
           <div className='relative'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
@@ -234,6 +308,7 @@ const NoteEditor: React.FC = () => {
               type='text'
               placeholder='Search notes...'
               value={searchQuery}
+              ref={searchInputRef}
               onChange={e => {
                 setSearchQuery(e.target.value)
                 trackFeatureUsage('search', 'query', { query: e.target.value })
@@ -254,7 +329,7 @@ const NoteEditor: React.FC = () => {
           </button>
         </div>
 
-        {/* List of Notes */}
+        {/* Notes List */}
         <div className='flex-1 overflow-y-auto'>
           {filteredNotes.map(note => (
             <div
@@ -295,7 +370,6 @@ const NoteEditor: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                {/* Delete button, shown on hover. */}
                 <button
                   onClick={e => handleDeleteNote(note, e)}
                   disabled={isDeleteModalOpen || isDeleting}
@@ -311,11 +385,11 @@ const NoteEditor: React.FC = () => {
         </div>
       </div>
 
-      {/* Main editor area. */}
+      {/* Editor */}
       <div className='flex-1 flex flex-col'>
         {currentNote ? (
           <>
-            {/* Header with note title and actions. */}
+            {/* Editor Header */}
             <div className='bg-white border-b border-gray-200 p-4 flex items-center justify-between'>
               <input
                 type='text'
@@ -325,9 +399,26 @@ const NoteEditor: React.FC = () => {
                 placeholder='Note title...'
               />
               <div className='flex items-center space-x-2'>
-                <button className='btn-ghost btn-sm flex items-center space-x-1'>
+                <button
+                  onClick={() => setIsTagModalOpen(true)}
+                  className='btn-ghost btn-sm flex items-center space-x-1'
+                  title='Manage Tags (Ctrl+T)'
+                >
                   <Tag className='h-4 w-4' />
                   <span>Tags</span>
+                  {currentNote.tags.length > 0 && (
+                    <span className='ml-1 px-2 py-0.5 bg-primary text-white text-xs rounded-full'>
+                      {currentNote.tags.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={enterFocusMode}
+                  className='btn-ghost btn-sm flex items-center space-x-1'
+                  title='Enter Focus Mode'
+                >
+                  <Maximize2 className='h-4 w-4' />
+                  <span>Focus</span>
                 </button>
                 <button
                   onClick={saveCurrentNote}
@@ -340,7 +431,7 @@ const NoteEditor: React.FC = () => {
               </div>
             </div>
 
-            {/* Rich text editor for the note content. */}
+            {/* Editor Content */}
             <div className='flex-1'>
               <RichTextEditor
                 content={currentNote.content}
@@ -352,7 +443,6 @@ const NoteEditor: React.FC = () => {
             </div>
           </>
         ) : (
-          // Placeholder screen when no note is selected.
           <div className='flex-1 flex items-center justify-center text-gray-500'>
             <div className='text-center'>
               <PlusCircle className='h-12 w-12 mx-auto mb-4 text-gray-300' />
@@ -363,7 +453,7 @@ const NoteEditor: React.FC = () => {
         )}
       </div>
 
-      {/* Modal for confirming note deletion. */}
+      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={cancelDeleteNote}
@@ -375,6 +465,71 @@ const NoteEditor: React.FC = () => {
         onConfirm={confirmDeleteNote}
         isLoading={isDeleting}
       />
+
+      {/* Tag Management Modal */}
+      {currentNote && (
+        <TagModal
+          isOpen={isTagModalOpen}
+          onClose={() => setIsTagModalOpen(false)}
+          tags={currentNote.tags}
+          onSave={handleSaveTags}
+        />
+      )}
+
+      {/* Focus Mode Overlay */}
+      {focusMode && currentNote && (
+        <div className='fixed inset-0 bg-background z-50 flex items-center justify-center p-4'>
+          <div
+            ref={focusModeRef}
+            className='w-full max-w-4xl h-full flex flex-col bg-white rounded-lg shadow-lg p-8'
+          >
+            {/* Focus Mode Header */}
+            <div className='flex items-center justify-between mb-6'>
+              <input
+                type='text'
+                value={currentNote.title}
+                onChange={e => updateCurrentNote({ title: e.target.value })}
+                className='text-3xl font-bold text-dark bg-transparent border-none outline-none flex-1'
+                placeholder='Note title...'
+              />
+              <button
+                onClick={exitFocusMode}
+                className='ml-4 p-2 text-gray-400 hover:text-dark hover:bg-gray-100 rounded-full transition-colors'
+                title='Exit Focus Mode (ESC)'
+                aria-label='Exit Focus Mode'
+              >
+                <X className='h-6 w-6' />
+              </button>
+            </div>
+
+            {/* Focus Mode Content */}
+            <div className='flex-1 overflow-hidden'>
+              <RichTextEditor
+                content={currentNote.content}
+                onChange={content => updateCurrentNote({ content })}
+                placeholder='Start writing your thoughts...'
+                className='h-full text-lg'
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Focus Mode Footer - Save Status */}
+            <div className='mt-4 flex items-center justify-center text-sm text-gray-500'>
+              {isLoading ? (
+                <span className='flex items-center space-x-2'>
+                  <Save className='h-4 w-4 animate-pulse' />
+                  <span>Saving...</span>
+                </span>
+              ) : (
+                <span className='flex items-center space-x-2'>
+                  <Save className='h-4 w-4' />
+                  <span>Auto-saved</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,24 +1,12 @@
+import { config } from '@/config/env'
 import posthog from 'posthog-js'
 
-// Retrieve analytics configuration from environment variables.
-const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY
-const POSTHOG_HOST =
-  import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com'
-
-/**
- * @interface AnalyticsEvent
- * @description Defines the structure for a generic analytics event.
- */
 export interface AnalyticsEvent {
   event: string
   properties?: Record<string, any>
   userId?: string
 }
 
-/**
- * @interface UserProperties
- * @description Defines the structure for user properties sent to the analytics service.
- */
 export interface UserProperties {
   userId?: string
   email?: string
@@ -28,40 +16,35 @@ export interface UserProperties {
   [key: string]: any
 }
 
-/**
- * @class Analytics
- * @description A wrapper around the PostHog analytics library to provide a consistent,
- * type-safe interface for tracking events and user data. It supports enabling/disabling
- * tracking for privacy compliance and provides convenience methods for common event types.
- */
 class Analytics {
   private isInitialized = false
   private isEnabled = true
 
   /**
-   * @method init
-   * @description Initializes the PostHog client. This should be called once when the application starts.
-   * If the PostHog API key is not provided, analytics will be disabled.
+   * Initialize PostHog analytics
    */
   init(): void {
-    if (this.isInitialized || !POSTHOG_API_KEY) {
+    if (this.isInitialized || !config.posthog.apiKey) {
       console.warn('Analytics: PostHog not initialized - missing API key')
       this.isEnabled = false
       return
     }
 
     try {
-      posthog.init(POSTHOG_API_KEY, {
-        api_host: POSTHOG_HOST,
-        // Configuration options focused on user privacy.
+      posthog.init(config.posthog.apiKey, {
+        api_host: config.posthog.host,
+        // Privacy-focused configuration
         capture_pageview: true,
         capture_pageleave: true,
         loaded: posthog => {
           if (process.env.NODE_ENV === 'development') posthog.debug()
         },
-        respect_dnt: true, // Respect Do Not Track browser settings.
+        // Respect user privacy
+        respect_dnt: true,
         disable_session_recording: false,
         disable_surveys: false,
+        // Performance optimizations
+        // batch_flush_interval_ms: 5000, // Removed as it's not in the current PostHog types
       })
 
       this.isInitialized = true
@@ -73,10 +56,7 @@ class Analytics {
   }
 
   /**
-   * @method track
-   * @description Tracks a custom event with optional properties.
-   * @param {string} event - The name of the event to track.
-   * @param {Record<string, any>} [properties] - Additional data to associate with the event.
+   * Track a custom event
    */
   track(event: string, properties?: Record<string, any>): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -93,10 +73,7 @@ class Analytics {
   }
 
   /**
-   * @method identify
-   * @description Associates a user with a unique ID and sets their properties.
-   * @param {string} userId - The unique identifier for the user.
-   * @param {UserProperties} [properties] - The user's properties.
+   * Identify a user
    */
   identify(userId: string, properties?: UserProperties): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -109,9 +86,7 @@ class Analytics {
   }
 
   /**
-   * @method setUserProperties
-   * @description Updates properties for the currently identified user.
-   * @param {UserProperties} properties - The properties to set or update.
+   * Set user properties
    */
   setUserProperties(properties: UserProperties): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -124,9 +99,7 @@ class Analytics {
   }
 
   /**
-   * @method pageView
-   * @description Tracks a page view event.
-   * @param {string} [page] - The URL of the page being viewed. Defaults to the current URL.
+   * Track page view
    */
   pageView(page?: string): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -142,9 +115,7 @@ class Analytics {
   }
 
   /**
-   * @method reset
-   * @description Resets the analytics session, typically called on user logout.
-   * This clears the user's identity and properties from the client.
+   * Reset user session (on logout)
    */
   reset(): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -157,11 +128,7 @@ class Analytics {
   }
 
   /**
-   * @method trackFeature
-   * @description A convenience method for tracking feature-specific events.
-   * @param {string} feature - The name of the feature.
-   * @param {string} action - The action taken within the feature.
-   * @param {Record<string, any>} [properties] - Additional properties.
+   * Track feature usage
    */
   trackFeature(
     feature: string,
@@ -176,11 +143,7 @@ class Analytics {
   }
 
   /**
-   * @method trackPerformance
-   * @description A convenience method for tracking performance metrics.
-   * @param {string} metric - The name of the performance metric (e.g., 'load_time').
-   * @param {number} value - The value of the metric.
-   * @param {Record<string, any>} [properties] - Additional context.
+   * Track performance metrics
    */
   trackPerformance(
     metric: string,
@@ -195,8 +158,7 @@ class Analytics {
   }
 
   /**
-   * @method disable
-   * @description Disables analytics tracking and opts the user out.
+   * Disable analytics (for privacy compliance)
    */
   disable(): void {
     this.isEnabled = false
@@ -206,8 +168,7 @@ class Analytics {
   }
 
   /**
-   * @method enable
-   * @description Enables analytics tracking and opts the user in.
+   * Enable analytics
    */
   enable(): void {
     this.isEnabled = true
@@ -217,12 +178,10 @@ class Analytics {
   }
 }
 
-// Create a singleton instance of the Analytics class.
+// Create singleton instance
 export const analytics = new Analytics()
 
-// --- Convenience Functions ---
-// These functions provide an easy way to call the analytics methods from anywhere in the app.
-
+// Convenience functions for common tracking events
 export const trackEvent = (event: string, properties?: Record<string, any>) =>
   analytics.track(event, properties)
 
@@ -239,9 +198,7 @@ export const trackUserAction = (
   properties?: Record<string, any>
 ) => analytics.track(`user_${action}`, properties)
 
-// --- Specific Event Tracking Functions ---
-// These functions are tailored for common, recurring events in the application.
-
+// Specific event tracking functions
 export const trackNoteEvent = (
   action: 'create' | 'edit' | 'delete' | 'save',
   properties?: Record<string, any>
