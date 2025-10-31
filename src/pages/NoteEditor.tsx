@@ -16,7 +16,21 @@ import ConfirmationModal from '../components/ConfirmationModal'
 import TagModal from '../components/TagModal'
 import type { Note } from '../types'
 
+/**
+ * @component NoteEditor
+ * @description Full-featured note editing interface for Paperlyte MVP
+ * Features:
+ * - Rich text editing with formatting toolbar
+ * - Note list with search functionality
+ * - Focus mode for distraction-free writing
+ * - Tag management via modal
+ * - Auto-save functionality
+ * - Delete confirmation modal
+ * - Keyboard shortcuts (Ctrl+K for search, ESC to exit focus mode)
+ * @returns {React.ReactElement} Note editor with sidebar and toolbar
+ */
 const NoteEditor: React.FC = () => {
+  // State management for notes and UI
   const [notes, setNotes] = useState<Note[]>([])
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -29,16 +43,17 @@ const NoteEditor: React.FC = () => {
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  // Initialize editor and load saved notes
   useEffect(() => {
-    // Track editor page view
     trackFeatureUsage('note_editor', 'view')
     monitoring.addBreadcrumb('Note editor loaded', 'navigation')
-
-    // Load notes from localStorage
     loadNotes()
   }, [])
 
-  // Focus Mode event handlers
+  /**
+   * Focus Mode event handlers
+   * Handles ESC key and click-outside to exit focus mode
+   */
   useEffect(() => {
     if (!focusMode) return
 
@@ -66,6 +81,11 @@ const NoteEditor: React.FC = () => {
     }
   }, [focusMode])
 
+  /**
+   * @function loadNotes
+   * @description Load all notes from data service (currently IndexedDB)
+   * Sets first note as active if notes exist
+   */
   const loadNotes = async () => {
     try {
       // Use data service for persistence (currently localStorage, will be API in Q4 2025)
@@ -82,6 +102,11 @@ const NoteEditor: React.FC = () => {
     }
   }
 
+  /**
+   * @function createNewNote
+   * @description Creates a new untitled note and sets it as current
+   * Tracks creation event for analytics
+   */
   const createNewNote = useCallback(async () => {
     const newNote: Note = {
       id: crypto.randomUUID(),

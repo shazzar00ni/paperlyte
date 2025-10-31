@@ -14,6 +14,17 @@ import { dataService } from '../services/dataService'
 import { trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 
+/**
+ * @interface AnalyticsData
+ * @description Dashboard analytics data structure
+ * @property {number} totalUsers - Total registered users
+ * @property {number} totalNotes - Total notes created
+ * @property {number} activeUsers - Currently active users
+ * @property {number} errorCount - Number of errors in time range
+ * @property {Object} performanceMetrics - App performance metrics
+ * @property {Array} topFeatures - Most used features with trends
+ * @property {Array} errorReports - Recent error reports
+ */
 interface AnalyticsData {
   totalUsers: number
   totalNotes: number
@@ -37,17 +48,38 @@ interface AnalyticsData {
   }>
 }
 
+/**
+ * @component AdminDashboard
+ * @description Administrative dashboard for monitoring app health and usage
+ * Features:
+ * - User and note statistics
+ * - Performance metrics (load time, memory usage)
+ * - Feature usage tracking with trends
+ * - Error monitoring and reporting
+ * - Time range filtering (7d, 30d, 90d)
+ * - Waitlist export functionality
+ * 
+ * Note: Currently uses mock data for most metrics (MVP)
+ * Future: Will integrate with PostHog and Sentry APIs
+ * @returns {React.ReactElement} Admin dashboard with metrics cards
+ */
 const AdminDashboard: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('7d')
 
+  // Load dashboard data when time range changes
   useEffect(() => {
     trackFeatureUsage('admin_dashboard', 'view')
     monitoring.addBreadcrumb('Admin dashboard loaded', 'navigation')
     loadAnalyticsData()
   }, [timeRange])
 
+  /**
+   * @function loadAnalyticsData
+   * @description Fetches analytics data from storage and simulates API metrics
+   * Combines real storage data with mock analytics for MVP
+   */
   const loadAnalyticsData = async () => {
     setIsLoading(true)
     try {

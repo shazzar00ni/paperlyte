@@ -14,6 +14,15 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { monitoring } from '../utils/monitoring'
 
+/**
+ * @interface RichTextEditorProps
+ * @description Props for the RichTextEditor component
+ * @property {string} content - The initial HTML content of the editor
+ * @property {(content: string) => void} onChange - Callback triggered when editor content changes
+ * @property {string} [placeholder] - Optional placeholder text displayed when editor is empty
+ * @property {string} [className] - Optional CSS class name for custom styling
+ * @property {boolean} [disabled] - Optional flag to disable editing
+ */
 interface RichTextEditorProps {
   content: string
   onChange: (content: string) => void
@@ -23,8 +32,18 @@ interface RichTextEditorProps {
 }
 
 /**
- * Lightning-fast rich text editor using contenteditable
- * Supports bold, italic, and list formatting with keyboard shortcuts
+ * @component RichTextEditor
+ * @description Lightning-fast rich text editor built with contenteditable API.
+ * Features include:
+ * - Text formatting (bold, italic, underline)
+ * - Heading levels (H1, H2, H3)
+ * - Lists (ordered and unordered)
+ * - Undo/Redo functionality with 50-entry history
+ * - Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+Z, etc.)
+ * - XSS protection via DOMPurify sanitization
+ * - Smart paste handling to preserve plain text
+ * @param {RichTextEditorProps} props - Component props
+ * @returns {React.ReactElement} Rendered rich text editor with toolbar
  */
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
   content,
@@ -36,13 +55,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null)
   const isUpdatingRef = useRef(false)
 
-  // Undo/Redo history
+  // Undo/Redo history management
+  // historyRef stores up to 50 content snapshots for undo/redo
+  // historyIndexRef tracks current position in history
   const historyRef = useRef<string[]>([])
   const historyIndexRef = useRef<number>(-1)
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
-  // Update editor content when prop changes (but not during user input)
+  /**
+   * Synchronize editor content with external prop changes
+   * Only updates when user is not actively typing (isUpdatingRef check)
+   * Sanitizes content to prevent XSS attacks
+   * Initializes history on first render
+   */
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       const currentContent = editorRef.current.innerHTML
@@ -78,13 +104,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [content])
 
-  // Update undo/redo button states
+  /**
+   * Update undo/redo button states based on history position
+   * Enables/disables buttons when history changes
+   */
   useEffect(() => {
     setCanUndo(historyIndexRef.current > 0)
     setCanRedo(historyIndexRef.current < historyRef.current.length - 1)
   }, [historyRef.current.length])
 
-  // Handle content changes with sanitization
+  /**
+   * @function handleInput
+   * @description Handles the onInput event from the contenteditable div
+   * Sanitizes content, manages undo/redo history, and triggers onChange callback
+   * Limits history to 50 entries to prevent memory issues
+   * @throws Logs errors to monitoring service if sanitization fails
+   */
   const handleInput = useCallback(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       isUpdatingRef.current = true
@@ -153,7 +188,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange])
 
-  // Undo/Redo functions
+  /**
+   * @function undo
+   * @description Reverts editor content to previous state in history
+   * Updates editor DOM and triggers onChange with historical content
+   */
   const undo = useCallback(() => {
     if (historyIndexRef.current > 0 && editorRef.current) {
       historyIndexRef.current--
@@ -165,6 +204,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange])
 
+  /**
+   * @function redo
+   * @description Re-applies editor content to next state in history
+   * Updates editor DOM and triggers onChange with future content
+   */
   const redo = useCallback(() => {
     if (
       historyIndexRef.current < historyRef.current.length - 1 &&
@@ -179,7 +223,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange])
 
-  // Helper to wrap selection with a tag
+  /**
+   * @function wrapSelectionWithTag
+   * @description Wraps current text selection with specified HTML tag
+   * Used for applying inline formatting (bold, italic, underline)
+   * @param {string} tag - HTML tag name to wrap selection with (e.g., 'b', 'i', 'u')
+   */
   const wrapSelectionWithTag = (tag: string) => {
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) return
@@ -196,7 +245,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     selection.addRange(newRange)
   }
 
-  // Format text using Selection API
+  /**
+   * @function formatText
+   * @description Applies formatting to selected text or current block
+   * Handles inline formatting (bold, italic, underline), headings, and lists
+   * Uses Selection API for precise cursor manipulation
+   * @param {string} command - Formatting command (e.g., 'bold', 'h1', 'insertUnorderedList')
+   * @param {string} [value] - Optional value for certain commands (e.g., 'div' for formatBlock)
+   */
   const formatText = useCallback(
     (command: string, value?: string) => {
       if (disabled) return
@@ -375,7 +431,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     [disabled, handleInput]
   )
 
-  // Handle keyboard shortcuts
+  /**
+   * @function handleKeyDown
+   * @description Handles keyboard shortcuts for formatting and undo/redo
+   * Shortcuts:
+   * - Ctrl+B: Bold
+   * - Ctrl+I: Italic
+   * - Ctrl+U: Underline
+   * - Ctrl+1/2/3: Headings
+   * - Ctrl+Z: Undo
+   * - Ctrl+Shift+Z or Ctrl+Y: Redo
+   * - Enter in empty list: Exit list
+   * @param {React.KeyboardEvent} e - Keyboard event
+   */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (disabled) return
@@ -441,7 +509,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     [disabled, formatText, undo, redo]
   )
 
-  // Handle paste to clean up formatting
+  /**
+   * @function handlePaste
+   * @description Handles paste events to strip rich formatting
+   * Only plain text is preserved to maintain editor consistency
+   * @param {React.ClipboardEvent} e - Clipboard event
+   */
   const handlePaste = useCallback(
     (e: React.ClipboardEvent) => {
       if (disabled) return
@@ -465,7 +538,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     [disabled, handleInput]
   )
 
-  // Toolbar button states
+  /**
+   * @function isActive
+   * @description Determines if a formatting command is active at current cursor position
+   * Used to highlight toolbar buttons when formatting is applied
+   * @param {string} command - Formatting command to check
+   * @returns {boolean} True if formatting is active at cursor position
+   */
   const isActive = useCallback(
     (command: string): boolean => {
       if (disabled) return false

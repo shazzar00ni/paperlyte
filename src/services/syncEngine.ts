@@ -33,7 +33,12 @@ class SyncEngine {
   }
 
   /**
-   * Simulate cloud storage for MVP (will be replaced with API calls)
+   * @function getCloudNotes
+   * @description Simulates retrieving notes from cloud storage (MVP implementation)
+   * Currently uses IndexedDB as "cloud" storage for offline testing
+   * @returns {Promise<Note[]>} Array of notes from simulated cloud
+   * @private
+   * @future Will be replaced with actual API calls to backend
    */
   private async getCloudNotes(): Promise<Note[]> {
     try {
@@ -58,6 +63,15 @@ class SyncEngine {
     }
   }
 
+  /**
+   * @function saveToCloud
+   * @description Simulates saving notes to cloud storage (MVP implementation)
+   * Handles storage quota errors gracefully
+   * @param {Note[]} notes - Notes to save to cloud
+   * @returns {Promise<boolean>} True if saved successfully
+   * @private
+   * @future Will be replaced with actual API POST requests
+   */
   private async saveToCloud(notes: Note[]): Promise<boolean> {
     try {
       if (this.useIndexedDB) {

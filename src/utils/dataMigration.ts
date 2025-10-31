@@ -12,6 +12,14 @@ import type { Note, WaitlistEntry } from '../types'
 const MIGRATION_KEY = 'paperlyte_migration_status'
 const STORAGE_PREFIX = 'paperlyte_'
 
+/**
+ * @interface MigrationStatus
+ * @description Tracks data migration from localStorage to IndexedDB
+ * @property {boolean} completed - Whether migration completed successfully
+ * @property {string} version - Migration version identifier
+ * @property {string} timestamp - ISO timestamp of migration completion
+ * @property {string} [error] - Error message if migration failed
+ */
 export interface MigrationStatus {
   completed: boolean
   version: string
@@ -20,7 +28,9 @@ export interface MigrationStatus {
 }
 
 /**
- * Check if migration has already been completed
+ * @function getMigrationStatus
+ * @description Retrieves current migration status from localStorage
+ * @returns {MigrationStatus | null} Migration status or null if not started
  */
 function getMigrationStatus(): MigrationStatus | null {
   try {
@@ -36,7 +46,10 @@ function getMigrationStatus(): MigrationStatus | null {
 }
 
 /**
- * Set migration status
+ * @function setMigrationStatus
+ * @description Persists migration status to localStorage
+ * @param {MigrationStatus} status - Migration status to save
+ * @returns {void}
  */
 function setMigrationStatus(status: MigrationStatus): void {
   try {
@@ -50,7 +63,11 @@ function setMigrationStatus(status: MigrationStatus): void {
 }
 
 /**
- * Get data from localStorage
+ * @function getFromLocalStorage
+ * @description Safely retrieves and parses data from localStorage
+ * @template T - Type of data to retrieve
+ * @param {string} key - Storage key (will be prefixed with 'paperlyte_')
+ * @returns {T[]} Array of data or empty array on error
  */
 function getFromLocalStorage<T>(key: string): T[] {
   try {
@@ -67,7 +84,9 @@ function getFromLocalStorage<T>(key: string): T[] {
 }
 
 /**
- * Migrate notes from localStorage to IndexedDB
+ * @function migrateNotes
+ * @description Migrates all notes from localStorage to IndexedDB
+ * @returns {Promise<{count: number, errors: number}>} Migration statistics
  */
 async function migrateNotes(): Promise<{ count: number; errors: number }> {
   const notes = getFromLocalStorage<Note>('notes')

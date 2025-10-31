@@ -1,12 +1,28 @@
 import { config } from '@/config/env'
 import posthog from 'posthog-js'
 
+/**
+ * @interface AnalyticsEvent
+ * @description Structure for custom analytics events
+ * @property {string} event - Event name to track
+ * @property {Record<string, any>} [properties] - Optional event properties
+ * @property {string} [userId] - Optional user identifier
+ */
 export interface AnalyticsEvent {
   event: string
   properties?: Record<string, any>
   userId?: string
 }
 
+/**
+ * @interface UserProperties
+ * @description User properties for analytics identification
+ * @property {string} [userId] - Unique user identifier
+ * @property {string} [email] - User email address
+ * @property {string} [name] - User display name
+ * @property {'free' | 'premium'} [plan] - User subscription plan
+ * @property {string} [signupDate] - ISO date string of user signup
+ */
 export interface UserProperties {
   userId?: string
   email?: string
@@ -16,12 +32,25 @@ export interface UserProperties {
   [key: string]: any
 }
 
+/**
+ * @class Analytics
+ * @description Privacy-focused analytics service using PostHog
+ * Features:
+ * - Event tracking for user interactions
+ * - User identification and property management
+ * - Respects Do Not Track browser setting
+ * - Session recording and surveys (configurable)
+ * - Page view and page leave tracking
+ */
 class Analytics {
   private isInitialized = false
   private isEnabled = true
 
   /**
-   * Initialize PostHog analytics
+   * @function init
+   * @description Initialize PostHog analytics with privacy-focused configuration
+   * Respects DNT header and provides development debugging
+   * @returns {void}
    */
   init(): void {
     if (this.isInitialized || !config.posthog.apiKey) {
@@ -56,7 +85,12 @@ class Analytics {
   }
 
   /**
-   * Track a custom event
+   * @function track
+   * @description Track a custom analytics event with optional properties
+   * Automatically adds timestamp and source metadata
+   * @param {string} event - Event name (e.g., 'note_created', 'waitlist_signup')
+   * @param {Record<string, any>} [properties] - Optional event properties
+   * @returns {void}
    */
   track(event: string, properties?: Record<string, any>): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -73,7 +107,12 @@ class Analytics {
   }
 
   /**
-   * Identify a user
+   * @function identify
+   * @description Identify a user for analytics tracking
+   * Associates future events with this user
+   * @param {string} userId - Unique user identifier
+   * @param {UserProperties} [properties] - Optional user properties
+   * @returns {void}
    */
   identify(userId: string, properties?: UserProperties): void {
     if (!this.isEnabled || !this.isInitialized) return
@@ -86,7 +125,10 @@ class Analytics {
   }
 
   /**
-   * Set user properties
+   * @function setUserProperties
+   * @description Update properties for the identified user
+   * @param {UserProperties} properties - User properties to set or update
+   * @returns {void}
    */
   setUserProperties(properties: UserProperties): void {
     if (!this.isEnabled || !this.isInitialized) return

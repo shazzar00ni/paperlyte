@@ -32,7 +32,12 @@ import { monitoring } from '../utils/monitoring'
  * - POST /api/auth/oauth/apple
  */
 
-// Rate limiting configuration
+/**
+ * @interface RateLimitEntry
+ * @description Tracks rate limiting attempts for authentication operations
+ * @property {number} count - Number of authentication attempts made
+ * @property {number} resetAt - Timestamp when rate limit resets (milliseconds since epoch)
+ */
 interface RateLimitEntry {
   count: number
   resetAt: number
@@ -53,7 +58,12 @@ class AuthService {
   private readonly REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000 // 7 days
 
   /**
-   * Storage helpers
+   * @function getFromStorage
+   * @description Retrieves and parses data from localStorage
+   * @template T - Type of data to retrieve
+   * @param {string} key - localStorage key
+   * @returns {T | null} Parsed data or null if not found/error
+   * @private
    */
   private getFromStorage<T>(key: string): T | null {
     try {
@@ -69,6 +79,15 @@ class AuthService {
     }
   }
 
+  /**
+   * @function saveToStorage
+   * @description Serializes and saves data to localStorage
+   * @template T - Type of data to save
+   * @param {string} key - localStorage key
+   * @param {T} data - Data to serialize and save
+   * @returns {boolean} True if saved successfully, false otherwise
+   * @private
+   */
   private saveToStorage<T>(key: string, data: T): boolean {
     try {
       localStorage.setItem(key, JSON.stringify(data))
@@ -83,6 +102,12 @@ class AuthService {
     }
   }
 
+  /**
+   * @function removeFromStorage
+   * @description Removes data from localStorage with error handling
+   * @param {string} key - localStorage key to remove
+   * @private
+   */
   private removeFromStorage(key: string): void {
     try {
       localStorage.removeItem(key)
@@ -96,7 +121,12 @@ class AuthService {
   }
 
   /**
-   * Rate limiting implementation
+   * @function checkRateLimit
+   * @description Implements rate limiting to prevent brute force attacks
+   * Allows MAX_ATTEMPTS (5) within RATE_LIMIT_WINDOW (15 minutes)
+   * @param {string} identifier - User identifier (email or username)
+   * @returns {boolean} True if rate limit not exceeded, false otherwise
+   * @private
    */
   private checkRateLimit(identifier: string): boolean {
     const key = `${this.rateLimitKey}${identifier}`

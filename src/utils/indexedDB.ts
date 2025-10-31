@@ -16,11 +16,25 @@ const NOTES_STORE = 'notes'
 const WAITLIST_STORE = 'waitlist'
 const METADATA_STORE = 'metadata'
 
+/**
+ * @interface IDBConfig
+ * @description Configuration options for IndexedDB initialization
+ * @property {string} [dbName] - Optional database name (defaults to 'paperlyte_db')
+ * @property {number} [version] - Optional database version (defaults to 1)
+ */
 export interface IDBConfig {
   dbName?: string
   version?: number
 }
 
+/**
+ * @class IndexedDBStorage
+ * @description Robust IndexedDB wrapper for offline-first data storage
+ * Provides three object stores:
+ * - notes: Stores note documents with indexes on updatedAt, createdAt, and tags
+ * - waitlist: Stores waitlist entries with unique email constraint
+ * - metadata: Stores sync metadata and migration status
+ */
 class IndexedDBStorage {
   private db: IDBDatabase | null = null
   private dbName: string
@@ -33,7 +47,12 @@ class IndexedDBStorage {
   }
 
   /**
-   * Initialize the database connection
+   * @function init
+   * @description Initialize IndexedDB connection and create object stores
+   * Creates stores for notes, waitlist, and metadata with appropriate indexes
+   * Handles schema upgrades automatically
+   * @returns {Promise<void>} Resolves when database is ready
+   * @throws {Error} If database fails to open
    */
   async init(): Promise<void> {
     // Return existing initialization promise if already in progress

@@ -10,16 +10,31 @@ import {
 } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 
+/**
+ * @component LandingPage
+ * @description Main marketing page for Paperlyte MVP
+ * Features:
+ * - Hero section with value proposition
+ * - Feature showcase with icons
+ * - Demo carousel showing app in action
+ * - Waitlist signup modal
+ * - Analytics tracking for all interactions
+ * @returns {React.ReactElement} Landing page with waitlist functionality
+ */
 const LandingPage: React.FC = () => {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
 
+  // Track page view for analytics
   useEffect(() => {
-    // Track landing page view
     trackFeatureUsage('landing_page', 'view')
     trackUserAction('landing_page_view')
     monitoring.addBreadcrumb('Landing page loaded', 'navigation')
   }, [])
 
+  /**
+   * @function handleWaitlistClick
+   * @description Opens waitlist modal and tracks interaction
+   */
   const handleWaitlistClick = () => {
     setIsWaitlistOpen(true)
     trackWaitlistEvent('view')
