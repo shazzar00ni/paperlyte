@@ -188,7 +188,7 @@ class KeyManagementService {
       )
 
       return {
-        isEnabled: hasPassword,
+        isEnabled: this.isInitialized(), // Reflects active encryption state for current session
         hasPassword,
         keyCount,
         lastKeyRotation: null, // TODO: Implement key rotation tracking
@@ -218,6 +218,13 @@ class KeyManagementService {
 
   /**
    * Get or create salt for key derivation
+   * 
+   * NOTE: Direct localStorage access is used here for encryption keys/salt
+   * rather than dataService abstraction. This is intentional for MVP as:
+   * 1. Encryption keys are fundamentally different from user data
+   * 2. They require immediate synchronous access for security operations
+   * 3. Future migration will move to secure storage (e.g., Web Crypto API storage)
+   * TODO: Migrate to secure storage mechanism in Q1 2026
    */
   private getOrCreateSalt(): Uint8Array {
     const saltKey = `${this.STORAGE_PREFIX}${this.SALT_KEY}`

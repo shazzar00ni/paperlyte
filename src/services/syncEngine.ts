@@ -68,7 +68,8 @@ class SyncEngine {
         isEncrypted: true,
         encryptedTitle: encryptedTitle.ciphertext,
         encryptedContent: encryptedContent.ciphertext,
-        encryptionIv: encryptedContent.iv, // Store IV for decryption
+        encryptedTitleIv: encryptedTitle.iv, // Store separate IV for title
+        encryptedContentIv: encryptedContent.iv, // Store separate IV for content
         encryptionKeyId: keyId,
         // Keep original for local use, but cloud will only have encrypted version
         title: '[Encrypted]',
@@ -80,8 +81,8 @@ class SyncEngine {
         action: 'encrypt_note_for_sync',
         additionalData: { noteId: note.id },
       })
-      // Return original note if encryption fails
-      return note
+      // Don't sync unencrypted data on encryption failure - throw error
+      throw new Error(`Failed to encrypt note ${note.id}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -115,11 +116,11 @@ class SyncEngine {
         note.encryptionKeyId
       )
 
-      // Decrypt title and content
+      // Decrypt title and content using their respective IVs
       const decryptedTitle = await encryptionService.decrypt(
         {
           ciphertext: note.encryptedTitle || '',
-          iv: note.encryptionIv || '',
+          iv: note.encryptedTitleIv || '',
           algorithm: 'AES-GCM',
         },
         key
@@ -128,7 +129,7 @@ class SyncEngine {
       const decryptedContent = await encryptionService.decrypt(
         {
           ciphertext: note.encryptedContent || '',
-          iv: note.encryptionIv || '',
+          iv: note.encryptedContentIv || '',
           algorithm: 'AES-GCM',
         },
         key
@@ -189,10 +190,24 @@ class SyncEngine {
 
   private async saveToCloud(notes: Note[]): Promise<boolean> {
     try {
-      // Encrypt notes before saving to cloud
-      const encryptedNotes = await Promise.all(
+      // Encrypt notes before saving to cloud, filtering out failures
+      const encryptionResults = await Promise.allSettled(
         notes.map(note => this.encryptNoteForSync(note))
       )
+      
+      const encryptedNotes = encryptionResults
+        .filter((result): result is PromiseFulfilledResult<Note> => result.status === 'fulfilled')
+        .map(result => result.value)
+      
+      // Log any encryption failures
+      const failures = encryptionResults.filter(result => result.status === 'rejected')
+      if (failures.length > 0) {
+        monitoring.addBreadcrumb(
+          `Failed to encrypt ${failures.length} note(s) - skipping sync for those notes`,
+          'warning',
+          { failureCount: failures.length, totalNotes: notes.length }
+        )
+      }
 
       if (this.useIndexedDB) {
         await indexedDB.init()
