@@ -181,11 +181,27 @@ Content-Security-Policy:
 
 - **default-src 'self':** Only load resources from same origin by default
 - **script-src:** Allow scripts from self, PostHog, and Sentry
-- **style-src 'unsafe-inline':** Required for Tailwind CSS inline styles
+  - `'unsafe-inline'` required for PostHog/Sentry initialization (MVP)
+  - Future: Replace with nonces when backend added (Q4 2025)
+- **style-src 'unsafe-inline':** Required for Tailwind CSS utility classes
+  - Future: Use CSS-in-JS with nonces or move to external stylesheets
 - **img-src:** Allow images from self, data URIs, HTTPS, and blob
 - **connect-src:** API calls to self, PostHog, and Sentry only
 - **frame-ancestors 'none':** Cannot be embedded in iframes
 - **upgrade-insecure-requests:** Automatically upgrade HTTP to HTTPS
+
+**Note on 'unsafe-inline':** While this weakens CSP protections, it's necessary for:
+
+1. Third-party analytics (PostHog, Sentry) requiring inline initialization
+2. Tailwind CSS utility-first approach with inline styles
+3. MVP static site architecture without server-side rendering
+
+**Mitigation Strategy:**
+
+- All user input is sanitized before rendering (DOMPurify)
+- XSS protection enabled via X-XSS-Protection header
+- Regular security audits to identify potential injection points
+- Plan to implement CSP nonces in Q4 2025 with backend
 
 **CSP Reporting (Future Implementation):**
 
