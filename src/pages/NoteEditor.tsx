@@ -7,27 +7,72 @@ import {
   Trash2,
   Maximize2,
   X,
+  CheckCircle,
+  XCircle,
+  Eye,
+  EyeOff,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
+import {
+  websocketService,
+  type WebSocketStatus,
+} from '../services/websocketService'
 import RichTextEditor from '../components/RichTextEditor'
+import MarkdownPreview from '../components/MarkdownPreview'
 import ConfirmationModal from '../components/ConfirmationModal'
 import TagModal from '../components/TagModal'
+import { useAutoSave } from '../hooks'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([])
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [wsStatus, setWsStatus] = useState<WebSocketStatus>('disconnected')
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-save hook with 500ms debounce
+  const { isSaving, saveSuccess, triggerSave } = useAutoSave(currentNote, {
+    onSave: async (note: Note) => {
+      try {
+        const success = await dataService.saveNote(note)
+        if (success) {
+          // Update notes list with the saved note
+          setNotes(prevNotes =>
+            prevNotes.map(n => (n.id === note.id ? note : n))
+          )
+
+          // Send update via WebSocket for real-time sync
+          if (websocketService.isConnected()) {
+            websocketService.sendNoteUpdate(note)
+          }
+
+          trackNoteEvent('save', { noteId: note.id, autoSave: true })
+        }
+        return success
+      } catch (error) {
+        monitoring.logError(error as Error, {
+          feature: 'note_editor',
+          action: 'auto_save',
+          additionalData: { noteId: note.id },
+        })
+        return false
+      }
+    },
+    delay: 500, // 500ms debounce as per requirements
+    enabled: true,
+  })
 
   useEffect(() => {
     // Track editor page view
@@ -36,6 +81,53 @@ const NoteEditor: React.FC = () => {
 
     // Load notes from localStorage
     loadNotes()
+
+    // Initialize WebSocket connection
+    websocketService.connect()
+
+    // WebSocket event handlers
+    const handleStatusChange = (data: { status: WebSocketStatus }) => {
+      setWsStatus(data.status)
+      monitoring.addBreadcrumb('WebSocket status changed', 'info', {
+        status: data.status,
+      })
+    }
+
+    const handleNoteUpdate = (note: Note) => {
+      // Handle incoming note updates from other clients
+      setNotes(prevNotes => {
+        const existingIndex = prevNotes.findIndex(n => n.id === note.id)
+        if (existingIndex >= 0) {
+          const updated = [...prevNotes]
+          updated[existingIndex] = note
+          return updated
+        }
+        return [note, ...prevNotes]
+      })
+      monitoring.addBreadcrumb('Note updated via WebSocket', 'info', {
+        noteId: note.id,
+      })
+    }
+
+    const handleNoteDelete = (data: { noteId: string }) => {
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== data.noteId))
+      monitoring.addBreadcrumb('Note deleted via WebSocket', 'info', {
+        noteId: data.noteId,
+      })
+    }
+
+    // Subscribe to WebSocket events
+    websocketService.on('status_change', handleStatusChange)
+    websocketService.on('note_update', handleNoteUpdate)
+    websocketService.on('note_delete', handleNoteDelete)
+
+    // Cleanup on unmount
+    return () => {
+      websocketService.off('status_change', handleStatusChange)
+      websocketService.off('note_update', handleNoteUpdate)
+      websocketService.off('note_delete', handleNoteDelete)
+      websocketService.disconnect()
+    }
   }, [])
 
   // Focus Mode event handlers
@@ -108,7 +200,7 @@ const NoteEditor: React.FC = () => {
     }
   }, [notes])
 
-  const updateCurrentNote = async (updates: Partial<Note>) => {
+  const updateCurrentNote = (updates: Partial<Note>) => {
     if (!currentNote) return
 
     const updatedNote = {
@@ -117,50 +209,22 @@ const NoteEditor: React.FC = () => {
       updatedAt: new Date().toISOString(),
     }
 
-    // Save individual note using data service
-    const success = await dataService.saveNote(updatedNote)
-    if (success) {
-      const updatedNotes = notes.map(note =>
-        note.id === currentNote.id ? updatedNote : note
-      )
-      setNotes(updatedNotes)
-      setCurrentNote(updatedNote)
+    // Update state - auto-save will handle persistence automatically
+    setCurrentNote(updatedNote)
 
-      trackNoteEvent('edit', {
-        noteId: currentNote.id,
-        field: Object.keys(updates)[0],
-      })
-    } else {
-      monitoring.logError(new Error('Failed to update note'), {
-        feature: 'note_editor',
-        action: 'update_note_failed',
-        additionalData: { noteId: currentNote.id },
-      })
-    }
+    trackNoteEvent('edit', {
+      noteId: currentNote.id,
+      field: Object.keys(updates)[0],
+    })
   }
 
   const saveCurrentNote = useCallback(async () => {
-    if (!currentNote) return
-
-    setIsLoading(true)
-    try {
-      // Simulate save delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      trackNoteEvent('save', { noteId: currentNote.id })
-      monitoring.addBreadcrumb('Note saved', 'user_action', {
-        noteId: currentNote.id,
-      })
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'note_editor',
-        action: 'save_note',
-        additionalData: { noteId: currentNote.id },
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [currentNote])
+    // Manually trigger save (for Ctrl+S shortcut)
+    await triggerSave()
+    monitoring.addBreadcrumb('Manual save triggered', 'user_action', {
+      noteId: currentNote?.id,
+    })
+  }, [currentNote, triggerSave])
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -300,8 +364,30 @@ const NoteEditor: React.FC = () => {
     <div className='h-screen flex bg-background'>
       {/* Sidebar */}
       <div className='w-80 bg-white border-r border-gray-200 flex flex-col'>
-        {/* Search */}
+        {/* Search and Connection Status */}
         <div className='p-4 border-b border-gray-200'>
+          <div className='flex items-center justify-between mb-3'>
+            <h2 className='text-lg font-semibold text-dark'>Notes</h2>
+            {/* Connection Status Indicator */}
+            <div className='flex items-center space-x-1 text-xs'>
+              {wsStatus === 'connected' ? (
+                <>
+                  <Wifi className='h-3 w-3 text-green-500' />
+                  <span className='text-green-600'>Online</span>
+                </>
+              ) : wsStatus === 'connecting' || wsStatus === 'reconnecting' ? (
+                <>
+                  <Wifi className='h-3 w-3 text-yellow-500 animate-pulse' />
+                  <span className='text-yellow-600'>Connecting...</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className='h-3 w-3 text-gray-400' />
+                  <span className='text-gray-500'>Offline</span>
+                </>
+              )}
+            </div>
+          </div>
           <div className='relative'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
             <input
@@ -399,6 +485,26 @@ const NoteEditor: React.FC = () => {
                 placeholder='Note title...'
               />
               <div className='flex items-center space-x-2'>
+                {/* Auto-save status indicator */}
+                <div className='flex items-center space-x-1 text-sm'>
+                  {isSaving ? (
+                    <>
+                      <Save className='h-4 w-4 text-gray-400 animate-pulse' />
+                      <span className='text-gray-600'>Saving...</span>
+                    </>
+                  ) : saveSuccess === true ? (
+                    <>
+                      <CheckCircle className='h-4 w-4 text-green-500' />
+                      <span className='text-green-600'>Saved</span>
+                    </>
+                  ) : saveSuccess === false ? (
+                    <>
+                      <XCircle className='h-4 w-4 text-red-500' />
+                      <span className='text-red-600'>Error</span>
+                    </>
+                  ) : null}
+                </div>
+
                 <button
                   onClick={() => setIsTagModalOpen(true)}
                   className='btn-ghost btn-sm flex items-center space-x-1'
@@ -413,6 +519,29 @@ const NoteEditor: React.FC = () => {
                   )}
                 </button>
                 <button
+                  onClick={() => {
+                    setShowPreview(!showPreview)
+                    trackFeatureUsage(
+                      'markdown_preview',
+                      showPreview ? 'hide' : 'show'
+                    )
+                  }}
+                  className='btn-ghost btn-sm flex items-center space-x-1'
+                  title={showPreview ? 'Hide Preview' : 'Show Markdown Preview'}
+                >
+                  {showPreview ? (
+                    <>
+                      <EyeOff className='h-4 w-4' />
+                      <span>Hide Preview</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className='h-4 w-4' />
+                      <span>Preview</span>
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={enterFocusMode}
                   className='btn-ghost btn-sm flex items-center space-x-1'
                   title='Enter Focus Mode'
@@ -422,24 +551,45 @@ const NoteEditor: React.FC = () => {
                 </button>
                 <button
                   onClick={saveCurrentNote}
-                  disabled={isLoading}
+                  disabled={isSaving}
                   className='btn-primary btn-sm flex items-center space-x-1'
+                  title='Manual Save (Ctrl+S)'
                 >
                   <Save className='h-4 w-4' />
-                  <span>{isLoading ? 'Saving...' : 'Save'}</span>
+                  <span>Save</span>
                 </button>
               </div>
             </div>
 
-            {/* Editor Content */}
-            <div className='flex-1'>
-              <RichTextEditor
-                content={currentNote.content}
-                onChange={content => updateCurrentNote({ content })}
-                placeholder='Start writing your thoughts...'
-                className='h-full'
-                disabled={isLoading}
-              />
+            {/* Editor Content - Side-by-side or single view */}
+            <div className='flex-1 flex'>
+              {showPreview ? (
+                <>
+                  {/* Editor on left */}
+                  <div className='flex-1 border-r border-gray-200'>
+                    <RichTextEditor
+                      content={currentNote.content}
+                      onChange={content => updateCurrentNote({ content })}
+                      placeholder='Start writing your thoughts...'
+                      className='h-full'
+                      disabled={false}
+                    />
+                  </div>
+                  {/* Preview on right */}
+                  <div className='flex-1 overflow-y-auto bg-gray-50'>
+                    <MarkdownPreview content={currentNote.content} />
+                  </div>
+                </>
+              ) : (
+                /* Full-width editor */
+                <RichTextEditor
+                  content={currentNote.content}
+                  onChange={content => updateCurrentNote({ content })}
+                  placeholder='Start writing your thoughts...'
+                  className='h-full w-full'
+                  disabled={false}
+                />
+              )}
             </div>
           </>
         ) : (
@@ -509,23 +659,28 @@ const NoteEditor: React.FC = () => {
                 onChange={content => updateCurrentNote({ content })}
                 placeholder='Start writing your thoughts...'
                 className='h-full text-lg'
-                disabled={isLoading}
+                disabled={isSaving}
               />
             </div>
 
             {/* Focus Mode Footer - Save Status */}
             <div className='mt-4 flex items-center justify-center text-sm text-gray-500'>
-              {isLoading ? (
+              {isSaving ? (
                 <span className='flex items-center space-x-2'>
                   <Save className='h-4 w-4 animate-pulse' />
                   <span>Saving...</span>
                 </span>
-              ) : (
-                <span className='flex items-center space-x-2'>
-                  <Save className='h-4 w-4' />
+              ) : saveSuccess === true ? (
+                <span className='flex items-center space-x-2 text-green-600'>
+                  <CheckCircle className='h-4 w-4' />
                   <span>Auto-saved</span>
                 </span>
-              )}
+              ) : saveSuccess === false ? (
+                <span className='flex items-center space-x-2 text-red-600'>
+                  <XCircle className='h-4 w-4' />
+                  <span>Save failed</span>
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
