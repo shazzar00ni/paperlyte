@@ -9,11 +9,14 @@ import {
   X,
   CheckCircle,
   XCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
+import MarkdownPreview from '../components/MarkdownPreview'
 import ConfirmationModal from '../components/ConfirmationModal'
 import TagModal from '../components/TagModal'
 import { useAutoSave } from '../hooks'
@@ -28,6 +31,7 @@ const NoteEditor: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -433,6 +437,29 @@ const NoteEditor: React.FC = () => {
                   )}
                 </button>
                 <button
+                  onClick={() => {
+                    setShowPreview(!showPreview)
+                    trackFeatureUsage(
+                      'markdown_preview',
+                      showPreview ? 'hide' : 'show'
+                    )
+                  }}
+                  className='btn-ghost btn-sm flex items-center space-x-1'
+                  title={showPreview ? 'Hide Preview' : 'Show Markdown Preview'}
+                >
+                  {showPreview ? (
+                    <>
+                      <EyeOff className='h-4 w-4' />
+                      <span>Hide Preview</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className='h-4 w-4' />
+                      <span>Preview</span>
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={enterFocusMode}
                   className='btn-ghost btn-sm flex items-center space-x-1'
                   title='Enter Focus Mode'
@@ -452,15 +479,35 @@ const NoteEditor: React.FC = () => {
               </div>
             </div>
 
-            {/* Editor Content */}
-            <div className='flex-1'>
-              <RichTextEditor
-                content={currentNote.content}
-                onChange={content => updateCurrentNote({ content })}
-                placeholder='Start writing your thoughts...'
-                className='h-full'
-                disabled={false}
-              />
+            {/* Editor Content - Side-by-side or single view */}
+            <div className='flex-1 flex'>
+              {showPreview ? (
+                <>
+                  {/* Editor on left */}
+                  <div className='flex-1 border-r border-gray-200'>
+                    <RichTextEditor
+                      content={currentNote.content}
+                      onChange={content => updateCurrentNote({ content })}
+                      placeholder='Start writing your thoughts...'
+                      className='h-full'
+                      disabled={false}
+                    />
+                  </div>
+                  {/* Preview on right */}
+                  <div className='flex-1 overflow-y-auto bg-gray-50'>
+                    <MarkdownPreview content={currentNote.content} />
+                  </div>
+                </>
+              ) : (
+                /* Full-width editor */
+                <RichTextEditor
+                  content={currentNote.content}
+                  onChange={content => updateCurrentNote({ content })}
+                  placeholder='Start writing your thoughts...'
+                  className='h-full w-full'
+                  disabled={false}
+                />
+              )}
             </div>
           </>
         ) : (
