@@ -243,8 +243,8 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className='card bg-white'>
+            {testimonials.map(testimonial => (
+              <div key={testimonial.author} className='card bg-white'>
                 <p className='text-lg text-gray-700 mb-4 italic'>
                   &quot;{testimonial.quote}&quot;
                 </p>
@@ -273,8 +273,8 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className='space-y-6'>
-            {faqs.map((faq, index) => (
-              <div key={index} className='card bg-gray-50'>
+            {faqs.map(faq => (
+              <div key={faq.question} className='card bg-gray-50'>
                 <h3 className='text-xl font-semibold text-dark mb-3'>
                   {faq.question}
                 </h3>
