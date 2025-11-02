@@ -11,10 +11,16 @@ import {
   XCircle,
   Eye,
   EyeOff,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
 import { dataService } from '../services/dataService'
+import {
+  websocketService,
+  type WebSocketStatus,
+} from '../services/websocketService'
 import RichTextEditor from '../components/RichTextEditor'
 import MarkdownPreview from '../components/MarkdownPreview'
 import ConfirmationModal from '../components/ConfirmationModal'
@@ -32,6 +38,7 @@ const NoteEditor: React.FC = () => {
   const [focusMode, setFocusMode] = useState(false)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [wsStatus, setWsStatus] = useState<WebSocketStatus>('disconnected')
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -45,6 +52,12 @@ const NoteEditor: React.FC = () => {
           setNotes(prevNotes =>
             prevNotes.map(n => (n.id === note.id ? note : n))
           )
+
+          // Send update via WebSocket for real-time sync
+          if (websocketService.isConnected()) {
+            websocketService.sendNoteUpdate(note)
+          }
+
           trackNoteEvent('save', { noteId: note.id, autoSave: true })
         }
         return success
@@ -68,6 +81,53 @@ const NoteEditor: React.FC = () => {
 
     // Load notes from localStorage
     loadNotes()
+
+    // Initialize WebSocket connection
+    websocketService.connect()
+
+    // WebSocket event handlers
+    const handleStatusChange = (data: { status: WebSocketStatus }) => {
+      setWsStatus(data.status)
+      monitoring.addBreadcrumb('WebSocket status changed', 'info', {
+        status: data.status,
+      })
+    }
+
+    const handleNoteUpdate = (note: Note) => {
+      // Handle incoming note updates from other clients
+      setNotes(prevNotes => {
+        const existingIndex = prevNotes.findIndex(n => n.id === note.id)
+        if (existingIndex >= 0) {
+          const updated = [...prevNotes]
+          updated[existingIndex] = note
+          return updated
+        }
+        return [note, ...prevNotes]
+      })
+      monitoring.addBreadcrumb('Note updated via WebSocket', 'info', {
+        noteId: note.id,
+      })
+    }
+
+    const handleNoteDelete = (data: { noteId: string }) => {
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== data.noteId))
+      monitoring.addBreadcrumb('Note deleted via WebSocket', 'info', {
+        noteId: data.noteId,
+      })
+    }
+
+    // Subscribe to WebSocket events
+    websocketService.on('status_change', handleStatusChange)
+    websocketService.on('note_update', handleNoteUpdate)
+    websocketService.on('note_delete', handleNoteDelete)
+
+    // Cleanup on unmount
+    return () => {
+      websocketService.off('status_change', handleStatusChange)
+      websocketService.off('note_update', handleNoteUpdate)
+      websocketService.off('note_delete', handleNoteDelete)
+      websocketService.disconnect()
+    }
   }, [])
 
   // Focus Mode event handlers
@@ -304,8 +364,30 @@ const NoteEditor: React.FC = () => {
     <div className='h-screen flex bg-background'>
       {/* Sidebar */}
       <div className='w-80 bg-white border-r border-gray-200 flex flex-col'>
-        {/* Search */}
+        {/* Search and Connection Status */}
         <div className='p-4 border-b border-gray-200'>
+          <div className='flex items-center justify-between mb-3'>
+            <h2 className='text-lg font-semibold text-dark'>Notes</h2>
+            {/* Connection Status Indicator */}
+            <div className='flex items-center space-x-1 text-xs'>
+              {wsStatus === 'connected' ? (
+                <>
+                  <Wifi className='h-3 w-3 text-green-500' />
+                  <span className='text-green-600'>Online</span>
+                </>
+              ) : wsStatus === 'connecting' || wsStatus === 'reconnecting' ? (
+                <>
+                  <Wifi className='h-3 w-3 text-yellow-500 animate-pulse' />
+                  <span className='text-yellow-600'>Connecting...</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className='h-3 w-3 text-gray-400' />
+                  <span className='text-gray-500'>Offline</span>
+                </>
+              )}
+            </div>
+          </div>
           <div className='relative'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
             <input
