@@ -63,7 +63,13 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
         ALLOW_DATA_ATTR: false,
       })
     } catch (error) {
-      console.error('Error parsing Markdown:', error)
+      // Use monitoring system for consistent error tracking
+      import('../utils/monitoring').then(({ monitoring }) => {
+        monitoring.logError(error as Error, {
+          feature: 'markdown_preview',
+          action: 'parse_error',
+        })
+      })
       return '<p>Error rendering preview</p>'
     }
   }, [content])

@@ -2,7 +2,7 @@
  * WebSocket Service for Real-Time Note Synchronization
  *
  * CURRENT IMPLEMENTATION: Simulated WebSocket for offline-first development
- * FUTURE MIGRATION: Will connect to real WebSocket server in Q4 2025
+ * FUTURE MIGRATION: Will connect to real WebSocket server when backend is ready
  *
  * Features:
  * - Auto-reconnection on connection loss
