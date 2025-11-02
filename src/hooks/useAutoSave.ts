@@ -8,6 +8,55 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { monitoring } from '../utils/monitoring'
 
+/**
+ * Performs a shallow comparison of two objects
+ * Handles edge cases that JSON.stringify cannot handle properly:
+ * - Property order independence
+ * - undefined values
+ * - Date objects
+ * - Arrays (shallow comparison)
+ *
+ * @param obj1 - First object to compare
+ * @param obj2 - Second object to compare
+ * @returns true if objects are shallowly equal
+ */
+function shallowEqual<T>(obj1: T | null, obj2: T | null): boolean {
+  // Handle null/undefined cases
+  if (obj1 === obj2) return true
+  if (!obj1 || !obj2) return false
+
+  // Get all keys from both objects
+  const keys1 = Object.keys(obj1 as object)
+  const keys2 = Object.keys(obj2 as object)
+
+  // Check if number of keys is different
+  if (keys1.length !== keys2.length) return false
+
+  // Check each key-value pair
+  for (const key of keys1) {
+    const val1 = (obj1 as Record<string, unknown>)[key]
+    const val2 = (obj2 as Record<string, unknown>)[key]
+
+    // Handle Date objects by comparing their timestamps
+    if (val1 instanceof Date && val2 instanceof Date) {
+      if (val1.getTime() !== val2.getTime()) return false
+      continue
+    }
+
+    // Handle arrays with shallow comparison
+    if (Array.isArray(val1) && Array.isArray(val2)) {
+      if (val1.length !== val2.length) return false
+      if (!val1.every((item, index) => item === val2[index])) return false
+      continue
+    }
+
+    // Direct comparison for primitives and references
+    if (val1 !== val2) return false
+  }
+
+  return true
+}
+
 export interface UseAutoSaveOptions<T> {
   /** Function to save the data */
   onSave: (data: T) => Promise<boolean>
@@ -132,9 +181,8 @@ export function useAutoSave<T>(
       return
     }
 
-    // Check if data actually changed
-    const dataChanged =
-      JSON.stringify(data) !== JSON.stringify(previousDataRef.current)
+    // Check if data actually changed using shallow equality
+    const dataChanged = !shallowEqual(data, previousDataRef.current)
 
     if (!dataChanged) {
       return

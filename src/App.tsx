@@ -1,5 +1,10 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import {
+  AdminErrorBoundary,
+  EditorErrorBoundary,
+  FeatureErrorBoundary,
+} from './components/ErrorBoundaries'
 import LoadingFallback from './components/LoadingFallback'
 import './styles/App.css'
 import { monitoring } from './utils/monitoring'
@@ -21,11 +26,39 @@ function App() {
       <div className='App'>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path='/' element={<LandingPage />} />
-            <Route path='/editor' element={<NoteEditor />} />
-            <Route path='/admin' element={<AdminDashboard />} />
+            <Route
+              path='/'
+              element={
+                <FeatureErrorBoundary featureName='landing_page'>
+                  <LandingPage />
+                </FeatureErrorBoundary>
+              }
+            />
+            <Route
+              path='/editor'
+              element={
+                <EditorErrorBoundary>
+                  <NoteEditor />
+                </EditorErrorBoundary>
+              }
+            />
+            <Route
+              path='/admin'
+              element={
+                <AdminErrorBoundary>
+                  <AdminDashboard />
+                </AdminErrorBoundary>
+              }
+            />
             {/* Fallback route for 404 - redirect to home */}
-            <Route path='*' element={<LandingPage />} />
+            <Route
+              path='*'
+              element={
+                <FeatureErrorBoundary featureName='landing_page'>
+                  <LandingPage />
+                </FeatureErrorBoundary>
+              }
+            />
           </Routes>
         </Suspense>
       </div>

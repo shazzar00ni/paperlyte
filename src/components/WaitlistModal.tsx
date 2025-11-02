@@ -1,9 +1,10 @@
 import { Briefcase, Mail, User, X } from 'lucide-react'
 import React, { useState } from 'react'
+import { useAsyncOperation } from '../hooks/useAsyncOperation'
 import { dataService } from '../services/dataService'
 import type { ModalProps } from '../types'
 import { trackWaitlistEvent } from '../utils/analytics'
-import { monitoring } from '../utils/monitoring'
+import { stripHtml } from '../utils/sanitization'
 
 interface WaitlistFormData {
   email: string
@@ -17,72 +18,90 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     name: '',
     interest: 'professional',
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  if (!isOpen) return null
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
+  // Use async operation hook for consistent state management
+  const submitWaitlist = useAsyncOperation(
+    async (data: WaitlistFormData) => {
       // Validate form
-      if (!formData.email || !formData.name) {
+      if (!data.email || !data.name) {
         throw new Error('Please fill in all required fields')
       }
 
-      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      // Normalize email for validation
+      const normalizedEmail = data.email.trim().toLowerCase()
+
+      // Stricter RFC-5322-based email validation
+      // Matches: local-part@domain with proper character constraints
+      const emailRegex =
+        /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i
+
+      // Sanity checks for common invalid patterns
+      const hasConsecutiveDots = /\.{2,}/.test(normalizedEmail)
+      const domainPart = normalizedEmail.split('@')[1] || ''
+      const domainLabels = domainPart.split('.')
+      const hasValidDomainLabels = domainLabels.every(
+        label => label.length > 0 && label.length <= 63
+      )
+      const hasValidTLD =
+        domainLabels.length >= 2 &&
+        domainLabels[domainLabels.length - 1].length >= 2
+
+      if (
+        !emailRegex.test(normalizedEmail) ||
+        hasConsecutiveDots ||
+        !hasValidDomainLabels ||
+        !hasValidTLD
+      ) {
         throw new Error('Please enter a valid email address')
       }
 
+      // Sanitize inputs before persistence as per coding guidelines
+      // Strip HTML/scripts and normalize email format to prevent XSS and data inconsistencies
+      const sanitizedEmail = stripHtml(normalizedEmail)
+      const sanitizedName = stripHtml(data.name.trim())
+
       // Use data service for persistence (currently localStorage, will be API in Q4 2025)
       const result = await dataService.addToWaitlist({
-        email: formData.email,
-        name: formData.name,
-        interest: formData.interest,
+        email: sanitizedEmail,
+        name: sanitizedName,
+        interest: data.interest,
       })
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to join waitlist')
       }
 
-      // Track successful signup
-      trackWaitlistEvent('signup', {
-        interest: formData.interest,
-        source: 'modal',
-      })
-
-      monitoring.addBreadcrumb('Waitlist signup successful', 'user_action', {
-        interest: formData.interest,
-      })
-
-      setIsSubmitted(true)
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Something went wrong'
-      setError(errorMessage)
-
-      monitoring.logError(error as Error, {
-        feature: 'waitlist',
-        action: 'signup_failed',
-        additionalData: { email: formData.email },
-      })
-    } finally {
-      setIsSubmitting(false)
+      return result
+    },
+    {
+      feature: 'waitlist',
+      action: 'signup',
+      onSuccess: () => {
+        trackWaitlistEvent('signup', {
+          interest: formData.interest,
+          source: 'modal',
+        })
+        setIsSubmitted(true)
+      },
     }
+  )
+
+  if (!isOpen) return null
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await submitWaitlist.execute(formData)
   }
 
   const handleClose = () => {
-    if (!isSubmitting) {
+    if (!submitWaitlist.isLoading) {
       onClose()
       // Reset form after a delay to prevent flash
       setTimeout(() => {
         setFormData({ email: '', name: '', interest: 'professional' })
         setIsSubmitted(false)
-        setError(null)
+        submitWaitlist.reset()
       }, 300)
     }
   }
@@ -98,7 +117,7 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           <button
             onClick={handleClose}
             className='text-gray-400 hover:text-gray-600 p-1'
-            disabled={isSubmitting}
+            disabled={submitWaitlist.isLoading}
             aria-label='Close modal'
           >
             <X className='h-6 w-6' />
@@ -150,7 +169,7 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                   }
                   className='input pl-11'
                   placeholder='your@email.com'
-                  disabled={isSubmitting}
+                  disabled={submitWaitlist.isLoading}
                 />
               </div>
             </div>
@@ -175,7 +194,7 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                   }
                   className='input pl-11'
                   placeholder='Your name'
-                  disabled={isSubmitting}
+                  disabled={submitWaitlist.isLoading}
                 />
               </div>
             </div>
@@ -200,7 +219,7 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                     })
                   }
                   className='input pl-11'
-                  disabled={isSubmitting}
+                  disabled={submitWaitlist.isLoading}
                 >
                   <option value='student'>Student</option>
                   <option value='professional'>Professional</option>
@@ -211,19 +230,21 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* Error Message */}
-            {error && (
+            {submitWaitlist.error && (
               <div className='bg-red-50 border border-red-200 rounded-lg p-3'>
-                <p className='text-red-600 text-sm'>{error}</p>
+                <p className='text-red-600 text-sm'>
+                  {submitWaitlist.error.message}
+                </p>
               </div>
             )}
 
             {/* Submit Button */}
             <button
               type='submit'
-              disabled={isSubmitting}
+              disabled={submitWaitlist.isLoading}
               className='btn-primary btn-md w-full'
             >
-              {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+              {submitWaitlist.isLoading ? 'Joining...' : 'Join Waitlist'}
             </button>
 
             {/* Privacy Note */}
