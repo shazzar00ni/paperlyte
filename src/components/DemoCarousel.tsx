@@ -17,7 +17,8 @@ const generatePlaceholderSVG = (title: string, color: string) => {
     <rect width="600" height="400" fill="${color}"/>
     <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
   </svg>`
-  return `data:image/svg+xml;base64,${btoa(svg)}`
+  // Use encodeURIComponent instead of btoa to handle special characters
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
 
 const demoSlides: DemoSlide[] = [

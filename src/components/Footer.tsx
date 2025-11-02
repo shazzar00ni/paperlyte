@@ -13,8 +13,9 @@ const Footer: React.FC = () => {
               <span className='font-bold text-xl text-dark'>Paperlyte</span>
             </div>
             <p className='text-gray-600 mb-4 max-w-md'>
-              Lightning fast, distraction-free note-taking app. Ideas saved
-              instantly—never lose your spark.
+              The note-taking app built for thinkers who refuse to let great
+              ideas slip away. Capture, organize, and create—all in one
+              beautifully simple space.
             </p>
             <div className='flex space-x-4'>
               <a
