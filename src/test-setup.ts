@@ -13,6 +13,13 @@ Object.defineProperty(global, 'crypto', {
         return v.toString(16)
       })
     }),
+    getRandomValues: vi.fn((array: Uint8Array) => {
+      // Fill array with random values for testing
+      for (let i = 0; i < array.length; i++) {
+        array[i] = Math.floor(Math.random() * 256)
+      }
+      return array
+    }),
     subtle: {
       digest: vi.fn(async (_algorithm: string, data: ArrayBuffer) => {
         // Mock SHA-256 digest - deterministic but high-entropy for testing
