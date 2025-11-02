@@ -1,6 +1,11 @@
 import '@testing-library/jest-dom'
 import 'fake-indexeddb/auto'
 import { beforeEach, vi } from 'vitest'
+import { toHaveNoViolations } from 'vitest-axe/matchers'
+import { expect } from 'vitest'
+
+// Extend Vitest matchers with axe accessibility matchers
+expect.extend(toHaveNoViolations)
 
 // Mock global crypto for tests
 Object.defineProperty(global, 'crypto', {
