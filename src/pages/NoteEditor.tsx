@@ -7,6 +7,8 @@ import {
   Trash2,
   Maximize2,
   X,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react'
 import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
 import { monitoring } from '../utils/monitoring'
@@ -14,13 +16,13 @@ import { dataService } from '../services/dataService'
 import RichTextEditor from '../components/RichTextEditor'
 import ConfirmationModal from '../components/ConfirmationModal'
 import TagModal from '../components/TagModal'
+import { useAutoSave } from '../hooks'
 import type { Note } from '../types'
 
 const NoteEditor: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([])
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -28,6 +30,32 @@ const NoteEditor: React.FC = () => {
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-save hook with 500ms debounce
+  const { isSaving, saveSuccess, triggerSave } = useAutoSave(currentNote, {
+    onSave: async (note: Note) => {
+      try {
+        const success = await dataService.saveNote(note)
+        if (success) {
+          // Update notes list with the saved note
+          setNotes(prevNotes =>
+            prevNotes.map(n => (n.id === note.id ? note : n))
+          )
+          trackNoteEvent('save', { noteId: note.id, autoSave: true })
+        }
+        return success
+      } catch (error) {
+        monitoring.logError(error as Error, {
+          feature: 'note_editor',
+          action: 'auto_save',
+          additionalData: { noteId: note.id },
+        })
+        return false
+      }
+    },
+    delay: 500, // 500ms debounce as per requirements
+    enabled: true,
+  })
 
   useEffect(() => {
     // Track editor page view
@@ -108,7 +136,7 @@ const NoteEditor: React.FC = () => {
     }
   }, [notes])
 
-  const updateCurrentNote = async (updates: Partial<Note>) => {
+  const updateCurrentNote = (updates: Partial<Note>) => {
     if (!currentNote) return
 
     const updatedNote = {
@@ -117,50 +145,22 @@ const NoteEditor: React.FC = () => {
       updatedAt: new Date().toISOString(),
     }
 
-    // Save individual note using data service
-    const success = await dataService.saveNote(updatedNote)
-    if (success) {
-      const updatedNotes = notes.map(note =>
-        note.id === currentNote.id ? updatedNote : note
-      )
-      setNotes(updatedNotes)
-      setCurrentNote(updatedNote)
+    // Update state - auto-save will handle persistence automatically
+    setCurrentNote(updatedNote)
 
-      trackNoteEvent('edit', {
-        noteId: currentNote.id,
-        field: Object.keys(updates)[0],
-      })
-    } else {
-      monitoring.logError(new Error('Failed to update note'), {
-        feature: 'note_editor',
-        action: 'update_note_failed',
-        additionalData: { noteId: currentNote.id },
-      })
-    }
+    trackNoteEvent('edit', {
+      noteId: currentNote.id,
+      field: Object.keys(updates)[0],
+    })
   }
 
   const saveCurrentNote = useCallback(async () => {
-    if (!currentNote) return
-
-    setIsLoading(true)
-    try {
-      // Simulate save delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      trackNoteEvent('save', { noteId: currentNote.id })
-      monitoring.addBreadcrumb('Note saved', 'user_action', {
-        noteId: currentNote.id,
-      })
-    } catch (error) {
-      monitoring.logError(error as Error, {
-        feature: 'note_editor',
-        action: 'save_note',
-        additionalData: { noteId: currentNote.id },
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [currentNote])
+    // Manually trigger save (for Ctrl+S shortcut)
+    await triggerSave()
+    monitoring.addBreadcrumb('Manual save triggered', 'user_action', {
+      noteId: currentNote?.id,
+    })
+  }, [currentNote, triggerSave])
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -399,6 +399,26 @@ const NoteEditor: React.FC = () => {
                 placeholder='Note title...'
               />
               <div className='flex items-center space-x-2'>
+                {/* Auto-save status indicator */}
+                <div className='flex items-center space-x-1 text-sm'>
+                  {isSaving ? (
+                    <>
+                      <Save className='h-4 w-4 text-gray-400 animate-pulse' />
+                      <span className='text-gray-600'>Saving...</span>
+                    </>
+                  ) : saveSuccess === true ? (
+                    <>
+                      <CheckCircle className='h-4 w-4 text-green-500' />
+                      <span className='text-green-600'>Saved</span>
+                    </>
+                  ) : saveSuccess === false ? (
+                    <>
+                      <XCircle className='h-4 w-4 text-red-500' />
+                      <span className='text-red-600'>Error</span>
+                    </>
+                  ) : null}
+                </div>
+
                 <button
                   onClick={() => setIsTagModalOpen(true)}
                   className='btn-ghost btn-sm flex items-center space-x-1'
@@ -422,11 +442,12 @@ const NoteEditor: React.FC = () => {
                 </button>
                 <button
                   onClick={saveCurrentNote}
-                  disabled={isLoading}
+                  disabled={isSaving}
                   className='btn-primary btn-sm flex items-center space-x-1'
+                  title='Manual Save (Ctrl+S)'
                 >
                   <Save className='h-4 w-4' />
-                  <span>{isLoading ? 'Saving...' : 'Save'}</span>
+                  <span>Save</span>
                 </button>
               </div>
             </div>
@@ -438,7 +459,7 @@ const NoteEditor: React.FC = () => {
                 onChange={content => updateCurrentNote({ content })}
                 placeholder='Start writing your thoughts...'
                 className='h-full'
-                disabled={isLoading}
+                disabled={false}
               />
             </div>
           </>
@@ -509,23 +530,28 @@ const NoteEditor: React.FC = () => {
                 onChange={content => updateCurrentNote({ content })}
                 placeholder='Start writing your thoughts...'
                 className='h-full text-lg'
-                disabled={isLoading}
+                disabled={isSaving}
               />
             </div>
 
             {/* Focus Mode Footer - Save Status */}
             <div className='mt-4 flex items-center justify-center text-sm text-gray-500'>
-              {isLoading ? (
+              {isSaving ? (
                 <span className='flex items-center space-x-2'>
                   <Save className='h-4 w-4 animate-pulse' />
                   <span>Saving...</span>
                 </span>
-              ) : (
-                <span className='flex items-center space-x-2'>
-                  <Save className='h-4 w-4' />
+              ) : saveSuccess === true ? (
+                <span className='flex items-center space-x-2 text-green-600'>
+                  <CheckCircle className='h-4 w-4' />
                   <span>Auto-saved</span>
                 </span>
-              )}
+              ) : saveSuccess === false ? (
+                <span className='flex items-center space-x-2 text-red-600'>
+                  <XCircle className='h-4 w-4' />
+                  <span>Save failed</span>
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
