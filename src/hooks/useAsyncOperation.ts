@@ -4,15 +4,23 @@ import { useCallback, useState } from 'react'
 /**
  * Async operation state
  * Represents the current state of an async operation
+ *
+ * **IMPORTANT**: This state implements stale-while-revalidate semantics.
+ * When an error occurs, `data` is preserved from the last successful operation.
+ * This means `isError: true` and `data: <value>` can coexist.
+ * Always check both `isError` and `data` when rendering!
  */
 export interface AsyncOperationState<T = unknown> {
   /** Whether the operation is currently in progress */
   isLoading: boolean
   /** Error from the last operation, if any */
   error: Error | null
-  /** Data from the last successful operation */
+  /**
+   * Data from the last successful operation
+   * **Note**: Preserved on error (stale data) - check isError flag
+   */
   data: T | null
-  /** Whether the operation has succeeded at least once */
+  /** Whether the most recent operation succeeded (reflects last operation result) */
   isSuccess: boolean
   /** Whether the operation has failed */
   isError: boolean
@@ -64,8 +72,24 @@ export interface UseAsyncOperationReturn<T, TArgs extends unknown[]> {
  * Provides consistent loading, error, and success state management
  * for async operations like API calls, database operations, etc.
  *
+ * **IMPORTANT: Stale-While-Revalidate Pattern**
+ *
+ * This hook implements a stale-while-revalidate pattern where data from the
+ * last successful operation is preserved when errors occur. This means:
+ *
+ * - `isError: true` can coexist with `data: <previous successful result>`
+ * - Components receive stale data instead of null/undefined on errors
+ * - This differs from traditional error handling where data is cleared
+ * - Consumers must explicitly handle this state in the UI
+ *
+ * **Why this matters:**
+ * - Users can continue viewing/working with stale data during temporary failures
+ * - Better offline-first experience (show last known good data)
+ * - Prevents UI flashing/clearing during transient network errors
+ *
  * @example
  * ```typescript
+ * // Basic usage
  * const saveNote = useAsyncOperation(
  *   async (note: Note) => {
  *     return await dataService.saveNote(note)
@@ -83,8 +107,56 @@ export interface UseAsyncOperationReturn<T, TArgs extends unknown[]> {
  *   await saveNote.execute(currentNote)
  * }
  *
+ * // Simple loading/error states
  * if (saveNote.isLoading) return <Spinner />
  * if (saveNote.isError) return <ErrorMessage error={saveNote.error} />
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Handling stale data on error (recommended pattern)
+ * const loadNotes = useAsyncOperation(
+ *   async () => await dataService.getNotes(),
+ *   { feature: 'notes', action: 'load' }
+ * )
+ *
+ * // In component render:
+ * if (loadNotes.isError && !loadNotes.data) {
+ *   // No previous data - show full error state
+ *   return <ErrorState error={loadNotes.error} onRetry={() => loadNotes.execute()} />
+ * }
+ *
+ * if (loadNotes.isError && loadNotes.data) {
+ *   // Has stale data - show data with error banner
+ *   return (
+ *     <>
+ *       <ErrorBanner
+ *         message="Failed to refresh. Showing cached data."
+ *         error={loadNotes.error}
+ *         onRetry={() => loadNotes.execute()}
+ *       />
+ *       <NotesList notes={loadNotes.data} isStale={true} />
+ *     </>
+ *   )
+ * }
+ *
+ * if (loadNotes.isLoading && !loadNotes.data) {
+ *   // Initial load
+ *   return <LoadingSpinner />
+ * }
+ *
+ * if (loadNotes.isLoading && loadNotes.data) {
+ *   // Refreshing - show data with loading indicator
+ *   return (
+ *     <>
+ *       <RefreshIndicator />
+ *       <NotesList notes={loadNotes.data} />
+ *     </>
+ *   )
+ * }
+ *
+ * // Success - show data
+ * return <NotesList notes={loadNotes.data} />
  * ```
  *
  * @param asyncFn - The async function to execute
@@ -157,11 +229,26 @@ export function useAsyncOperation<T, TArgs extends unknown[] = []>(
         const errorObj =
           error instanceof Error ? error : new Error(String(error))
 
-        // Error state - preserve previous successful data (stale data on error)
+        /**
+         * STALE-WHILE-REVALIDATE PATTERN
+         *
+         * Preserve previous successful data when errors occur.
+         * This creates a state where isError: true AND data: <stale value>.
+         *
+         * Benefits:
+         * - Users can continue working with cached data during failures
+         * - Better offline-first UX
+         * - Prevents UI clearing on transient errors
+         *
+         * Implications:
+         * - Components MUST check both isError and data
+         * - Show stale data with error banner instead of clearing UI
+         * - See JSDoc examples for recommended handling patterns
+         */
         setState(prev => ({
           isLoading: false,
           error: errorObj,
-          data: prev.data, // Keep last known good value
+          data: prev.data, // Keep last known good value (stale data)
           isSuccess: false,
           isError: true,
         }))

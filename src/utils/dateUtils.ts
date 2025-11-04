@@ -6,6 +6,23 @@
 import { monitoring } from './monitoring'
 
 /**
+ * Safely get string representation of date input for logging
+ * Handles string, valid Date, and invalid Date inputs without throwing
+ *
+ * @param input - Date string or Date object to represent
+ * @returns Safe string representation of the input
+ */
+function safeInputRepresentation(input: string | Date): string {
+  if (typeof input === 'string') {
+    return input
+  } else if (input instanceof Date && Number.isFinite(input.getTime())) {
+    return input.toISOString()
+  } else {
+    return String(input)
+  }
+}
+
+/**
  * Get current timestamp as ISO string
  * Single source of truth for creating timestamps
  *
@@ -25,6 +42,13 @@ export function getCurrentTimestamp(): string {
  * @throws Never throws - returns fallback for invalid input
  */
 export function formatDate(date: string | Date): string {
+  // Record the operation attempt
+  monitoring.addBreadcrumb('formatDate called', 'info', {
+    feature: 'date_utils',
+    action: 'format_date',
+    inputType: typeof date,
+  })
+
   // Validate input type
   if (date === null || date === undefined) {
     const error = new Error('formatDate received null or undefined input')
@@ -54,11 +78,12 @@ export function formatDate(date: string | Date): string {
     // Validate Date object is valid using Number.isFinite
     if (!Number.isFinite(dateObj.getTime())) {
       const error = new Error('formatDate constructed invalid Date object')
+
       monitoring.logError(error, {
         feature: 'date_utils',
         action: 'format_date',
         additionalData: {
-          input: typeof date === 'string' ? date : date.toISOString(),
+          input: safeInputRepresentation(date),
           inputType: typeof date,
           timestamp: dateObj.getTime(),
         },
@@ -92,6 +117,11 @@ export function formatDate(date: string | Date): string {
  * @throws Never throws - returns fallback for invalid input
  */
 export function formatDateTime(date: string | Date): string {
+  // Record the attempt to format a date
+  monitoring.addBreadcrumb('formatDateTime called', 'info', {
+    inputType: typeof date,
+  })
+
   // Validate input type
   if (date === null || date === undefined) {
     const error = new Error('formatDateTime received null or undefined input')
@@ -121,11 +151,12 @@ export function formatDateTime(date: string | Date): string {
     // Validate Date object is valid using Number.isFinite
     if (!Number.isFinite(dateObj.getTime())) {
       const error = new Error('formatDateTime constructed invalid Date object')
+
       monitoring.logError(error, {
         feature: 'date_utils',
         action: 'format_date_time',
         additionalData: {
-          input: typeof date === 'string' ? date : date.toISOString(),
+          input: safeInputRepresentation(date),
           inputType: typeof date,
           timestamp: dateObj.getTime(),
         },
@@ -233,32 +264,82 @@ export function daysBetween(
   date1: string | Date,
   date2: string | Date
 ): number {
+  // Record function invocation
+  monitoring.addBreadcrumb('daysBetween called', 'info', {
+    date1Type: typeof date1,
+    date2Type: typeof date2,
+  })
+
   // Validate first date parameter
   if (date1 === null || date1 === undefined) {
-    throw new RangeError(
+    const error = new RangeError(
       `daysBetween: Invalid first date parameter 'date1' - received ${date1} (type: ${typeof date1})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'days_between',
+      additionalData: {
+        date1: String(date1),
+        date1Type: typeof date1,
+        date2: String(date2),
+        date2Type: typeof date2,
+      },
+    })
+    throw error
   }
 
   // Validate string input is not empty
   if (typeof date1 === 'string' && date1.trim() === '') {
-    throw new RangeError(
+    const error = new RangeError(
       `daysBetween: Invalid first date parameter 'date1' - received empty string`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'days_between',
+      additionalData: {
+        date1: date1,
+        date1Type: 'string',
+        date2: String(date2),
+        date2Type: typeof date2,
+      },
+    })
+    throw error
   }
 
   // Validate second date parameter
   if (date2 === null || date2 === undefined) {
-    throw new RangeError(
+    const error = new RangeError(
       `daysBetween: Invalid second date parameter 'date2' - received ${date2} (type: ${typeof date2})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'days_between',
+      additionalData: {
+        date1: String(date1),
+        date1Type: typeof date1,
+        date2: String(date2),
+        date2Type: typeof date2,
+      },
+    })
+    throw error
   }
 
   // Validate string input is not empty
   if (typeof date2 === 'string' && date2.trim() === '') {
-    throw new RangeError(
+    const error = new RangeError(
       `daysBetween: Invalid second date parameter 'date2' - received empty string`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'days_between',
+      additionalData: {
+        date1: String(date1),
+        date1Type: typeof date1,
+        date2: date2,
+        date2Type: 'string',
+      },
+    })
+    throw error
   }
 
   // Parse first date and validate
@@ -266,9 +347,21 @@ export function daysBetween(
   const d1Time = d1.getTime()
   if (Number.isNaN(d1Time)) {
     const date1Value = typeof date1 === 'string' ? date1 : String(date1)
-    throw new RangeError(
+    const error = new RangeError(
       `daysBetween: Invalid first date parameter 'date1' - constructed Date has NaN timestamp (input: "${date1Value}", type: ${typeof date1})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'days_between',
+      additionalData: {
+        date1: date1Value,
+        date1Type: typeof date1,
+        date1Timestamp: d1Time,
+        date2: String(date2),
+        date2Type: typeof date2,
+      },
+    })
+    throw error
   }
 
   // Parse second date and validate
@@ -276,9 +369,22 @@ export function daysBetween(
   const d2Time = d2.getTime()
   if (Number.isNaN(d2Time)) {
     const date2Value = typeof date2 === 'string' ? date2 : String(date2)
-    throw new RangeError(
+    const error = new RangeError(
       `daysBetween: Invalid second date parameter 'date2' - constructed Date has NaN timestamp (input: "${date2Value}", type: ${typeof date2})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'days_between',
+      additionalData: {
+        date1: String(date1),
+        date1Type: typeof date1,
+        date1Timestamp: d1Time,
+        date2: date2Value,
+        date2Type: typeof date2,
+        date2Timestamp: d2Time,
+      },
+    })
+    throw error
   }
 
   // All validations passed - calculate integer day difference
@@ -295,18 +401,44 @@ export function daysBetween(
  * @throws Error if date is invalid or days is not a valid non-negative number
  */
 export function isOlderThan(date: string | Date, days: number): boolean {
+  // Record function invocation
+  monitoring.addBreadcrumb('isOlderThan called', 'info', {
+    dateType: typeof date,
+    days: days,
+  })
+
   // Validate date parameter - check for null/undefined
   if (date === null || date === undefined) {
-    throw new Error(
+    const error = new Error(
       `isOlderThan: Invalid date parameter - received ${date} (type: ${typeof date})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'is_older_than',
+      additionalData: {
+        date: String(date),
+        dateType: typeof date,
+        days: days,
+      },
+    })
+    throw error
   }
 
   // Validate string input is not empty
   if (typeof date === 'string' && date.trim() === '') {
-    throw new Error(
+    const error = new Error(
       `isOlderThan: Invalid date parameter - received empty string (type: string)`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'is_older_than',
+      additionalData: {
+        date: date,
+        dateType: 'string',
+        days: days,
+      },
+    })
+    throw error
   }
 
   // Parse date into Date object
@@ -316,30 +448,72 @@ export function isOlderThan(date: string | Date, days: number): boolean {
   const timestamp = dateObj.getTime()
   if (!Number.isFinite(timestamp)) {
     const dateValue = typeof date === 'string' ? date : String(date)
-    throw new Error(
+    const error = new Error(
       `isOlderThan: Invalid date parameter - constructed Date has non-finite timestamp (input: "${dateValue}", type: ${typeof date}, timestamp: ${timestamp})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'is_older_than',
+      additionalData: {
+        date: dateValue,
+        dateType: typeof date,
+        timestamp: timestamp,
+        days: days,
+      },
+    })
+    throw error
   }
 
   // Validate days parameter is a finite number
   if (!Number.isFinite(days)) {
-    throw new Error(
+    const error = new Error(
       `isOlderThan: Invalid days parameter - must be finite number (received: ${days}, type: ${typeof days})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'is_older_than',
+      additionalData: {
+        date: String(date),
+        dateType: typeof date,
+        days: days,
+        daysType: typeof days,
+      },
+    })
+    throw error
   }
 
   // Validate days parameter is non-negative
   if (days < 0) {
-    throw new Error(
+    const error = new Error(
       `isOlderThan: Invalid days parameter - must be non-negative (received: ${days})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'is_older_than',
+      additionalData: {
+        date: String(date),
+        dateType: typeof date,
+        days: days,
+      },
+    })
+    throw error
   }
 
   // Validate days parameter is an integer per project convention
   if (!Number.isInteger(days)) {
-    throw new Error(
+    const error = new Error(
       `isOlderThan: Invalid days parameter - must be an integer (received: ${days})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'is_older_than',
+      additionalData: {
+        date: String(date),
+        dateType: typeof date,
+        days: days,
+      },
+    })
+    throw error
   }
 
   // All validations passed - calculate and compare
@@ -358,6 +532,14 @@ export function formatForFilename(date?: string | Date): string {
   try {
     // Validate string input is not empty
     if (date !== undefined && typeof date === 'string' && date.trim() === '') {
+      monitoring.addBreadcrumb(
+        'formatForFilename validation failed: empty string',
+        'error',
+        {
+          input: date,
+          inputType: 'string',
+        }
+      )
       const error = new Error('formatForFilename received empty string')
       monitoring.logError(error, {
         feature: 'date_utils',
@@ -377,6 +559,19 @@ export function formatForFilename(date?: string | Date): string {
     // Validate Date object has a finite timestamp before calling toISOString()
     const timestamp = dateObj.getTime()
     if (!Number.isFinite(timestamp)) {
+      monitoring.addBreadcrumb(
+        'formatForFilename validation failed: non-finite timestamp',
+        'error',
+        {
+          input: date
+            ? typeof date === 'string'
+              ? date
+              : String(date)
+            : 'undefined',
+          inputType: typeof date,
+          timestamp: timestamp,
+        }
+      )
       const error = new Error(
         'formatForFilename constructed invalid Date object'
       )
@@ -400,6 +595,11 @@ export function formatForFilename(date?: string | Date): string {
     return dateObj.toISOString().split('T')[0]
   } catch (error) {
     // Handle any unexpected errors during Date construction or formatting
+    monitoring.addBreadcrumb('formatForFilename exception caught', 'error', {
+      input: date ? String(date) : 'undefined',
+      inputType: typeof date,
+      errorMessage: (error as Error).message,
+    })
     monitoring.logError(error as Error, {
       feature: 'date_utils',
       action: 'format_for_filename',
@@ -428,32 +628,87 @@ export function compareDates(
   b: string | Date,
   descending = true
 ): number {
+  // Record invocation with inputs
+  monitoring.addBreadcrumb('compareDates called', 'info', {
+    aType: typeof a,
+    bType: typeof b,
+    descending: descending,
+  })
+
   // Validate first date parameter
   if (a === null || a === undefined) {
-    throw new Error(
+    const error = new RangeError(
       `compareDates: Invalid first date parameter 'a' - received ${a} (type: ${typeof a})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'compare_dates',
+      additionalData: {
+        a: String(a),
+        aType: typeof a,
+        b: String(b),
+        bType: typeof b,
+        descending: descending,
+      },
+    })
+    throw error
   }
 
   // Validate string input is not empty
   if (typeof a === 'string' && a.trim() === '') {
-    throw new Error(
+    const error = new RangeError(
       `compareDates: Invalid first date parameter 'a' - received empty string`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'compare_dates',
+      additionalData: {
+        a: a,
+        aType: 'string',
+        b: String(b),
+        bType: typeof b,
+        descending: descending,
+      },
+    })
+    throw error
   }
 
   // Validate second date parameter
   if (b === null || b === undefined) {
-    throw new Error(
+    const error = new RangeError(
       `compareDates: Invalid second date parameter 'b' - received ${b} (type: ${typeof b})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'compare_dates',
+      additionalData: {
+        a: String(a),
+        aType: typeof a,
+        b: String(b),
+        bType: typeof b,
+        descending: descending,
+      },
+    })
+    throw error
   }
 
   // Validate string input is not empty
   if (typeof b === 'string' && b.trim() === '') {
-    throw new Error(
+    const error = new RangeError(
       `compareDates: Invalid second date parameter 'b' - received empty string`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'compare_dates',
+      additionalData: {
+        a: String(a),
+        aType: typeof a,
+        b: b,
+        bType: 'string',
+        descending: descending,
+      },
+    })
+    throw error
   }
 
   // Parse and validate first date
@@ -461,9 +716,22 @@ export function compareDates(
   const aTime = aObj.getTime()
   if (!Number.isFinite(aTime)) {
     const aValue = typeof a === 'string' ? a : String(a)
-    throw new Error(
+    const error = new RangeError(
       `compareDates: Invalid first date parameter 'a' - constructed Date has non-finite timestamp (input: "${aValue}", type: ${typeof a}, timestamp: ${aTime})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'compare_dates',
+      additionalData: {
+        a: aValue,
+        aType: typeof a,
+        aTimestamp: aTime,
+        b: String(b),
+        bType: typeof b,
+        descending: descending,
+      },
+    })
+    throw error
   }
 
   // Parse and validate second date
@@ -471,9 +739,23 @@ export function compareDates(
   const bTime = bObj.getTime()
   if (!Number.isFinite(bTime)) {
     const bValue = typeof b === 'string' ? b : String(b)
-    throw new Error(
+    const error = new RangeError(
       `compareDates: Invalid second date parameter 'b' - constructed Date has non-finite timestamp (input: "${bValue}", type: ${typeof b}, timestamp: ${bTime})`
     )
+    monitoring.logError(error, {
+      feature: 'date_utils',
+      action: 'compare_dates',
+      additionalData: {
+        a: String(a),
+        aType: typeof a,
+        aTimestamp: aTime,
+        b: bValue,
+        bType: typeof b,
+        bTimestamp: bTime,
+        descending: descending,
+      },
+    })
+    throw error
   }
 
   // All validations passed - perform comparison with validated numeric times

@@ -3,6 +3,9 @@
  * Centralized validation logic for all user inputs
  */
 
+import { monitoring } from './monitoring'
+import { sanitizeContent, sanitizeTitle } from './sanitization'
+
 /**
  * Validation result interface
  */
@@ -84,33 +87,8 @@ export function validateNote(note: {
   title: string
   content?: string
 }): ValidationResult {
-  // Import sanitization utilities inline to avoid circular dependencies
-  const sanitizeTitle = (title: string): string => {
-    if (!title || typeof title !== 'string') return ''
-    // Remove script tags, HTML tags, control characters
-    let sanitized = title.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      ''
-    )
-    sanitized = sanitized.replace(/<[^>]+>/g, '')
-    // eslint-disable-next-line no-control-regex
-    sanitized = sanitized.trim().replace(/[\x00-\x1F\x7F]/g, '')
-    return sanitized.substring(0, 255)
-  }
-
-  const sanitizeContent = (content: string): string => {
-    if (!content || typeof content !== 'string') return ''
-    // Remove script tags and control characters for basic sanitization
-    let sanitized = content.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      ''
-    )
-    // eslint-disable-next-line no-control-regex
-    sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '')
-    return sanitized
-  }
-
-  // Sanitize inputs to prevent XSS and normalize data
+  // Use DOMPurify-based sanitization from sanitization.ts for production-grade XSS prevention
+  // Note: Direct import is safe here as validation.ts doesn't export functions used by sanitization.ts
   const sanitizedTitle = sanitizeTitle(note.title)
   const sanitizedContent = note.content ? sanitizeContent(note.content) : ''
 
@@ -119,7 +97,7 @@ export function validateNote(note: {
     return { isValid: false, error: 'Note title is required' }
   }
 
-  // Validate title length (already enforced in sanitization, but explicit check)
+  // Validate length of sanitized title
   if (sanitizedTitle.length > 255) {
     return {
       isValid: false,
@@ -140,9 +118,21 @@ export function validateNote(note: {
           error: 'Note content is too large (maximum 10MB)',
         }
       }
-    } catch {
-      // TextEncoder should be available in all modern browsers
-      throw new Error('TextEncoder not available for size validation')
+    } catch (error) {
+      // TextEncoder should be available in all modern browsers, but handle gracefully
+      const errorMessage = 'TextEncoder not available for size validation'
+      monitoring.logError(error as Error, {
+        feature: 'validation',
+        action: 'validate_note_content_size',
+        additionalData: {
+          message: errorMessage,
+          contentLength: sanitizedContent.length,
+        },
+      })
+      return {
+        isValid: false,
+        error: 'Unable to validate content size (technical error)',
+      }
     }
   }
 
@@ -229,12 +219,7 @@ export function validateFileSize(
   maxSizeMB: number
 ): ValidationResult {
   // Validate size parameter
-  if (
-    typeof size !== 'number' ||
-    !Number.isFinite(size) ||
-    Number.isNaN(size) ||
-    size < 0
-  ) {
+  if (typeof size !== 'number' || !Number.isFinite(size) || size < 0) {
     return {
       isValid: false,
       error: 'Invalid file size: must be a finite non-negative number',
@@ -245,7 +230,6 @@ export function validateFileSize(
   if (
     typeof maxSizeMB !== 'number' ||
     !Number.isFinite(maxSizeMB) ||
-    Number.isNaN(maxSizeMB) ||
     maxSizeMB < 0
   ) {
     return {

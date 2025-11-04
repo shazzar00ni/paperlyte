@@ -1,7 +1,8 @@
 import DOMPurify from 'dompurify'
 import { Home, RefreshCw, Shield } from 'lucide-react'
 import { ReactNode } from 'react'
-import { trackUserAction } from '../../utils/analytics'
+import { dataService } from '../../services/dataService'
+import { trackFeatureUsage, trackNavigationEvent } from '../../utils/analytics'
 import { monitoring } from '../../utils/monitoring'
 import FeatureErrorBoundary from './FeatureErrorBoundary'
 
@@ -28,21 +29,20 @@ export function AdminErrorBoundary({
   children,
   onReset,
 }: AdminErrorBoundaryProps) {
-  const handleReset = () => {
+  const handleReset = async () => {
     monitoring.addBreadcrumb('Admin dashboard reset initiated', 'user', {
       action: 'reset_dashboard',
     })
 
     try {
-      // Clear any cached admin data
-      sessionStorage.removeItem('admin_filters')
+      // Clear any cached admin data using dataService
+      await dataService.removeSessionItem('admin_filters')
 
       monitoring.addBreadcrumb('Admin filters cleared from session', 'info', {
         action: 'clear_session',
       })
 
-      trackUserAction('reset_dashboard', {
-        feature: 'admin_error_boundary',
+      trackFeatureUsage('admin_error_boundary', 'reset_dashboard', {
         hasCustomReset: !!onReset,
       })
 
@@ -121,8 +121,7 @@ export function AdminErrorBoundary({
                     action: 'reload_dashboard_clicked',
                   }
                 )
-                trackUserAction('reload_dashboard_clicked', {
-                  feature: 'admin_error_boundary',
+                trackFeatureUsage('admin_error_boundary', 'reload_dashboard', {
                   errorMessage: error.message,
                 })
                 resetError()
@@ -144,8 +143,9 @@ export function AdminErrorBoundary({
                     fromError: true,
                   }
                 )
-                trackUserAction('return_home_clicked', {
-                  feature: 'admin_error_boundary',
+                trackNavigationEvent('page_change', {
+                  from: 'admin_error_boundary',
+                  to: 'home',
                   fromError: true,
                 })
                 window.location.href = '/'

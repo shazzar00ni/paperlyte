@@ -6,6 +6,14 @@ import type { ModalProps } from '../types'
 import { trackWaitlistEvent } from '../utils/analytics'
 import { stripHtml } from '../utils/sanitization'
 
+/**
+ * RFC-5322-based email validation regex
+ * Matches: local-part@domain with proper character constraints
+ * Declared at module scope to avoid recompilation on each render
+ */
+const EMAIL_REGEX =
+  /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i
+
 interface WaitlistFormData {
   email: string
   name: string
@@ -31,11 +39,6 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
       // Normalize email for validation
       const normalizedEmail = data.email.trim().toLowerCase()
 
-      // Stricter RFC-5322-based email validation
-      // Matches: local-part@domain with proper character constraints
-      const emailRegex =
-        /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i
-
       // Sanity checks for common invalid patterns
       const hasConsecutiveDots = /\.{2,}/.test(normalizedEmail)
       const domainPart = normalizedEmail.split('@')[1] || ''
@@ -48,7 +51,7 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         domainLabels[domainLabels.length - 1].length >= 2
 
       if (
-        !emailRegex.test(normalizedEmail) ||
+        !EMAIL_REGEX.test(normalizedEmail) ||
         hasConsecutiveDots ||
         !hasValidDomainLabels ||
         !hasValidTLD

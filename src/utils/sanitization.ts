@@ -79,34 +79,91 @@ export function sanitizeTitle(title: string): string {
  */
 export function sanitizeContent(content: string): string {
   if (!content || typeof content !== 'string') {
+    monitoring.addBreadcrumb(
+      'Content sanitization skipped - invalid input',
+      'info',
+      {
+        inputType: typeof content,
+        inputPresent: !!content,
+      }
+    )
     return ''
   }
 
-  // Use DOMPurify for comprehensive, secure HTML sanitization
-  // Configure to allow basic formatting tags while removing all dangerous content
-  const sanitized = DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: [
-      'p',
-      'br',
-      'strong',
-      'em',
-      'u',
-      'h1',
-      'h2',
-      'h3',
-      'ul',
-      'ol',
-      'li',
-      'blockquote',
-      'code',
-      'pre',
-    ],
-    ALLOWED_ATTR: [], // No attributes allowed - prevents event handlers and dangerous attributes
-    KEEP_CONTENT: true, // Preserve text content when removing tags
-    ALLOW_DATA_ATTR: false, // Prevent data-* attributes
+  const originalLength = content.length
+
+  monitoring.addBreadcrumb('Starting content sanitization', 'info', {
+    originalLength,
   })
 
-  return sanitized
+  try {
+    // Use DOMPurify for comprehensive, secure HTML sanitization
+    // Configure to allow basic formatting tags while removing all dangerous content
+    const sanitized = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: [
+        'p',
+        'br',
+        'strong',
+        'b',
+        'em',
+        'i',
+        'u',
+        'h1',
+        'h2',
+        'h3',
+        'ul',
+        'ol',
+        'li',
+        'blockquote',
+        'code',
+        'pre',
+      ],
+      ALLOWED_ATTR: [], // No attributes allowed - prevents event handlers and dangerous attributes
+      KEEP_CONTENT: true, // Preserve text content when removing tags
+      ALLOW_DATA_ATTR: false, // Prevent data-* attributes
+    })
+
+    // Normalize content for comparison by collapsing whitespace and line endings
+    const normalize = (str: string) =>
+      str.replace(/\r\n/g, '\n').replace(/\s+/g, ' ').trim()
+    const originalNormalized = normalize(content)
+    const sanitizedNormalized = normalize(sanitized)
+    const contentModified = originalNormalized !== sanitizedNormalized
+
+    monitoring.addBreadcrumb('Content sanitization complete', 'info', {
+      originalLength,
+      sanitizedLength: sanitized.length,
+      contentModified,
+    })
+
+    return sanitized
+  } catch (error) {
+    const errorObj =
+      error instanceof Error
+        ? error
+        : new Error('DOMPurify sanitization failed')
+
+    monitoring.logError(errorObj, {
+      feature: 'sanitization',
+      action: 'sanitize_content',
+      additionalData: {
+        originalLength,
+        errorMessage: errorObj.message,
+      },
+    })
+
+    monitoring.addBreadcrumb(
+      'Content sanitization failed - returning empty string',
+      'error',
+      {
+        originalLength,
+        errorMessage: errorObj.message,
+      }
+    )
+
+    // Return empty string on error for safety (fail secure)
+    return ''
+  }
 }
 
 /**
@@ -118,10 +175,27 @@ export function sanitizeContent(content: string): string {
  */
 export function stripHtml(html: string): string {
   if (!html || typeof html !== 'string') {
+    monitoring.addBreadcrumb('HTML stripping skipped - invalid input', 'info', {
+      inputType: typeof html,
+      inputPresent: !!html,
+    })
     return ''
   }
 
-  return html.replace(/<[^>]*>/g, ' ').trim()
+  const originalLength = html.length
+  monitoring.addBreadcrumb('Starting HTML tag stripping', 'info', {
+    originalLength,
+  })
+
+  const stripped = html.replace(/<[^>]*>/g, ' ').trim()
+
+  monitoring.addBreadcrumb('HTML tag stripping complete', 'info', {
+    originalLength,
+    strippedLength: stripped.length,
+    tagsRemoved: originalLength !== stripped.length,
+  })
+
+  return stripped
 }
 
 /**
@@ -134,22 +208,51 @@ export function stripHtml(html: string): string {
  */
 export function sanitizeFilename(filename: string): string {
   if (!filename || typeof filename !== 'string') {
+    monitoring.addBreadcrumb(
+      'Filename sanitization skipped - invalid input',
+      'info',
+      {
+        inputType: typeof filename,
+        inputPresent: !!filename,
+      }
+    )
     return 'untitled'
   }
+
+  const originalLength = filename.length
+  monitoring.addBreadcrumb('Starting filename sanitization', 'info', {
+    originalLength,
+  })
 
   // Remove or replace invalid filename characters
   // eslint-disable-next-line no-control-regex
   let sanitized = filename.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
 
+  const hadInvalidChars = sanitized !== filename
+
   // Remove leading/trailing dots and spaces
   sanitized = sanitized.replace(/^[\s.]+|[\s.]+$/g, '')
 
   // Limit length
-  if (sanitized.length > 255) {
+  const wasTruncated = sanitized.length > 255
+  if (wasTruncated) {
     sanitized = sanitized.substring(0, 255)
   }
 
-  return sanitized || 'untitled'
+  const usedFallback = !sanitized
+  if (usedFallback) {
+    sanitized = 'untitled'
+  }
+
+  monitoring.addBreadcrumb('Filename sanitization complete', 'info', {
+    originalLength,
+    sanitizedLength: sanitized.length,
+    hadInvalidChars,
+    wasTruncated,
+    usedFallback,
+  })
+
+  return sanitized
 }
 
 /**
@@ -204,8 +307,17 @@ export function sanitizeUrl(url: string): string | null {
  */
 export function escapeHtml(text: string): string {
   if (!text || typeof text !== 'string') {
+    monitoring.addBreadcrumb('HTML escaping skipped - invalid input', 'info', {
+      inputType: typeof text,
+      inputPresent: !!text,
+    })
     return ''
   }
+
+  const originalLength = text.length
+  monitoring.addBreadcrumb('Starting HTML entity escaping', 'info', {
+    originalLength,
+  })
 
   const map: Record<string, string> = {
     '&': '&amp;',
@@ -216,7 +328,15 @@ export function escapeHtml(text: string): string {
     '/': '&#x2F;',
   }
 
-  return text.replace(/[&<>"'/]/g, char => map[char])
+  const escaped = text.replace(/[&<>"'/]/g, char => map[char])
+
+  monitoring.addBreadcrumb('HTML entity escaping complete', 'info', {
+    originalLength,
+    escapedLength: escaped.length,
+    entitiesEscaped: escaped.length !== originalLength,
+  })
+
+  return escaped
 }
 
 /**
@@ -229,12 +349,34 @@ export function escapeHtml(text: string): string {
  */
 export function sanitizeSearchQuery(query: string): string {
   if (!query || typeof query !== 'string') {
+    monitoring.addBreadcrumb(
+      'Search query sanitization skipped - invalid input',
+      'info',
+      {
+        inputType: typeof query,
+        inputPresent: !!query,
+      }
+    )
     return ''
   }
 
+  const originalLength = query.length
+  monitoring.addBreadcrumb('Starting search query sanitization', 'info', {
+    originalLength,
+  })
+
   // Remove special regex characters that could cause errors
-  return query
+  const sanitized = query
     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     .trim()
     .substring(0, 200) // Limit search query length
+
+  monitoring.addBreadcrumb('Search query sanitization complete', 'info', {
+    originalLength,
+    sanitizedLength: sanitized.length,
+    wasTruncated: originalLength > 200,
+    specialCharsEscaped: sanitized !== query,
+  })
+
+  return sanitized
 }

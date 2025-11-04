@@ -1,3 +1,4 @@
+import { trackFeatureUsage } from '@/utils/analytics'
 import { monitoring } from '@/utils/monitoring'
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
 import { Component, ErrorInfo, ReactNode } from 'react'
@@ -41,17 +42,23 @@ interface FeatureErrorBoundaryState {
  *
  * @example
  * ```tsx
- * // With SPA navigation using React Router
- * import { useNavigate } from 'react-router-dom'
- *
+ * // Basic usage with callback handlers
  * function App() {
- *   const navigate = useNavigate()
+ *   const handleReset = () => {
+ *     // Reset component state or perform cleanup
+ *     console.log('Feature reset')
+ *   }
+ *
+ *   const handleNavigateHome = () => {
+ *     // Navigate to home using your routing solution
+ *     console.log('Navigate to home')
+ *   }
  *
  *   return (
  *     <FeatureErrorBoundary
  *       featureName="note_editor"
- *       onReset={() => window.location.reload()}
- *       onNavigateHome={() => navigate('/')}
+ *       onReset={handleReset}
+ *       onNavigateHome={handleNavigateHome}
  *     >
  *       <NoteEditor />
  *     </FeatureErrorBoundary>
@@ -124,14 +131,22 @@ export class FeatureErrorBoundary extends Component<
 
   handleNavigateHome = (): void => {
     const { onNavigateHome } = this.props
+    const usedSpaNavigation = !!onNavigateHome
 
     monitoring.addBreadcrumb(
       'Navigate home from error boundary',
       'navigation',
       {
         feature: this.props.featureName,
+        usedSpaNavigation,
       }
     )
+
+    // Track analytics for navigation from error
+    trackFeatureUsage(this.props.featureName, 'navigate_home_from_error', {
+      usedSpaNavigation,
+      navigationMethod: usedSpaNavigation ? 'custom_callback' : 'full_reload',
+    })
 
     // Use custom navigation if provided (SPA navigation)
     if (onNavigateHome) {

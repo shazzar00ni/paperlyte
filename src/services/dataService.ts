@@ -882,6 +882,77 @@ class DataService {
       }
     }
   }
+
+  /**
+   * Remove item from localStorage
+   * Provides abstraction layer for localStorage removal operations
+   * Automatically handles the storage prefix for Paperlyte keys
+   *
+   * @param key - The localStorage key to remove (without prefix)
+   * @returns Promise<boolean> - true if successful, false on any failure (never throws)
+   */
+  async removeItem(key: string): Promise<boolean> {
+    await this.initialize()
+
+    try {
+      if (typeof localStorage === 'undefined') {
+        monitoring.addBreadcrumb(
+          'LocalStorage unavailable in removeItem',
+          'warning',
+          {
+            key,
+          }
+        )
+        return false
+      }
+
+      const fullKey = `${this.storagePrefix}${key}`
+      localStorage.removeItem(fullKey)
+
+      monitoring.addBreadcrumb('LocalStorage item removed', 'info', {
+        key: fullKey,
+      })
+
+      return true
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'remove_item',
+        additionalData: { key },
+      })
+      return false
+    }
+  }
+
+  /**
+   * Remove item from session storage
+   * Provides abstraction layer for session storage operations
+   *
+   * @param key - The session storage key to remove
+   * @returns Promise<boolean> - true if successful, false otherwise
+   */
+  async removeSessionItem(key: string): Promise<boolean> {
+    try {
+      if (typeof sessionStorage === 'undefined') {
+        throw new StorageUnavailableError('SessionStorage is not available')
+      }
+
+      sessionStorage.removeItem(key)
+
+      monitoring.addBreadcrumb('Session item removed', 'info', {
+        key,
+      })
+
+      return true
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'data_service',
+        action: 'remove_session_item',
+        additionalData: { key },
+      })
+      return false
+    }
+  }
 }
 
 // Export singleton instance

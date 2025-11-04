@@ -195,6 +195,10 @@ describe('dateUtils', () => {
         expect.objectContaining({
           feature: 'date_utils',
           action: 'format_date_time',
+          additionalData: expect.objectContaining({
+            input: '   ',
+            inputType: 'string',
+          }),
         })
       )
     })
@@ -224,6 +228,11 @@ describe('dateUtils', () => {
         expect.objectContaining({
           feature: 'date_utils',
           action: 'format_date_time',
+          additionalData: expect.objectContaining({
+            input: expect.any(String),
+            inputType: 'object',
+            timestamp: expect.any(Number),
+          }),
         })
       )
     })

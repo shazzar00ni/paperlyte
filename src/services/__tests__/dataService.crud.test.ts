@@ -2,9 +2,9 @@
  * Tests for enhanced CRUD operations in dataService
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { dataService } from '../dataService'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Note } from '../../types'
+import { dataService } from '../dataService'
 
 // Mock dependencies
 vi.mock('../../utils/monitoring', () => ({
@@ -45,7 +45,17 @@ vi.mock('../../utils/dataMigration', () => ({
 
 describe('DataService Enhanced CRUD Operations', () => {
   beforeEach(() => {
+    // Clear all localStorage including any paperlyte_ prefixed keys
     localStorage.clear()
+    // Extra cleanup to ensure no lingering state - collect keys first to avoid index shifts
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith('paperlyte_')) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key))
     vi.clearAllMocks()
   })
 
@@ -179,8 +189,9 @@ describe('DataService Enhanced CRUD Operations', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      const success = await dataService.saveNote(note)
-      expect(success).toBe(false)
+      await expect(dataService.saveNote(note)).rejects.toThrow(
+        'Note title is required'
+      )
     })
 
     it('should reject notes with titles exceeding 255 characters', async () => {
@@ -193,8 +204,9 @@ describe('DataService Enhanced CRUD Operations', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      const success = await dataService.saveNote(note)
-      expect(success).toBe(false)
+      await expect(dataService.saveNote(note)).rejects.toThrow(
+        'Note title must be 255 characters or less'
+      )
     })
   })
 

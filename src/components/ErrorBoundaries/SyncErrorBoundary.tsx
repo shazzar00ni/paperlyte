@@ -1,5 +1,6 @@
 import { Cloud, RefreshCw } from 'lucide-react'
 import { ReactNode } from 'react'
+import { dataService } from '../../services/dataService'
 import { trackUserAction } from '../../utils/analytics'
 import { monitoring } from '../../utils/monitoring'
 import FeatureErrorBoundary from './FeatureErrorBoundary'
@@ -22,24 +23,28 @@ export function SyncErrorBoundary({
   children,
   onReset,
 }: SyncErrorBoundaryProps) {
-  const handleReset = () => {
+  const handleReset = async (resetError: () => void) => {
     try {
       monitoring.addBreadcrumb('sync_error_boundary_reset', 'user', {
         hasCustomReset: !!onReset,
       })
 
-      // Clear any corrupted sync state
-      // Note: Using localStorage directly here as sync_state is not a dataService-managed entity
-      // and there's no dataService.remove() method. This is acceptable for infrastructure state.
-      localStorage.removeItem('paperlyte_sync_state')
+      // Clear any corrupted sync state using dataService abstraction
+      await dataService.removeItem('sync_state')
 
       monitoring.addBreadcrumb('Sync state cleared', 'info', {
         action: 'clear_sync_state',
       })
 
+      // Always clear the error boundary state first
+      resetError()
+
       if (onReset) {
+        // When custom reset handler exists, call it after clearing error state
+        // This allows SPA navigation without page reload
         onReset()
       } else {
+        // No custom handler - perform full page reload
         window.location.reload()
       }
     } catch (error) {
@@ -73,13 +78,13 @@ export function SyncErrorBoundary({
         )}
 
         <button
-          onClick={() => {
+          onClick={async () => {
             trackUserAction('retry_sync', {
               feature: 'sync_error_boundary',
               errorMessage: error.message,
             })
-            resetError()
-            handleReset()
+            // handleReset() clears error boundary state, clears sync state, then calls custom onReset or reloads
+            await handleReset(resetError)
           }}
           aria-label='Retry sync'
           className='flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700'
@@ -99,7 +104,7 @@ export function SyncErrorBoundary({
     <FeatureErrorBoundary
       featureName='sync_engine'
       fallback={customFallback}
-      onReset={handleReset}
+      onReset={onReset}
     >
       {children}
     </FeatureErrorBoundary>

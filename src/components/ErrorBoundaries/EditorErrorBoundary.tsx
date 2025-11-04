@@ -17,7 +17,7 @@ export function EditorErrorBoundary({
   children,
   onReset,
 }: EditorErrorBoundaryProps) {
-  const handleReset = () => {
+  const handleReset = async () => {
     try {
       // Add breadcrumb before reset
       monitoring.addBreadcrumb(
@@ -45,16 +45,25 @@ export function EditorErrorBoundary({
       })
 
       if (onReset) {
-        onReset()
+        // Handle both sync and async onReset functions by wrapping in Promise.resolve()
+        // This ensures we wait for async operations to complete before logging
+        await Promise.resolve(onReset())
+
+        // Add breadcrumb after custom reset completes
+        monitoring.addBreadcrumb('Editor reset completed', 'info', {
+          action: 'reset_complete',
+          resetType: 'custom',
+        })
       } else {
+        // Add breadcrumb before page reload (last chance to log)
+        monitoring.addBreadcrumb('Editor reset: reloading page', 'info', {
+          action: 'reset_complete',
+          resetType: 'reload',
+        })
+
         // Default: reload the page
         window.location.reload()
       }
-
-      // Add breadcrumb after successful reset
-      monitoring.addBreadcrumb('Editor reset completed', 'info', {
-        action: 'reset_complete',
-      })
     } catch (error) {
       // Log error to monitoring
       monitoring.logError(error as Error, {

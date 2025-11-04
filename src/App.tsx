@@ -54,7 +54,7 @@ function App() {
             <Route
               path='*'
               element={
-                <FeatureErrorBoundary featureName='landing_page'>
+                <FeatureErrorBoundary featureName='not_found'>
                   <LandingPage />
                 </FeatureErrorBoundary>
               }

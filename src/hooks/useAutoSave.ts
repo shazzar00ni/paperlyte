@@ -34,6 +34,9 @@ function shallowEqual<T>(obj1: T | null, obj2: T | null): boolean {
 
   // Check each key-value pair
   for (const key of keys1) {
+    // Check if key exists on obj2 before accessing
+    if (!Object.prototype.hasOwnProperty.call(obj2, key)) return false
+
     const val1 = (obj1 as Record<string, unknown>)[key]
     const val2 = (obj2 as Record<string, unknown>)[key]
 
