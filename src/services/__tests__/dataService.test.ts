@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Note } from '../../types'
 import { dataService } from '../dataService'
 
@@ -7,6 +7,11 @@ describe('DataService', () => {
     // Clear localStorage before each test
     localStorage.clear()
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    // Cleanup after each test as well
+    localStorage.clear()
   })
 
   describe('Notes Operations', () => {
