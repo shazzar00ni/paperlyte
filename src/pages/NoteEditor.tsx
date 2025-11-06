@@ -121,11 +121,14 @@ const NoteEditor: React.FC = () => {
     websocketService.on('note_update', handleNoteUpdate)
     websocketService.on('note_delete', handleNoteDelete)
 
-    // Cleanup on unmount
+    // Cleanup on unmount - ensures all handlers are removed even if operations are pending
     return () => {
+      // Remove event handlers first to prevent any race conditions
       websocketService.off('status_change', handleStatusChange)
       websocketService.off('note_update', handleNoteUpdate)
       websocketService.off('note_delete', handleNoteDelete)
+      
+      // Disconnect WebSocket connection
       websocketService.disconnect()
     }
   }, [])

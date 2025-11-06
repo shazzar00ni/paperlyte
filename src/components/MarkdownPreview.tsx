@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { monitoring } from '../utils/monitoring'
 
 interface MarkdownPreviewProps {
   content: string
@@ -64,11 +65,9 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
       })
     } catch (error) {
       // Use monitoring system for consistent error tracking
-      import('../utils/monitoring').then(({ monitoring }) => {
-        monitoring.logError(error as Error, {
-          feature: 'markdown_preview',
-          action: 'parse_error',
-        })
+      monitoring.logError(error as Error, {
+        feature: 'markdown_preview',
+        action: 'parse_error',
       })
       return '<p>Error rendering preview</p>'
     }
