@@ -29,6 +29,12 @@ import { monitoring } from '../utils/monitoring'
  * @property {string} rateLimitKey - Prefix for rate limiting keys.
  */
 // Rate limiting configuration
+/**
+ * @interface RateLimitEntry
+ * @description
+ * Represents a record of authentication attempts for rate limiting purposes.
+ * Stores the number of failed attempts and the timestamp when the rate limit resets.
+ */
 interface RateLimitEntry {
   count: number
   resetAt: number
