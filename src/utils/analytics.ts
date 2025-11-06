@@ -37,7 +37,7 @@ class Analytics {
         capture_pageview: true,
         capture_pageleave: true,
         loaded: posthog => {
-          if (process.env.NODE_ENV === 'development') posthog.debug()
+          if (import.meta.env.DEV) posthog.debug()
         },
         // Respect user privacy
         respect_dnt: true,

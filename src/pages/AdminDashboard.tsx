@@ -189,6 +189,7 @@ const AdminDashboard: React.FC = () => {
                 value={timeRange}
                 onChange={e => setTimeRange(e.target.value)}
                 className='input text-sm'
+                aria-label='Select time range for analytics data'
               >
                 <option value='24h'>Last 24 hours</option>
                 <option value='7d'>Last 7 days</option>
@@ -289,10 +290,10 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className='flex items-center space-x-2'>
-                      <div className='w-20 bg-gray-200 rounded-full h-2'>
+                      <div className='w-20 bg-gray-200 rounded-full h-2 relative overflow-hidden'>
                         <div
-                          className='h-2 bg-primary rounded-full'
-                          style={{ width: `${feature.usage}%` }}
+                          className='h-2 bg-primary rounded-full absolute top-0 left-0'
+                          data-usage={feature.usage}
                         ></div>
                       </div>
                       <span className='text-sm text-gray-600'>

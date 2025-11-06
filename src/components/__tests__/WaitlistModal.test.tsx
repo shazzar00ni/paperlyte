@@ -56,7 +56,7 @@ describe('WaitlistModal', () => {
     const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
     const interestSelect = screen.getByLabelText("I'm interested as a...")
-    const submitButton = screen.getByText('Join Waitlist')
+    const submitButton = screen.getByRole('button', { name: /join waitlist/i })
 
     // Enter email without proper domain (passes HTML5 but fails our regex)
     await user.type(emailInput, 'test@test')
@@ -85,7 +85,7 @@ describe('WaitlistModal', () => {
     const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
     const interestSelect = screen.getByLabelText("I'm interested as a...")
-    const submitButton = screen.getByText('Join Waitlist')
+    const submitButton = screen.getByRole('button', { name: /join waitlist/i })
 
     // Fill form with valid data
     await user.type(emailInput, 'test@example.com')
@@ -113,7 +113,7 @@ describe('WaitlistModal', () => {
 
     const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
-    const submitButton = screen.getByText('Join Waitlist')
+    const submitButton = screen.getByRole('button', { name: /join waitlist/i })
 
     await user.type(emailInput, 'existing@example.com')
     await user.type(nameInput, 'Existing User')
@@ -134,7 +134,7 @@ describe('WaitlistModal', () => {
 
     const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
-    const submitButton = screen.getByText('Join Waitlist')
+    const submitButton = screen.getByRole('button', { name: /join waitlist/i })
 
     await user.type(emailInput, 'success@example.com')
     await user.type(nameInput, 'Success User')
@@ -154,7 +154,7 @@ describe('WaitlistModal', () => {
     const emailInput = screen.getByLabelText('Email Address *')
     const nameInput = screen.getByLabelText('Name *')
     const interestSelect = screen.getByLabelText("I'm interested as a...")
-    const submitButton = screen.getByText('Join Waitlist')
+    const submitButton = screen.getByRole('button', { name: /join waitlist/i })
 
     await user.type(emailInput, 'professional@example.com')
     await user.type(nameInput, 'Professional User')

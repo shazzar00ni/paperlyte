@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  Save,
-  Tag,
-  Search,
-  PlusCircle,
-  Trash2,
   Maximize2,
+  PlusCircle,
+  Save,
+  Search,
+  Tag,
+  Trash2,
   X,
 } from 'lucide-react'
-import { trackNoteEvent, trackFeatureUsage } from '../utils/analytics'
-import { monitoring } from '../utils/monitoring'
-import { dataService } from '../services/dataService'
-import RichTextEditor from '../components/RichTextEditor'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ConfirmationModal from '../components/ConfirmationModal'
+import RichTextEditor from '../components/RichTextEditor'
 import TagModal from '../components/TagModal'
+import { dataService } from '../services/dataService'
 import type { Note } from '../types'
+import { trackFeatureUsage, trackNoteEvent } from '../utils/analytics'
+import { monitoring } from '../utils/monitoring'
 
 const NoteEditor: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([])
@@ -28,6 +28,13 @@ const NoteEditor: React.FC = () => {
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Define exitFocusMode before useEffect to avoid reference errors
+  const exitFocusMode = useCallback(() => {
+    setFocusMode(false)
+    trackFeatureUsage('focus_mode', 'exit')
+    monitoring.addBreadcrumb('Focus Mode exited', 'user_action')
+  }, [])
 
   useEffect(() => {
     // Track editor page view
@@ -64,7 +71,7 @@ const NoteEditor: React.FC = () => {
       document.removeEventListener('keydown', handleEscapeKey)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [focusMode])
+  }, [focusMode, exitFocusMode])
 
   const loadNotes = async () => {
     try {
@@ -281,13 +288,7 @@ const NoteEditor: React.FC = () => {
     monitoring.addBreadcrumb('Focus Mode entered', 'user_action')
   }
 
-  const exitFocusMode = () => {
-    setFocusMode(false)
-    trackFeatureUsage('focus_mode', 'exit')
-    monitoring.addBreadcrumb('Focus Mode exited', 'user_action')
-  }
-
-  const filteredNotes = notes.filter(
+  const filteredNotes = (notes || []).filter(
     note =>
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
