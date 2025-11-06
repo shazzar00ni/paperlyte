@@ -350,7 +350,7 @@ const AdminDashboard: React.FC = () => {
               <div className='flex justify-between items-center'>
                 <span className='text-gray-600'>Memory Usage</span>
                 <span className='font-medium text-dark'>
-                  {analyticsData?.performanceMetrics.memoryUsage.toFixed(2)}MB
+                  {analyticsData?.performanceMetrics.memoryUsage}MB
                 </span>
               </div>
             </div>
