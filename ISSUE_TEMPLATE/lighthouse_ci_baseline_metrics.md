@@ -1,3 +1,3 @@
 # Run Lighthouse CI for baseline metrics
 
-**Task:** Execute `npm run lighthouse:ci` to establish baseline performance, accessibility, and SEO metrics before launch. Document findings and address any critical issues identified.
+**Task:** Execute `npx lighthouse-ci` to establish baseline performance, accessibility, and SEO metrics. First build the application (`npm run build`), start the preview server (`npm run preview`), then run the audit. Document findings and address any critical issues identified.
