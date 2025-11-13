@@ -354,4 +354,6 @@ lhci collect --config=./.lighthouserc.json
 
 ---
 
-_Last Updated: October 16, 2025_
+#### Last Updated
+
+October 16, 2025
