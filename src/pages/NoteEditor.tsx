@@ -104,6 +104,9 @@ const NoteEditor: React.FC = () => {
         }
         return [note, ...prevNotes]
       })
+      setCurrentNote(prev =>
+        prev?.id === note.id ? note : prev
+      )
       monitoring.addBreadcrumb('Note updated via WebSocket', 'info', {
         noteId: note.id,
       })
