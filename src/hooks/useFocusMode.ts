@@ -117,7 +117,7 @@ export function useFocusMode(
     return () => {
       document.removeEventListener('keydown', handleEscapeKey)
     }
-  }, [isFocusMode, enableEscapeKey])
+  }, [isFocusMode, enableEscapeKey, exitFocusMode])
 
   // Handle click outside
   useEffect(() => {
