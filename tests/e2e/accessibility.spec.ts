@@ -206,13 +206,19 @@ test.describe('Accessibility E2E Tests', () => {
     await expect(focusedElement).toBeVisible()
 
     // Get computed styles to check for focus indicator
-    const outlineWidth = await focusedElement.evaluate(el => {
+    const { outlineWidth, boxShadow } = await focusedElement.evaluate(el => {
       const styles = window.getComputedStyle(el)
-      return styles.outlineWidth
+      return {
+        outlineWidth: styles.outlineWidth,
+        boxShadow: styles.boxShadow,
+      }
     })
 
-    // Focus indicator should be visible (outline width > 0 or has box-shadow)
-    expect(outlineWidth).not.toBe('0px')
+    // Focus indicator should be visible via outline or box shadow
+    expect(
+      outlineWidth !== '0px' ||
+        (boxShadow !== undefined && boxShadow !== 'none')
+    ).toBeTruthy()
   })
 
   test('Buttons should have accessible names', async ({ page }) => {
