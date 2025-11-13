@@ -7,6 +7,10 @@
 
 /**
  * Base error class for all Paperlyte errors
+ * @param message - Human-readable error message
+ * @param code - Machine-readable error code
+ * @param recoverable - Whether the error can be recovered from
+ * @param context - Additional context for debugging
  */
 export class PaperlyteError extends Error {
   constructor(
