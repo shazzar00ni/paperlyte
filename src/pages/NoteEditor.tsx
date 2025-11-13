@@ -206,6 +206,17 @@ const NoteEditor: React.FC = () => {
     }
   }, [notes])
 
+  /**
+   * Updates the current note in local state.
+   *
+   * @param updates - Partial note fields to update.
+   * @remarks
+   * This function is now synchronous and does NOT persist changes directly.
+   * Persistence is delegated to the auto-save hook (`useAutoSave`), which
+   * observes state changes and handles saving to storage or backend.
+   * This design ensures UI responsiveness and centralizes persistence logic.
+   * Future maintainers: do not add direct persistence here; use the auto-save pattern.
+   */
   const updateCurrentNote = (updates: Partial<Note>) => {
     if (!currentNote) return
 
