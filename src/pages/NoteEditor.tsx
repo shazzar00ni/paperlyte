@@ -113,7 +113,21 @@ const NoteEditor: React.FC = () => {
     }
 
     const handleNoteDelete = (data: { noteId: string }) => {
-      setNotes(prevNotes => prevNotes.filter(n => n.id !== data.noteId))
+      setNotes(prevNotes => {
+        const newNotes = prevNotes.filter(n => n.id !== data.noteId)
+        
+        // Update currentNote if the deleted note was being viewed
+        setCurrentNote(prev => {
+          if (prev?.id === data.noteId) {
+            // Switch to the first available note or null
+            return newNotes[0] || null
+          }
+          return prev
+        })
+        
+        return newNotes
+      })
+      
       monitoring.addBreadcrumb('Note deleted via WebSocket', 'info', {
         noteId: data.noteId,
       })

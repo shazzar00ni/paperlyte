@@ -27,7 +27,12 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   // Parse and sanitize Markdown
   const htmlContent = useMemo(() => {
     try {
-      const rawHtml = marked.parse(content || '') as string
+      // Validate content before parsing
+      if (!content || typeof content !== 'string') {
+        return '<p>No content to preview</p>'
+      }
+
+      const rawHtml = marked.parse(content) as string
       // Sanitize HTML to prevent XSS attacks
       return DOMPurify.sanitize(rawHtml, {
         ALLOWED_TAGS: [
