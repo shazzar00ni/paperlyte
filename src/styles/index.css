@@ -291,7 +291,7 @@ button:not(:disabled):active {
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9em;
+  font-size: 0.9rem;
 }
 
 .markdown-preview pre {
