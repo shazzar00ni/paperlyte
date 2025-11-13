@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { monitoring } from '../utils/monitoring'
@@ -17,7 +17,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   className = '',
 }) => {
   // Configure marked options for better rendering
-  useMemo(() => {
+  useEffect(() => {
     marked.setOptions({
       breaks: true, // Add <br> on single line breaks
       gfm: true, // GitHub Flavored Markdown
