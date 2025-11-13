@@ -274,13 +274,12 @@ test.describe('Accessibility E2E Tests', () => {
     await submitButton.click()
 
     // Check for ARIA live regions or role=alert
-    const errorRegion = page.locator(
+    const errorRegions = page.locator(
       '[role="alert"], [aria-live="polite"], [aria-live="assertive"]'
     )
 
-    if ((await errorRegion.count()) > 0) {
-      await expect(errorRegion.first()).toBeVisible()
-    }
+    expect(await errorRegions.count()).toBeGreaterThan(0)
+    await expect(errorRegions.first()).toBeVisible()
   })
 
   test('Loading states should be announced to screen readers', async ({
