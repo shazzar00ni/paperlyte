@@ -337,7 +337,7 @@ The testing strategy will scale with the application, supporting the planned Q4 
 - [Testing Guide](./docs/TESTING.md)
 - [Testing Strategy](./docs/TESTING_STRATEGY.md)
 - [Contributing Guidelines](./CONTRIBUTING.md)
-- [Issue #XX - Testing Strategy](link-to-original-issue)
+- [Issue #109 - Testing Strategy](https://github.com/shazzar00ni/paperlyte/issues/109)
 
 ---
 
