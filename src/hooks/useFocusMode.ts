@@ -142,7 +142,7 @@ export function useFocusMode(
       clearTimeout(timeoutId)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isFocusMode, enableClickOutside])
+  }, [isFocusMode, enableClickOutside, exitFocusMode])
 
   // Prevent body scroll when in focus mode
   useEffect(() => {
