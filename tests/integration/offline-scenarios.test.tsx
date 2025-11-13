@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import NoteEditor from '../../src/pages/NoteEditor'
@@ -9,19 +9,39 @@ import { dataService } from '../../src/services/dataService'
  * Tests app behavior when network is unavailable
  */
 
+// Helper to manage navigator.onLine stubbing
+let originalNavigatorOnLineDescriptor: PropertyDescriptor | undefined
+
+function setNavigatorOnline(value: boolean): void {
+  Object.defineProperty(navigator, 'onLine', {
+    configurable: true,
+    get: () => value,
+  })
+}
+
 describe('Offline Scenarios Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+    
+    // Store original descriptor
+    originalNavigatorOnLineDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      'onLine'
+    )
+  })
+
+  afterEach(() => {
+    // Restore original descriptor
+    if (originalNavigatorOnLineDescriptor) {
+      Object.defineProperty(navigator, 'onLine', originalNavigatorOnLineDescriptor)
+    }
   })
 
   describe('Offline Mode Detection', () => {
     it('should work normally when offline', async () => {
       // Simulate offline mode
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -36,10 +56,7 @@ describe('Offline Scenarios Integration Tests', () => {
       expect(navigator.onLine).toBe(true)
 
       // Simulate going offline
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       // Trigger offline event
       window.dispatchEvent(new Event('offline'))
@@ -50,18 +67,12 @@ describe('Offline Scenarios Integration Tests', () => {
 
     it('should show online indicator when connection restored', async () => {
       // Start offline
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
       // Go online
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: true,
-      })
+      setNavigatorOnline(true)
 
       // Trigger online event
       window.dispatchEvent(new Event('online'))
@@ -75,10 +86,7 @@ describe('Offline Scenarios Integration Tests', () => {
       const user = userEvent.setup()
 
       // Set offline mode
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -124,10 +132,7 @@ describe('Offline Scenarios Integration Tests', () => {
       })
 
       // Set offline mode
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -141,10 +146,7 @@ describe('Offline Scenarios Integration Tests', () => {
       const user = userEvent.setup()
 
       // Start online
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: true,
-      })
+      setNavigatorOnline(true)
 
       render(<NoteEditor />)
 
@@ -159,10 +161,7 @@ describe('Offline Scenarios Integration Tests', () => {
       await user.type(editor, 'Starting to type...')
 
       // Go offline mid-edit
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
       window.dispatchEvent(new Event('offline'))
 
       // Continue typing
@@ -210,10 +209,7 @@ describe('Offline Scenarios Integration Tests', () => {
       const user = userEvent.setup()
 
       // Set offline mode
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -238,10 +234,7 @@ describe('Offline Scenarios Integration Tests', () => {
     it('should search by tags when offline', async () => {
       const user = userEvent.setup()
 
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -275,10 +268,7 @@ describe('Offline Scenarios Integration Tests', () => {
         await dataService.saveNote(note)
       }
 
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       const startTime = Date.now()
       render(<NoteEditor />)
@@ -306,10 +296,7 @@ describe('Offline Scenarios Integration Tests', () => {
         throw error
       })
 
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -332,10 +319,7 @@ describe('Offline Scenarios Integration Tests', () => {
       // Corrupt the localStorage data
       localStorage.setItem('paperlyte_notes', 'invalid json{]')
 
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       // Should not crash
       expect(() => render(<NoteEditor />)).not.toThrow()
@@ -351,10 +335,7 @@ describe('Offline Scenarios Integration Tests', () => {
     it('should queue changes for sync when offline', async () => {
       const user = userEvent.setup()
 
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -388,10 +369,7 @@ describe('Offline Scenarios Integration Tests', () => {
       const user = userEvent.setup()
 
       // Start offline and make changes
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: false,
-      })
+      setNavigatorOnline(false)
 
       render(<NoteEditor />)
 
@@ -405,10 +383,7 @@ describe('Offline Scenarios Integration Tests', () => {
       await user.type(editor, 'To be synced')
 
       // Go online
-      Object.defineProperty(navigator, 'onLine', {
-        writable: true,
-        value: true,
-      })
+      setNavigatorOnline(true)
       window.dispatchEvent(new Event('online'))
 
       // Sync should trigger (implementation would be tested here)
