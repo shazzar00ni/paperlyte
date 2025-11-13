@@ -109,10 +109,10 @@ check_npm_script_exists() {
         # Fallback: Use grep with improved pattern
         # This checks for the script name followed by optional whitespace and colon
         # within the scripts section
-        grep -q "\"scripts\"\s*:" "$package_json" && \
-        grep -A 100 "\"scripts\"\s*:" "$package_json" | \
-        grep -B 100 "^\s*}" | \
-        grep -q "\"$script\"\s*:"
+        grep -E -q '"scripts"[[:space:]]*:' "$package_json" && \
+        grep -E -A 100 '"scripts"[[:space:]]*:' "$package_json" | \
+        grep -E -B 100 '^[[:space:]]*}' | \
+        grep -E -q "\"$script\"[[:space:]]*:"
         return $?
     fi
 }
