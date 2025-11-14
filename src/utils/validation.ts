@@ -87,6 +87,18 @@ export function validateNote(note: {
   title: string
   content?: string
 }): ValidationResult {
+  // Validate title length BEFORE sanitization to catch oversized inputs
+  // Sanitization will truncate, but we want to reject oversized titles
+  const rawTitle = note.title || ''
+
+  // Check raw title length first (before sanitization truncates it)
+  if (rawTitle.trim().length > 255) {
+    return {
+      isValid: false,
+      error: 'Note title must be 255 characters or less',
+    }
+  }
+
   // Use DOMPurify-based sanitization from sanitization.ts for production-grade XSS prevention
   // Note: Direct import is safe here as validation.ts doesn't export functions used by sanitization.ts
   const sanitizedTitle = sanitizeTitle(note.title)
@@ -95,14 +107,6 @@ export function validateNote(note: {
   // Validate title is not empty after sanitization
   if (!sanitizedTitle || sanitizedTitle.length === 0) {
     return { isValid: false, error: 'Note title is required' }
-  }
-
-  // Validate length of sanitized title
-  if (sanitizedTitle.length > 255) {
-    return {
-      isValid: false,
-      error: 'Note title must be 255 characters or less',
-    }
   }
 
   // Content is optional but if provided, check byte-based size limits
