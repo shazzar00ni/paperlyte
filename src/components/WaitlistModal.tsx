@@ -111,10 +111,16 @@ const WaitlistModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className='modal-overlay' onClick={handleClose}>
-      <div className='modal-content' onClick={e => e.stopPropagation()}>
+      <div
+        className='modal-content'
+        onClick={e => e.stopPropagation()}
+        role='dialog'
+        aria-modal='true'
+        aria-labelledby='modal-title'
+      >
         {/* Header */}
         <div className='flex justify-between items-center mb-6'>
-          <h2 className='text-2xl font-bold text-dark'>
+          <h2 id='modal-title' className='text-2xl font-bold text-dark'>
             {isSubmitted ? 'Welcome aboard!' : 'Join the Waitlist'}
           </h2>
           <button

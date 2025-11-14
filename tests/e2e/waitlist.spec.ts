@@ -5,37 +5,37 @@ test.describe('Waitlist Functionality', () => {
     await page.goto('/')
 
     // Open waitlist modal
-    await page.getByRole('button', { name: /Join the Waitlist/i }).click()
+    await page.getByRole('button', { name: /Join Waitlist/i }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
   })
 
   test('should display waitlist form', async ({ page }) => {
     // Check form fields
-    await expect(page.getByLabel(/email/i)).toBeVisible()
-    await expect(page.getByLabel(/name/i)).toBeVisible()
-    await expect(
-      page.getByLabel(/interest/i).or(page.getByRole('combobox'))
-    ).toBeVisible()
+    await expect(page.getByLabel(/email address/i)).toBeVisible()
+    await expect(page.getByLabel(/^name/i)).toBeVisible()
+    await expect(page.getByLabel(/interested as/i)).toBeVisible()
 
     // Check submit button
-    await expect(page.getByRole('button', { name: /join/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /join waitlist/i })
+    ).toBeVisible()
   })
 
   test('should require email field', async ({ page }) => {
     // Try to submit without email
-    await page.getByLabel(/name/i).fill('Test User')
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByLabel(/^name/i).fill('Test User')
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Should show validation error or prevent submission
-    const emailField = page.getByLabel(/email/i)
+    const emailField = page.getByLabel(/email address/i)
     await expect(emailField).toBeFocused()
   })
 
   test('should validate email format', async ({ page }) => {
     // Enter invalid email
-    await page.getByLabel(/email/i).fill('invalid-email')
-    await page.getByLabel(/name/i).fill('Test User')
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByLabel(/email address/i).fill('invalid-email')
+    await page.getByLabel(/^name/i).fill('Test User')
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Should show validation error
     await expect(
@@ -45,24 +45,19 @@ test.describe('Waitlist Functionality', () => {
 
   test('should successfully submit valid form', async ({ page }) => {
     // Fill out form with valid data
-    await page.getByLabel(/email/i).fill('test@example.com')
-    await page.getByLabel(/name/i).fill('Test User')
+    await page.getByLabel(/email address/i).fill('test@example.com')
+    await page.getByLabel(/^name/i).fill('Test User')
 
-    // Select interest if dropdown exists
-    const interestField = page
-      .getByLabel(/interest/i)
-      .or(page.getByRole('combobox'))
-    if (await interestField.isVisible()) {
-      await interestField.click()
-      await page.getByText(/professional/i).click()
-    }
+    // Select interest
+    const interestField = page.getByLabel(/interested as/i)
+    await interestField.selectOption('professional')
 
     // Submit form
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Should show success message
     await expect(
-      page.getByText(/success/i).or(page.getByText(/thank you/i))
+      page.getByText(/you're on the list/i).or(page.getByText(/thank you/i))
     ).toBeVisible({ timeout: 10000 })
   })
 
@@ -70,23 +65,23 @@ test.describe('Waitlist Functionality', () => {
     const testEmail = 'duplicate@example.com'
 
     // Submit first time
-    await page.getByLabel(/email/i).fill(testEmail)
-    await page.getByLabel(/name/i).fill('Test User')
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByLabel(/email address/i).fill(testEmail)
+    await page.getByLabel(/^name/i).fill('Test User')
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Wait for success
     await expect(
-      page.getByText(/success/i).or(page.getByText(/thank you/i))
+      page.getByText(/you're on the list/i).or(page.getByText(/thank you/i))
     ).toBeVisible({ timeout: 10000 })
 
     // Close modal and reopen
     await page.getByRole('button', { name: /close/i }).click()
-    await page.getByRole('button', { name: /Join the Waitlist/i }).click()
+    await page.getByRole('button', { name: /Join Waitlist/i }).click()
 
     // Try to submit same email again
-    await page.getByLabel(/email/i).fill(testEmail)
-    await page.getByLabel(/name/i).fill('Another User')
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByLabel(/email address/i).fill(testEmail)
+    await page.getByLabel(/^name/i).fill('Another User')
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Should show duplicate error
     await expect(
@@ -126,12 +121,12 @@ test.describe('Waitlist Functionality', () => {
     await page.reload()
 
     // Open waitlist again after reload
-    await page.getByRole('button', { name: /Join the Waitlist/i }).click()
+    await page.getByRole('button', { name: /Join Waitlist/i }).click()
 
     // Submit form
-    await page.getByLabel(/email/i).fill('analytics@example.com')
-    await page.getByLabel(/name/i).fill('Analytics User')
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByLabel(/email address/i).fill('analytics@example.com')
+    await page.getByLabel(/^name/i).fill('Analytics User')
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Check that analytics events were fired
     const events = await page.evaluate(() => window.mockWaitlistEvents)
@@ -140,18 +135,18 @@ test.describe('Waitlist Functionality', () => {
 
   test('should be accessible', async ({ page }) => {
     // Check that form elements have proper labels
-    await expect(page.getByLabel(/email/i)).toBeVisible()
-    await expect(page.getByLabel(/name/i)).toBeVisible()
+    await expect(page.getByLabel(/email address/i)).toBeVisible()
+    await expect(page.getByLabel(/^name/i)).toBeVisible()
 
     // Check that modal has proper role
     await expect(page.getByRole('dialog')).toBeVisible()
 
     // Test keyboard navigation
     await page.keyboard.press('Tab')
-    await expect(page.getByLabel(/email/i)).toBeFocused()
+    await expect(page.getByLabel(/email address/i)).toBeFocused()
 
     await page.keyboard.press('Tab')
-    await expect(page.getByLabel(/name/i)).toBeFocused()
+    await expect(page.getByLabel(/^name/i)).toBeFocused()
   })
 
   test('should handle form submission errors gracefully', async ({ page }) => {
@@ -164,9 +159,9 @@ test.describe('Waitlist Functionality', () => {
     })
 
     // Submit form
-    await page.getByLabel(/email/i).fill('error@example.com')
-    await page.getByLabel(/name/i).fill('Error User')
-    await page.getByRole('button', { name: /join/i }).click()
+    await page.getByLabel(/email address/i).fill('error@example.com')
+    await page.getByLabel(/^name/i).fill('Error User')
+    await page.getByRole('button', { name: /join waitlist/i }).click()
 
     // Should show error message
     await expect(
