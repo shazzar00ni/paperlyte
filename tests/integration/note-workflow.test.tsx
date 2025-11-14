@@ -276,7 +276,8 @@ describe('Note Workflow Integration', () => {
 
       // Try to create a note
       const titleInput =
-        screen.getByRole('textbox', { name: /title/i }) ||
+-        screen.getByRole('textbox', { name: /title/i }) ||
+        screen.queryByRole('textbox', { name: /title/i }) ??
         screen.getByDisplayValue(/untitled/i)
       await user.type(titleInput, 'Test Note')
 
