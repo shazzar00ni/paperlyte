@@ -7,8 +7,7 @@
         "chromeFlags": "--no-sandbox --headless --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions",
         "maxWaitForLoad": 90000,
         "skipAudits": []
-      },
-      "startServerCommand": "npm run preview"
+      }
     },
     "assert": {
       "preset": "lighthouse:recommended",
