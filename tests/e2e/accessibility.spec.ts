@@ -241,14 +241,15 @@ test.describe('Accessibility E2E Tests', () => {
 
     // Check for skip link (may be visually hidden)
     const skipLink = page.locator('a[href="#main"], a[href="#content"]').first()
+    
+    // Require the skip link to be present
+    expect(await skipLink.count()).toBeGreaterThan(0)
 
-    if ((await skipLink.count()) > 0) {
-      // Focus the skip link
-      await page.keyboard.press('Tab')
+    // Focus the skip link
+    await page.keyboard.press('Tab')
 
-      // Verify it becomes visible on focus
-      await expect(skipLink).toBeFocused()
-    }
+    // Verify it becomes visible on focus
+    await expect(skipLink).toBeFocused()
   })
 
   test('Mobile navigation should be accessible', async ({ page }) => {
