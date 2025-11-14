@@ -62,6 +62,7 @@ This checklist ensures safe, reliable deployments to staging and production envi
   - All dependencies up to date (or justification documented)
 
 - [ ] **Performance check**
+
   ```bash
   npm run preview &
   npx lighthouse http://localhost:4173 --only-categories=performance
@@ -185,6 +186,7 @@ This checklist ensures safe, reliable deployments to staging and production envi
   - [ ] Analytics data flowing correctly
 
 - [ ] **Security headers verified**
+
   ```bash
   curl -I https://staging.paperlyte.com
   ```
@@ -279,6 +281,7 @@ vercel --prod
   - [ ] Waitlist signup works
 
 - [ ] **No critical errors**
+
   ```bash
   # Check Sentry for new errors
   # Navigate to Sentry dashboard
@@ -323,6 +326,7 @@ vercel --prod
   - [ ] Analytics data flowing
 
 - [ ] **Security validation**
+
   ```bash
   # Run security header check
   curl -I https://paperlyte.com | grep -E "(Strict-Transport|Content-Security|X-Frame)"
@@ -555,11 +559,11 @@ netlify rollback
 
 ## Sign-Off
 
-**Deployment Lead:** ********\_\_\_******** Date: ****\_\_\_****
+**Deployment Lead:** **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\***
 
-**QA Approval:** ********\_\_\_******** Date: ****\_\_\_****
+**QA Approval:** **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\***
 
-**Product Owner:** ********\_\_\_******** Date: ****\_\_\_****
+**Product Owner:** **\*\*\*\***\_\_\_**\*\*\*\*** Date: \***\*\_\_\_\*\***
 
 ---
 
