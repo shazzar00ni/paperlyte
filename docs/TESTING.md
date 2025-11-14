@@ -2,7 +2,25 @@
 
 ## Overview
 
-Paperlyte uses a comprehensive testing pipeline with multiple test types to ensure code quality, security, and reliability.
+Paperlyte uses a comprehensive testing pipeline with multiple test types to ensure code quality, security, accessibility, and reliability.
+
+> 📖 **See also:** [Testing Strategy](./TESTING_STRATEGY.md) - Comprehensive testing philosophy and best practices
+
+## Quick Start
+
+```bash
+# Run all unit and integration tests
+npm run test
+
+# Run with coverage
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+
+# Run all tests (unit + integration + E2E)
+npm run test:all
+```
 
 ## Test Types
 
@@ -75,6 +93,84 @@ npm run test:e2e:debug
 - **Cross-browser Testing**: Chromium, Firefox, WebKit
 - **Mobile Responsiveness**: Different viewport sizes
 - **Performance Metrics**: Web Vitals and loading times
+
+### 4. Accessibility Tests
+
+**Framework**: axe-core + vitest-axe + @axe-core/playwright  
+**Location**: `tests/accessibility/` and integrated in component tests  
+**Coverage**: WCAG 2.1 Level A and AA compliance
+
+```bash
+# Run accessibility tests (part of unit test suite)
+npm run test:run -- tests/accessibility
+
+# Run E2E accessibility tests
+npm run test:e2e -- tests/e2e/accessibility.spec.ts
+```
+
+#### Accessibility Testing Areas:
+
+- **Component Accessibility**: All components checked for WCAG violations
+- **Keyboard Navigation**: Tab order, focus management, keyboard shortcuts
+- **ARIA Attributes**: Proper roles, labels, and live regions
+- **Color Contrast**: Meets WCAG AA standards (4.5:1 for normal text)
+- **Screen Reader Support**: Announcements for state changes
+- **Form Labels**: All inputs have associated labels
+- **Focus Indicators**: Visible focus states for all interactive elements
+- **Heading Hierarchy**: Logical heading order (h1 → h2 → h3)
+
+#### Component Test Example:
+
+```typescript
+import { axe } from 'vitest-axe'
+
+describe('MyComponent Accessibility', () => {
+  it('should have no accessibility violations', async () => {
+    const { container } = render(<MyComponent />)
+
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+})
+```
+
+#### E2E Test Example:
+
+```typescript
+import AxeBuilder from '@axe-core/playwright'
+
+test('page should be accessible', async ({ page }) => {
+  await page.goto('/')
+
+  const accessibilityResults = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa'])
+    .analyze()
+
+  expect(accessibilityResults.violations).toEqual([])
+})
+```
+
+#### Manual Accessibility Testing:
+
+While automated tests catch many issues, manual testing is also important:
+
+1. **Screen Reader Testing**:
+   - macOS: VoiceOver (Cmd + F5)
+   - Windows: NVDA (free) or JAWS
+   - Test all major user flows
+
+2. **Keyboard-Only Navigation**:
+   - Navigate entire app using only Tab, Enter, Escape, Arrow keys
+   - Verify all interactive elements are reachable
+   - Check visible focus indicators
+
+3. **Color Blindness Testing**:
+   - Use browser extensions to simulate different types
+   - Verify information isn't conveyed by color alone
+
+4. **Zoom Testing**:
+   - Test at 200% and 400% zoom levels
+   - Verify no content is cut off or overlapping
 
 ## Test Configuration
 
