@@ -35,7 +35,16 @@ describe('DataService', () => {
 
       const notes = await dataService.getNotes()
       expect(notes).toHaveLength(1)
-      expect(notes[0]).toEqual(testNote)
+      // Check core properties - saveNote adds version, wordCount, and updates updatedAt
+      expect(notes[0].id).toBe(testNote.id)
+      expect(notes[0].title).toBe(testNote.title)
+      expect(notes[0].content).toBe(testNote.content)
+      expect(notes[0].tags).toEqual(testNote.tags)
+      expect(notes[0].createdAt).toBe(testNote.createdAt)
+      // These are added/modified by saveNote
+      expect(notes[0].version).toBe(1)
+      expect(notes[0].wordCount).toBe(6) // "This is a test note content" = 6 words
+      expect(notes[0].updatedAt).toBeDefined()
     })
 
     it('should update an existing note', async () => {
