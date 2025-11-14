@@ -1,0 +1,73 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+    - generic [ref=e6]:
+        - generic [ref=e7]:
+            - heading "Finally, note-taking that feels effortless" [level=1] [ref=e8]:
+                - text: Finally, note-taking that feels
+                - generic [ref=e9]: effortless
+            - paragraph [ref=e10]: Paperlyte is the lightning-fast, beautifully minimal note app that gets out of your way. No accounts, no complexity, no bloat—just you and your ideas.
+            - generic [ref=e11]:
+                - link "Start Writing Now" [ref=e12] [cursor=pointer]:
+                    - /url: /editor
+                - button "Join Waitlist" [ref=e13] [cursor=pointer]
+        - img "Network visualization showing interconnected notes including project tags, ideas, meeting notes, search functionality, and task management in a mind-map style layout" [ref=e15]
+    - generic [ref=e17]:
+        - generic [ref=e18]:
+            - heading "See Paperlyte in action" [level=2] [ref=e19]
+            - paragraph [ref=e20]: Discover how effortless note-taking can be
+        - generic [ref=e21]:
+            - generic [ref=e23]:
+                - heading "See Paperlyte in Action" [level=3] [ref=e24]
+                - button "Pause slideshow" [ref=e25] [cursor=pointer]:
+                    - img [ref=e26] [cursor=pointer]
+            - generic [ref=e30]:
+                - generic [ref=e31]:
+                    - img "Paperlyte editor interface showing clean, minimal design" [ref=e32]
+                    - button "Previous slide" [ref=e33] [cursor=pointer]:
+                        - img [ref=e34] [cursor=pointer]
+                    - button "Next slide" [ref=e36] [cursor=pointer]:
+                        - img [ref=e37] [cursor=pointer]
+                - generic [ref=e39]:
+                    - heading "Lightning Fast Editor" [level=4] [ref=e40]
+                    - paragraph [ref=e41]: Start writing instantly with our distraction-free interface. No loading screens, no delays.
+            - generic [ref=e43]:
+                - button "Go to slide 1" [ref=e44] [cursor=pointer]
+                - button "Go to slide 2" [ref=e45] [cursor=pointer]
+                - button "Go to slide 3" [ref=e46] [cursor=pointer]
+                - button "Go to slide 4" [ref=e47] [cursor=pointer]
+    - generic [ref=e49]:
+        - generic [ref=e50]:
+            - heading "Everything you need, nothing you don't" [level=2] [ref=e51]
+            - paragraph [ref=e52]: Built for creators, thinkers, and note-taking enthusiasts
+        - generic [ref=e53]:
+            - generic [ref=e54]:
+                - img [ref=e56]
+                - heading "Launches Instantly" [level=3] [ref=e58]
+                - paragraph [ref=e59]: Start writing in under 3 seconds—faster than any other note app.
+            - generic [ref=e60]:
+                - img [ref=e62]
+                - heading "Your Data Stays Yours" [level=3] [ref=e64]
+                - paragraph [ref=e65]: Notes stored locally on your device—no cloud, no tracking, complete privacy.
+            - generic [ref=e66]:
+                - img [ref=e68]
+                - heading "Works Everywhere" [level=3] [ref=e70]
+                - paragraph [ref=e71]: Beautiful on desktop, tablet, and mobile—no app download required.
+            - generic [ref=e72]:
+                - img [ref=e74]
+                - heading "Find Anything in Milliseconds" [level=3] [ref=e77]
+                - paragraph [ref=e78]: Search through all your notes instantly as you type—no waiting.
+            - generic [ref=e79]:
+                - img [ref=e81]
+                - heading "Never Lose Your Work" [level=3] [ref=e84]
+                - paragraph [ref=e85]: Auto-saves as you type with visual confirmation—write worry-free.
+            - generic [ref=e86]:
+                - img [ref=e88]
+                - heading "Zero Learning Curve" [level=3] [ref=e91]
+                - paragraph [ref=e92]: Just start typing—rich formatting with keyboard shortcuts that feel natural.
+    - generic [ref=e94]:
+        - heading "Why wait? Start taking better notes today" [level=2] [ref=e95]
+        - paragraph [ref=e96]: Join thousands who've discovered note-taking without the friction
+        - button "Try Paperlyte Now" [ref=e97] [cursor=pointer]
+```

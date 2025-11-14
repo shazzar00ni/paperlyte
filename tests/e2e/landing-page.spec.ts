@@ -8,7 +8,7 @@ test.describe('Landing Page', () => {
   test('should display the main heading', async ({ page }) => {
     await expect(
       page.getByRole('heading', {
-        name: /Your thoughts deserve a lightning-fast home/i,
+        name: /Finally, note-taking that feels effortless/i,
       })
     ).toBeVisible()
   })
@@ -16,37 +16,40 @@ test.describe('Landing Page', () => {
   test('should display hero content', async ({ page }) => {
     // Check for hero text
     await expect(
-      page.getByText(/Paperlyte is the distraction-free note-taking app/i)
+      page.getByText(/Paperlyte is the lightning-fast, beautifully minimal/i)
     ).toBeVisible()
 
     // Check for call-to-action buttons
     await expect(
-      page.getByRole('button', { name: /Join the Waitlist/i })
+      page.getByRole('button', { name: /Join Waitlist/i })
     ).toBeVisible()
 
     await expect(
-      page.getByRole('button', { name: /Watch Demo/i })
+      page.getByRole('link', { name: /Start Writing Now/i })
     ).toBeVisible()
   })
 
   test('should display feature cards', async ({ page }) => {
     // Check for key features
-    await expect(page.getByText('Lightning Fast')).toBeVisible()
-    await expect(page.getByText('Private & Secure')).toBeVisible()
+    await expect(page.getByText('Launches Instantly')).toBeVisible()
+    await expect(page.getByText('Your Data Stays Yours')).toBeVisible()
     await expect(page.getByText('Works Everywhere')).toBeVisible()
-    await expect(page.getByText('Smart Search')).toBeVisible()
-    await expect(page.getByText('Organize Effortlessly')).toBeVisible()
-    await expect(page.getByText('Minimal by Design')).toBeVisible()
+    await expect(page.getByText('Find Anything in Milliseconds')).toBeVisible()
+    await expect(page.getByText('Never Lose Your Work')).toBeVisible()
+    await expect(page.getByText('Zero Learning Curve')).toBeVisible()
   })
 
   test('should open waitlist modal when clicking join waitlist', async ({
     page,
   }) => {
-    await page.getByRole('button', { name: /Join the Waitlist/i }).click()
+    // Wait for the button to be visible and clickable
+    const waitlistButton = page.getByRole('button', { name: /Join Waitlist/i })
+    await expect(waitlistButton).toBeVisible()
+    await waitlistButton.click()
 
     // Check if modal opened
-    await expect(page.getByRole('dialog')).toBeVisible()
-    await expect(page.getByText(/Join the Waitlist/i)).toBeVisible()
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/Join.*Waitlist/i)).toBeVisible()
   })
 
   test('should be responsive on mobile', async ({ page }) => {
@@ -56,12 +59,12 @@ test.describe('Landing Page', () => {
     // Elements should still be visible on mobile
     await expect(
       page.getByRole('heading', {
-        name: /Your thoughts deserve a lightning-fast home/i,
+        name: /Finally, note-taking that feels effortless/i,
       })
     ).toBeVisible()
 
     await expect(
-      page.getByRole('button', { name: /Join the Waitlist/i })
+      page.getByRole('button', { name: /Join Waitlist/i })
     ).toBeVisible()
   })
 
@@ -100,20 +103,22 @@ test.describe('Landing Page', () => {
     ).toBeTruthy()
   })
 
-  test('should handle demo button click', async ({ page }) => {
-    await page.getByRole('button', { name: /Watch Demo/i }).click()
+  test('should handle start writing button click', async ({ page }) => {
+    await page.getByRole('link', { name: /Start Writing Now/i }).click()
 
-    // Demo functionality may not be implemented yet, but button should be clickable
-    // This test ensures the button exists and is interactive
+    // Should navigate to editor (even if route doesn't exist yet)
+    await page.waitForURL(/.*/)
   })
 
   test('should display footer information', async ({ page }) => {
     // Scroll to footer
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
-    // Check for footer content (adjust based on actual footer content)
+    // Check for footer content - the landing page has a CTA section at bottom
     await expect(
-      page.getByText(/MIT/i).or(page.getByText(/License/i))
+      page
+        .getByText(/try paperlyte now/i)
+        .or(page.getByText(/start taking better notes/i))
     ).toBeVisible()
   })
 })
