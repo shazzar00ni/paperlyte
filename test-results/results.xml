@@ -1,0 +1,138 @@
+<testsuites id="" name="" tests="1" failures="1" skipped="0" errors="0" time="20.120766">
+<testsuite name="landing-page.spec.ts" timestamp="2025-11-14T20:38:55.535Z" hostname="chromium" tests="1" failures="1" skipped="0" time="17.051" errors="0">
+<testcase name="Landing Page › should display the main heading" classname="landing-page.spec.ts" time="17.051">
+<failure message="landing-page.spec.ts:8:3 should display the main heading" type="FAILURE">
+<![CDATA[  [chromium] › landing-page.spec.ts:8:3 › Landing Page › should display the main heading ───────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  getByRole('heading', { name: /Your thoughts deserve a lightning-fast home/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /Your thoughts deserve a lightning-fast home/i })
+
+
+      11 |         name: /Your thoughts deserve a lightning-fast home/i,
+      12 |       })
+    > 13 |     ).toBeVisible()
+         |       ^
+      14 |   })
+      15 |
+      16 |   test('should display hero content', async ({ page }) => {
+        at /home/runner/work/paperlyte/paperlyte/tests/e2e/landing-page.spec.ts:13:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  getByRole('heading', { name: /Your thoughts deserve a lightning-fast home/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /Your thoughts deserve a lightning-fast home/i })
+
+
+      11 |         name: /Your thoughts deserve a lightning-fast home/i,
+      12 |       })
+    > 13 |     ).toBeVisible()
+         |       ^
+      14 |   })
+      15 |
+      16 |   test('should display hero content', async ({ page }) => {
+        at /home/runner/work/paperlyte/paperlyte/tests/e2e/landing-page.spec.ts:13:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  getByRole('heading', { name: /Your thoughts deserve a lightning-fast home/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /Your thoughts deserve a lightning-fast home/i })
+
+
+      11 |         name: /Your thoughts deserve a lightning-fast home/i,
+      12 |       })
+    > 13 |     ).toBeVisible()
+         |       ^
+      14 |   })
+      15 |
+      16 |   test('should display hero content', async ({ page }) => {
+        at /home/runner/work/paperlyte/paperlyte/tests/e2e/landing-page.spec.ts:13:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/landing-page-Landing-Page-should-display-the-main-heading-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium/video.webm]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium/error-context.md]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|landing-page-Landing-Page-should-display-the-main-heading-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>
