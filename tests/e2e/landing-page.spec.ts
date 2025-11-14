@@ -110,15 +110,18 @@ test.describe('Landing Page', () => {
     await page.waitForURL(/.*/)
   })
 
-  test('should display footer information', async ({ page }) => {
-    // Scroll to footer
+  test('should display CTA section', async ({ page }) => {
+    // Scroll to bottom CTA section
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
-    // Check for footer content - the landing page has a CTA section at bottom
+    // Wait for scroll to complete
+    await page.waitForTimeout(500)
+
+    // Check for CTA content at bottom of page
     await expect(
-      page
-        .getByText(/try paperlyte now/i)
-        .or(page.getByText(/start taking better notes/i))
+      page.getByRole('heading', {
+        name: /Why wait.*Start taking better notes today/i,
+      })
     ).toBeVisible()
   })
 })
