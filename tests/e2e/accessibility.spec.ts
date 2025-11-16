@@ -58,9 +58,6 @@ test.describe('Accessibility E2E Tests', () => {
 
     // Tab through modal elements
     await page.keyboard.press('Tab')
-    const firstFocus = await page.evaluate(() =>
-      document.activeElement?.getAttribute('name')
-    )
 
     // Tab to last element and back to first (focus trap)
     for (let i = 0; i < 10; i++) {
