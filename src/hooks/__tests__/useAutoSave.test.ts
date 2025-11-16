@@ -52,7 +52,7 @@ describe('useAutoSave', () => {
 
   it('should debounce multiple rapid changes', async () => {
     const onSave = vi.fn().mockResolvedValue(true)
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ data }) => useAutoSave(data, { onSave, delay: 1000 }),
       {
         initialProps: { data: { content: 'initial' } },
