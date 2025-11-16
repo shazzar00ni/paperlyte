@@ -120,7 +120,7 @@ describe('useAutoSave', () => {
 
   it('should not save when disabled', async () => {
     const onSave = vi.fn().mockResolvedValue(true)
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ data, enabled }) =>
         useAutoSave(data, { onSave, delay: 1000, enabled }),
       {
