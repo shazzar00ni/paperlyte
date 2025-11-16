@@ -88,7 +88,7 @@ describe('useAutoSave', () => {
 
   it('should not save when data has not changed', async () => {
     const onSave = vi.fn().mockResolvedValue(true)
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ data }) => useAutoSave(data, { onSave, delay: 1000 }),
       {
         initialProps: { data: { content: 'test' } },
