@@ -32,11 +32,16 @@ export function sanitizeTitle(title: string): string {
     originalLength,
   })
 
-  // Remove script tags with their content first
-  let sanitized = title.replace(
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    ''
-  )
+  // Remove script tags with their content first (apply repeatedly for complete removal)
+  let sanitized = title;
+  let previous;
+  do {
+    previous = sanitized;
+    sanitized = sanitized.replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      ''
+    );
+  } while (sanitized !== previous);
 
   const hasScriptTags = sanitized.length !== title.length
   if (hasScriptTags) {
