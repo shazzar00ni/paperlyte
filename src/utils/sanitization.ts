@@ -33,8 +33,8 @@ export function sanitizeTitle(title: string): string {
   })
 
   // Remove all HTML tags including scripts using DOMPurify
-  let sanitized = DOMPurify.sanitize(title, { ALLOWED_TAGS: [] });
-  const hadScriptOrHtmlTags = sanitized.length !== title.length;
+  let sanitized = DOMPurify.sanitize(title, { ALLOWED_TAGS: [] })
+  const hadScriptOrHtmlTags = sanitized.length !== title.length
   if (hadScriptOrHtmlTags) {
     monitoring.addBreadcrumb('Removed HTML/script tags from title using DOMPurify', 'warning', {
       originalLength,
