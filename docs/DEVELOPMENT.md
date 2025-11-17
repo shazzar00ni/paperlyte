@@ -1,5 +1,9 @@
 # Development Guide
 
+## Architectural Overview
+
+Paperlyte is a client-side React application built with TypeScript. It uses Vite for fast builds and Vitest for testing. All data is stored locally in the browser, using IndexedDB as the primary storage mechanism with a localStorage fallback when IndexedDB is unavailable. This means there is no backend server. This architecture ensures that the application is fast, private, and can be used offline.
+
 ## Getting Started
 
 ### Prerequisites
@@ -50,15 +54,24 @@ npm run security-fix
 - **ESLint**: Configured for TypeScript and React
 - **Prettier**: Code formatting with consistent style
 - **TypeScript**: Strict type checking enabled
-- **Husky**: Git hooks for pre-commit validation
+-   **Husky**: Git hooks for pre-commit validation.
+
+### Branch Naming Conventions
+
+To keep our repository organized, please follow these branch naming conventions:
+
+-   `feature/<description>`: For new features (e.g., `feature/add-tagging-system`).
+-   `fix/<description>`: For bug fixes (e.g., `fix/resolve-search-bug`).
+-   `docs/<description>`: For documentation updates (e.g., `docs/update-readme`).
+-   `chore/<description>`: For routine maintenance tasks (e.g., `chore/update-dependencies`).
 
 ### Git Hooks
 
 Pre-commit hooks automatically run:
 
-- ESLint (with auto-fix)
-- Prettier formatting
-- TypeScript type checking
+-   ESLint (with auto-fix)
+-   Prettier formatting
+-   TypeScript type checking
 
 Commit message validation ensures [Conventional Commits](https://www.conventionalcommits.org/) format:
 
@@ -103,7 +116,32 @@ GitHub Actions automatically run on push and PR:
 - **Type Checking**: TypeScript compilation validation
 - **Build**: Production build verification
 - **Security Audit**: Dependency vulnerability scanning
-- **Commit Message Linting**: Conventional Commits validation
+-   **Commit Message Linting**: Validates that commit messages follow the Conventional Commits standard.
+
+## Testing
+
+This project uses Vitest for unit and integration testing and Playwright for end-to-end testing.
+
+-   **Unit Tests**: Located in `src/components/__tests__`, these tests verify the functionality of individual components.
+-   **Integration Tests**: These tests ensure that multiple components work together as expected.
+-   **End-to-End Tests**: Located in the `tests/` directory, these tests simulate user interactions to validate the application's functionality from start to finish.
+
+To run the tests, use the following commands:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run end-to-end tests
+npm run test:e2e
+```
+
+## Database Management
+
+For testing purposes, this project uses `fake-indexeddb` to create an in-memory version of the IndexedDB database. This allows us to run tests in a clean, isolated environment without affecting the actual browser database. The setup for this can be found in `src/test-setup.ts`.
 
 ## Dependency Management
 
@@ -195,7 +233,9 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
 
 **Build failures**: Ensure all dependencies are installed with `npm install`
 
-**Git hooks failing**: Make sure Husky is properly installed with `npm run prepare`
+**Git hooks failing**: Make sure Husky is properly installed with `npm run prepare`.
+
+**`vitest` not found**: If you encounter an error where `vitest` cannot be found, even after a clean install, try running the tests with `npx vitest` as a workaround.
 
 ### Getting Help
 
