@@ -251,7 +251,7 @@ To verify the fix:
 ## Related Issues
 
 - Original Issue: #[issue-number] - Fix Vitest Memory Issues & Establish Testing Framework
-- GitHub Actions Run: https://github.com/shazzar00ni/paperlyte/actions/runs/18518067551
+- GitHub Actions Run: <https://github.com/shazzar00ni/paperlyte/actions/runs/18518067551>
 
 ---
 
