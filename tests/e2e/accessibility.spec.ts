@@ -238,7 +238,7 @@ test.describe('Accessibility E2E Tests', () => {
 
     // Check for skip link (may be visually hidden)
     const skipLink = page.locator('a[href="#main"], a[href="#content"]').first()
-    
+
     // Require the skip link to be present
     expect(await skipLink.count()).toBeGreaterThan(0)
 

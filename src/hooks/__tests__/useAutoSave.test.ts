@@ -107,9 +107,7 @@ describe('useAutoSave', () => {
 
   it('should not save when data is null', async () => {
     const onSave = vi.fn().mockResolvedValue(true)
-    renderHook(() =>
-      useAutoSave(null, { onSave, delay: 1000 })
-    )
+    renderHook(() => useAutoSave(null, { onSave, delay: 1000 }))
 
     await act(async () => {
       vi.advanceTimersByTime(1000)

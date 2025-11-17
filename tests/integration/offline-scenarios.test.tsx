@@ -23,7 +23,7 @@ describe('Offline Scenarios Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    
+
     // Store original descriptor
     originalNavigatorOnLineDescriptor = Object.getOwnPropertyDescriptor(
       navigator,
@@ -34,7 +34,11 @@ describe('Offline Scenarios Integration Tests', () => {
   afterEach(() => {
     // Restore original descriptor
     if (originalNavigatorOnLineDescriptor) {
-      Object.defineProperty(navigator, 'onLine', originalNavigatorOnLineDescriptor)
+      Object.defineProperty(
+        navigator,
+        'onLine',
+        originalNavigatorOnLineDescriptor
+      )
     }
   })
 
