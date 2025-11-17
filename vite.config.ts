@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => ({
       '@/types': resolve(__dirname, './src/types'),
       '@/assets': resolve(__dirname, './src/assets'),
       '@/config': resolve(__dirname, './src/config'),
+      '@/services': resolve(__dirname, './src/services'),
     },
   },
   server: {

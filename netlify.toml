@@ -23,7 +23,59 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    # Prevent clickjacking attacks
     X-Frame-Options = "DENY"
+    
+    # Enable XSS protection in older browsers
     X-XSS-Protection = "1; mode=block"
+    
+    # Prevent MIME-type sniffing
     X-Content-Type-Options = "nosniff"
+    
+    # Control referrer information
     Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Enforce HTTPS (HSTS) - 1 year with subdomains
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    
+    # Content Security Policy - Strict policy for production
+    # Allows: self, inline styles (for Tailwind), PostHog, Sentry
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://app.posthog.com https://*.sentry.io;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https: blob:;
+      font-src 'self' data:;
+      connect-src 'self' https://app.posthog.com https://*.ingest.sentry.io https://*.sentry.io;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
+    """
+    
+    # Permissions Policy - Restrict browser features
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    
+    # Cross-Origin policies
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
+
+# Caching headers for static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Caching for HTML (short cache with revalidation)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Security headers for service worker (if added in future)
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
