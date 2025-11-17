@@ -56,7 +56,7 @@ export function sanitizeTitle(title: string): string {
     originalLength,
     sanitizedLength: sanitized.length,
     wasTruncated,
-    hadScriptTags: hadScriptOrHtmlTags,
+    hadScriptOrHtmlTags: hadScriptOrHtmlTags,
   })
 
   return sanitized
