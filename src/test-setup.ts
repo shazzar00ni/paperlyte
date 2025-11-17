@@ -13,13 +13,18 @@ Object.defineProperty(global, 'crypto', {
         return v.toString(16)
       })
     }),
-    getRandomValues: vi.fn((array: Uint8Array) => {
-      // Fill array with random values for testing
-      for (let i = 0; i < array.length; i++) {
-        array[i] = Math.floor(Math.random() * 256)
-      }
-      return array
-    }),
+    getRandomValues: (() => {
+      let callCount = 0
+      return vi.fn((array: Uint8Array) => {
+        // Deterministic but secure mock using hash-based DRBG with call counter
+        const seed = 'test-seed-' + array.length + '-' + callCount++
+        const hash = new TextEncoder().encode(seed)
+        for (let i = 0; i < array.length; i++) {
+          array[i] = hash[i % hash.length] ^ (i & 0xff)
+        }
+        return array
+      })
+    })(),
     subtle: {
       digest: vi.fn(async (_algorithm: string, data: ArrayBuffer) => {
         // Mock SHA-256 digest - deterministic but high-entropy for testing

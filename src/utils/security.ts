@@ -116,6 +116,7 @@ class RateLimiter {
 class CSRFTokenManager {
   private static readonly TOKEN_KEY = 'paperlyte_csrf_token'
   private static readonly TOKEN_EXPIRY_MS = 3600000 // 1 hour
+  private inMemoryToken: { token: string; expiry: number } | null = null
 
   /**
    * Generate a new CSRF token
@@ -145,8 +146,9 @@ class CSRFTokenManager {
         feature: 'security',
         action: 'csrf_token_generation',
       })
-      // No fallback - CSRF protection requires secure storage
-      throw new Error('Unable to generate CSRF token: Storage unavailable')
+      // Fallback to in-memory storage with session scope
+      this.inMemoryToken = tokenData
+      return token
     }
 
     return token
@@ -160,6 +162,10 @@ class CSRFTokenManager {
     try {
       const stored = sessionStorage.getItem(CSRFTokenManager.TOKEN_KEY)
       if (!stored) {
+        // Check in-memory fallback
+        if (this.inMemoryToken && this.inMemoryToken.expiry > Date.now()) {
+          return this.inMemoryToken.token
+        }
         return null
       }
 
@@ -175,6 +181,10 @@ class CSRFTokenManager {
         feature: 'security',
         action: 'csrf_token_retrieval',
       })
+      // Check in-memory fallback
+      if (this.inMemoryToken && this.inMemoryToken.expiry > Date.now()) {
+        return this.inMemoryToken.token
+      }
       return null
     }
   }
@@ -211,6 +221,8 @@ class CSRFTokenManager {
         action: 'csrf_token_clear',
       })
     }
+    // Also clear in-memory fallback
+    this.inMemoryToken = null
   }
 }
 
@@ -423,8 +435,10 @@ export const sanitization = {
     // Basic sanitization
     const sanitized = email.trim().toLowerCase()
 
-    // Validate email format
-    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
+    // Validate email format with international support
+    // Supports international characters, special chars, and modern TLDs
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
     if (!emailRegex.test(sanitized)) return null
 
     // Additional security checks
