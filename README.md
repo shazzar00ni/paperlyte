@@ -131,6 +131,11 @@ Ready for launch! Check out our comprehensive launch resources:
 - **[Keyboard Shortcuts](docs/keyboard-shortcuts.md)** - Complete shortcuts reference
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
+### Product Roadmap
+
+- **[Advanced Features Roadmap](docs/ADVANCED_FEATURES_ROADMAP.md)** - Growth features and integrations strategy
+- **[Simple Scribbles Roadmap](simple-scribbles/roadmap.md)** - Core product development timeline
+
 ---
 
 ## 🔒 Security & Privacy

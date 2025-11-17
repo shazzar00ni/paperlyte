@@ -34,4 +34,20 @@
 - [ ] **SOC 2 Type II compliance**
 - [ ] **Annual security audits**
 
+### Advanced Features & Integrations
+
+For detailed planning on growth features, integrations, and monetization strategy, see:
+
+📄 **[Advanced Features Roadmap](../docs/ADVANCED_FEATURES_ROADMAP.md)**
+
+This comprehensive roadmap covers:
+
+- Real-time collaboration and multi-user editing
+- Advanced note features (templates, linking, version history)
+- Platform expansion (mobile, desktop, browser extension)
+- Third-party integrations (Google Drive, GitHub, Slack, etc.)
+- Premium subscription tiers and monetization strategy
+- API ecosystem for third-party developers
+- Implementation timeline and success metrics
+
 ---
