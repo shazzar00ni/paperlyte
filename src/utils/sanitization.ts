@@ -32,27 +32,15 @@ export function sanitizeTitle(title: string): string {
     originalLength,
   })
 
-  // Remove script tags with their content first
-  let sanitized = title;
-  let prevSanitized;
-  do {
-    prevSanitized = sanitized;
-    sanitized = sanitized.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      ''
-    );
-  } while (sanitized !== prevSanitized);
-
-  const hasScriptTags = sanitized.length !== title.length
-  if (hasScriptTags) {
-    monitoring.addBreadcrumb('Removed script tags from title', 'warning', {
+  // Remove all HTML tags including scripts using DOMPurify
+  let sanitized = DOMPurify.sanitize(title, { ALLOWED_TAGS: [] });
+  const hadScriptOrHtmlTags = sanitized.length !== title.length;
+  if (hadScriptOrHtmlTags) {
+    monitoring.addBreadcrumb('Removed HTML/script tags from title using DOMPurify', 'warning', {
       originalLength,
-      lengthAfterScriptRemoval: sanitized.length,
-    })
+      lengthAfterSanitization: sanitized.length,
+    });
   }
-
-  // Remove all remaining HTML tags
-  sanitized = sanitized.replace(/<[^>]+>/g, '')
 
   // Trim and remove control characters
   // eslint-disable-next-line no-control-regex
@@ -68,7 +56,7 @@ export function sanitizeTitle(title: string): string {
     originalLength,
     sanitizedLength: sanitized.length,
     wasTruncated,
-    hadScriptTags: hasScriptTags,
+    hadScriptTags: hadScriptOrHtmlTags,
   })
 
   return sanitized
