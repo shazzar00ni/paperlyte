@@ -105,7 +105,7 @@ export class NetworkError extends PaperlyteError {
   constructor(
     message: string,
     public readonly statusCode?: number,
-    public readonly retryable: boolean = true,
+    retryable: boolean = true,
     context?: Record<string, unknown>
   ) {
     super(message, 'NETWORK_ERROR', retryable, { ...context, statusCode })
