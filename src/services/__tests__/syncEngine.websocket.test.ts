@@ -76,7 +76,6 @@ vi.mock('../../utils/dataMigration', () => ({
 describe('SyncEngine - WebSocket Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.useFakeTimers()
     localStorage.clear()
     websocketService.disconnect()
     websocketService.resetReconnectionState()
@@ -84,30 +83,23 @@ describe('SyncEngine - WebSocket Integration', () => {
   })
 
   afterEach(() => {
-    vi.useRealTimers()
     websocketService.disconnect()
     syncEngine.disableRealtimeSync()
   })
 
   describe('Real-time Sync Enablement', () => {
     it('should enable real-time sync successfully', async () => {
-      const enablePromise = syncEngine.enableRealtimeSync('wss://test.com')
-
-      await vi.runAllTimersAsync()
-      const result = await enablePromise
+      const result = await syncEngine.enableRealtimeSync('wss://test.com')
 
       expect(result).toBe(true)
       expect(syncEngine.isRealtimeSyncActive()).toBe(true)
     })
 
     it('should enable real-time sync with authentication token', async () => {
-      const enablePromise = syncEngine.enableRealtimeSync(
+      const result = await syncEngine.enableRealtimeSync(
         'wss://test.com',
         'test-token'
       )
-
-      await vi.runAllTimersAsync()
-      const result = await enablePromise
 
       expect(result).toBe(true)
       expect(syncEngine.isRealtimeSyncActive()).toBe(true)
@@ -115,7 +107,6 @@ describe('SyncEngine - WebSocket Integration', () => {
 
     it('should disable real-time sync', async () => {
       await syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
 
       syncEngine.disableRealtimeSync()
 
@@ -125,9 +116,7 @@ describe('SyncEngine - WebSocket Integration', () => {
     it('should report correct connection state', async () => {
       expect(syncEngine.getRealtimeConnectionState()).toBe('disconnected')
 
-      const enablePromise = syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
-      await enablePromise
+      await syncEngine.enableRealtimeSync('wss://test.com')
 
       expect(syncEngine.getRealtimeConnectionState()).toBe('connected')
     })
@@ -136,7 +125,6 @@ describe('SyncEngine - WebSocket Integration', () => {
   describe('Sending Updates via WebSocket', () => {
     beforeEach(async () => {
       await syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
     })
 
     it('should send note update when real-time sync is active', () => {
@@ -185,7 +173,6 @@ describe('SyncEngine - WebSocket Integration', () => {
   describe('Receiving Real-time Updates', () => {
     beforeEach(async () => {
       await syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
     })
 
     it('should receive and handle real-time note updates', async () => {
@@ -320,9 +307,7 @@ describe('SyncEngine - WebSocket Integration', () => {
 
   describe('Connection State Management', () => {
     it('should handle connection state changes', async () => {
-      const enablePromise = syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
-      await enablePromise
+      await syncEngine.enableRealtimeSync('wss://test.com')
 
       expect(syncEngine.getRealtimeConnectionState()).toBe('connected')
 
@@ -334,7 +319,6 @@ describe('SyncEngine - WebSocket Integration', () => {
 
     it('should not be active when WebSocket disconnects', async () => {
       await syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
 
       expect(syncEngine.isRealtimeSyncActive()).toBe(true)
 
@@ -376,18 +360,14 @@ describe('SyncEngine - WebSocket Integration', () => {
 
       global.WebSocket = FailingMockWebSocket as unknown as typeof WebSocket
 
-      const enablePromise = syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
-
       // Should not throw, just return false
-      const result = await enablePromise
+      const result = await syncEngine.enableRealtimeSync('wss://test.com')
       expect(result).toBe(false)
       expect(syncEngine.isRealtimeSyncActive()).toBe(false)
     })
 
     it('should handle callback errors gracefully', async () => {
       await syncEngine.enableRealtimeSync('wss://test.com')
-      await vi.runAllTimersAsync()
 
       const faultyCallback = vi.fn(() => {
         throw new Error('Callback error')
