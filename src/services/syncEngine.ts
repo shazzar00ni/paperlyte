@@ -719,11 +719,20 @@ class SyncEngine {
 
   /**
    * Disable real-time sync and disconnect WebSocket
+   * Clears all registered callbacks to prevent memory leaks
    */
   disableRealtimeSync(): void {
     monitoring.addBreadcrumb('Disabling real-time sync', 'info')
     websocketService.disconnect()
     this.realtimeSyncEnabled = false
+    
+    // Clear all callbacks to prevent memory leaks
+    this.realtimeSyncCallbacks.clear()
+    
+    monitoring.addBreadcrumb(
+      'Cleared all real-time sync callbacks',
+      'info'
+    )
   }
 
   /**

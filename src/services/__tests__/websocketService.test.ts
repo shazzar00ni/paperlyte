@@ -582,4 +582,134 @@ describe('WebSocketService', () => {
       expect(handler).toHaveBeenCalledWith(message.payload)
     })
   })
+
+  describe('Payload Validation', () => {
+    beforeEach(async () => {
+      await websocketService.connect('wss://test.com')
+      await vi.runAllTimersAsync()
+    })
+
+    it('should reject note_updated messages with invalid payload structure', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_updated', handler)
+
+      const message: WebSocketMessage = {
+        type: 'note_updated',
+        payload: { invalidField: 'data' }, // Missing 'note' object
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should accept note_updated messages with valid payload structure', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_updated', handler)
+
+      const message: WebSocketMessage = {
+        type: 'note_updated',
+        payload: {
+          note: { id: 'note-123', title: 'Test', content: 'Content' },
+          userId: 'user-1',
+        },
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).toHaveBeenCalledWith(message.payload)
+    })
+
+    it('should reject note_deleted messages with missing noteId', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_deleted', handler)
+
+      const message: WebSocketMessage = {
+        type: 'note_deleted',
+        payload: { userId: 'user-1' }, // Missing noteId
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should accept note_deleted messages with valid payload', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_deleted', handler)
+
+      const message: WebSocketMessage = {
+        type: 'note_deleted',
+        payload: { noteId: 'note-123', userId: 'user-1' },
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).toHaveBeenCalledWith(message.payload)
+    })
+
+    it('should reject sync_required messages with missing reason', async () => {
+      const handler = vi.fn()
+      websocketService.on('sync_required', handler)
+
+      const message: WebSocketMessage = {
+        type: 'sync_required',
+        payload: { otherField: 'data' }, // Missing reason
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should accept sync_required messages with valid payload', async () => {
+      const handler = vi.fn()
+      websocketService.on('sync_required', handler)
+
+      const message: WebSocketMessage = {
+        type: 'sync_required',
+        payload: { reason: 'server_update' },
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).toHaveBeenCalledWith(message.payload)
+    })
+  })
 })

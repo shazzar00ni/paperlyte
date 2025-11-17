@@ -406,4 +406,111 @@ describe('SyncEngine - WebSocket Integration', () => {
       expect(goodCallback).toHaveBeenCalled()
     })
   })
+
+  describe('Callback Memory Management', () => {
+    it('should clear all callbacks when real-time sync is disabled', async () => {
+      await syncEngine.enableRealtimeSync('wss://test.com')
+
+      const callback1 = vi.fn()
+      const callback2 = vi.fn()
+      const callback3 = vi.fn()
+
+      syncEngine.onRealtimeUpdate(callback1)
+      syncEngine.onRealtimeUpdate(callback2)
+      syncEngine.onRealtimeUpdate(callback3)
+
+      // Verify callbacks are registered
+      const updatedNote: Note = {
+        id: 'note-1',
+        title: 'Test Note',
+        content: 'Test content',
+        tags: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', {
+            data: JSON.stringify({
+              type: 'note_updated',
+              payload: { note: updatedNote },
+              timestamp: new Date().toISOString(),
+            }),
+          })
+        )
+      }
+
+      expect(callback1).toHaveBeenCalledTimes(1)
+      expect(callback2).toHaveBeenCalledTimes(1)
+      expect(callback3).toHaveBeenCalledTimes(1)
+
+      // Disable real-time sync (should clear callbacks)
+      syncEngine.disableRealtimeSync()
+
+      // Re-enable and send another message
+      await syncEngine.enableRealtimeSync('wss://test.com')
+
+      const ws2 = (websocketService as any).ws
+      if (ws2 && ws2.onmessage) {
+        ws2.onmessage(
+          new MessageEvent('message', {
+            data: JSON.stringify({
+              type: 'note_updated',
+              payload: { note: updatedNote },
+              timestamp: new Date().toISOString(),
+            }),
+          })
+        )
+      }
+
+      // Callbacks should not be called again (they were cleared)
+      expect(callback1).toHaveBeenCalledTimes(1)
+      expect(callback2).toHaveBeenCalledTimes(1)
+      expect(callback3).toHaveBeenCalledTimes(1)
+    })
+
+    it('should allow new callbacks to be registered after clearing', async () => {
+      await syncEngine.enableRealtimeSync('wss://test.com')
+
+      const oldCallback = vi.fn()
+      syncEngine.onRealtimeUpdate(oldCallback)
+
+      // Disable and clear callbacks
+      syncEngine.disableRealtimeSync()
+
+      // Re-enable and register new callback
+      await syncEngine.enableRealtimeSync('wss://test.com')
+      const newCallback = vi.fn()
+      syncEngine.onRealtimeUpdate(newCallback)
+
+      // Send message
+      const updatedNote: Note = {
+        id: 'note-1',
+        title: 'Test Note',
+        content: 'Test content',
+        tags: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', {
+            data: JSON.stringify({
+              type: 'note_updated',
+              payload: { note: updatedNote },
+              timestamp: new Date().toISOString(),
+            }),
+          })
+        )
+      }
+
+      // Only new callback should be called
+      expect(oldCallback).not.toHaveBeenCalled()
+      expect(newCallback).toHaveBeenCalledTimes(1)
+    })
+  })
 })

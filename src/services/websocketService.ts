@@ -298,6 +298,49 @@ class WebSocketService {
   }
 
   /**
+   * Validate payload structure for specific event types
+   */
+  private validatePayloadStructure(
+    type: string,
+    payload: unknown
+  ): boolean {
+    if (!payload || typeof payload !== 'object') {
+      return false
+    }
+
+    const data = payload as Record<string, unknown>
+
+    switch (type) {
+      case 'note_updated':
+        // Validate NoteUpdatePayload structure
+        return (
+          typeof data.note === 'object' &&
+          data.note !== null &&
+          typeof (data.note as Record<string, unknown>).id === 'string'
+        )
+
+      case 'note_deleted':
+        // Validate NoteDeletePayload structure
+        return typeof data.noteId === 'string' && data.noteId.length > 0
+
+      case 'sync_required':
+        // Validate SyncRequiredPayload structure
+        return typeof data.reason === 'string' && data.reason.length > 0
+
+      case 'pong':
+        // Pong messages can have any payload structure
+        return true
+
+      default:
+        // Unknown event types - allow but log
+        monitoring.addBreadcrumb('Unknown WebSocket event type', 'warning', {
+          type,
+        })
+        return true
+    }
+  }
+
+  /**
    * Handle incoming WebSocket message
    */
   private handleMessage(event: MessageEvent): void {
@@ -313,6 +356,21 @@ class WebSocketService {
             action: 'validate_message',
             additionalData: {
               receivedType: typeof event.data,
+            },
+          }
+        )
+        return
+      }
+
+      // Validate payload structure for specific event types
+      if (!this.validatePayloadStructure(message.type, message.payload)) {
+        monitoring.logError(
+          new Error('Invalid WebSocket message payload structure'),
+          {
+            feature: 'websocket_service',
+            action: 'validate_payload',
+            additionalData: {
+              type: message.type,
             },
           }
         )

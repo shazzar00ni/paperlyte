@@ -82,14 +82,24 @@ if (connected) {
 
 ```typescript
 // Register callback for note updates
-syncEngine.onRealtimeUpdate(note => {
+const handleNoteUpdate = (note) => {
   console.log('Note updated:', note)
   // Update your UI with the new note data
-})
+}
 
-// Unregister callback when component unmounts
-syncEngine.offRealtimeUpdate(callback)
+syncEngine.onRealtimeUpdate(handleNoteUpdate)
+
+// IMPORTANT: Unregister callback when component unmounts to prevent memory leaks
+syncEngine.offRealtimeUpdate(handleNoteUpdate)
+
+// Or simply disable real-time sync which automatically clears all callbacks
+syncEngine.disableRealtimeSync()
 ```
+
+**Memory Management Best Practices:**
+- Always unregister callbacks when components unmount
+- Use `disableRealtimeSync()` to automatically clear all callbacks
+- Avoid anonymous functions if you need to unregister specific callbacks
 
 ### Sending Updates
 
@@ -125,6 +135,7 @@ const state = syncEngine.getRealtimeConnectionState()
 
 ```typescript
 // Disconnect and disable real-time sync
+// This also automatically clears all registered callbacks to prevent memory leaks
 syncEngine.disableRealtimeSync()
 ```
 
@@ -245,6 +256,34 @@ class CustomWebSocketService extends WebSocketService {
   }
 }
 ```
+
+## Message Validation
+
+The WebSocket service implements comprehensive message validation at two levels:
+
+### Schema Validation
+
+All incoming messages are validated for required fields before processing:
+- `type`: Must be a non-empty string
+- `timestamp`: Must be a valid ISO timestamp string
+- `payload`: Must be present (can be any type)
+
+Messages that fail schema validation are rejected and logged.
+
+### Payload Validation
+
+Event-specific payload structures are validated based on message type:
+
+**note_updated:**
+- Must contain a `note` object with an `id` field
+
+**note_deleted:**
+- Must contain a non-empty `noteId` string
+
+**sync_required:**
+- Must contain a non-empty `reason` string
+
+Invalid payloads are rejected and logged before being emitted to event handlers. This prevents malformed messages from causing runtime errors or unexpected behavior in your application.
 
 ## Error Handling
 
