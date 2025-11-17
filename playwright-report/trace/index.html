@@ -34,7 +34,18 @@
           const command = `npx playwright show-report ${reportPath}`;
           reportLink.innerHTML = `You can open the report via <code>${command}</code> from your Playwright project. <button type="button">Copy Command</button>`;
           fallbackErrorDialog.insertBefore(reportLink, fallbackErrorDialog.children[1]);
-          reportLink.querySelector('button').addEventListener('click', () => navigator.clipboard.writeText(command));
+          const copyButton = reportLink.querySelector('button');
+          copyButton.addEventListener('click', async () => {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+              console.warn('Clipboard API not available; cannot copy command automatically.');
+              return;
+            }
+            try {
+              await navigator.clipboard.writeText(command);
+            } catch (err) {
+              console.error('Failed to copy command to clipboard:', err);
+            }
+          });
         }
         fallbackErrorDialog.show();
       }
