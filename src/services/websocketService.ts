@@ -86,7 +86,7 @@ class WebSocketService {
    * Connect to WebSocket server
    *
    * @param url - WebSocket server URL (e.g., 'wss://api.paperlyte.com/sync')
-   * @param token - Optional authentication token
+   * @param token - Optional authentication token (sent via Sec-WebSocket-Protocol header)
    */
   async connect(url: string, token?: string): Promise<boolean> {
     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -100,9 +100,13 @@ class WebSocketService {
 
     return new Promise((resolve, reject) => {
       try {
-        // Append token to URL if provided
-        const wsUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url
-        this.ws = new WebSocket(wsUrl)
+        // Use protocol-based authentication instead of URL parameters
+        // Token is sent via Sec-WebSocket-Protocol header for better security
+        if (token) {
+          this.ws = new WebSocket(url, [`token-${token}`])
+        } else {
+          this.ws = new WebSocket(url)
+        }
 
         // Set up event listeners
         this.ws.onopen = () => {
@@ -267,11 +271,53 @@ class WebSocketService {
   }
 
   /**
+   * Validate incoming WebSocket message schema
+   */
+  private validateMessageSchema(message: unknown): message is WebSocketMessage {
+    if (!message || typeof message !== 'object') {
+      return false
+    }
+
+    const msg = message as Record<string, unknown>
+
+    // Check required fields
+    if (typeof msg.type !== 'string' || !msg.type) {
+      return false
+    }
+
+    if (typeof msg.timestamp !== 'string' || !msg.timestamp) {
+      return false
+    }
+
+    // Payload can be any type, but it must exist
+    if (!('payload' in msg)) {
+      return false
+    }
+
+    return true
+  }
+
+  /**
    * Handle incoming WebSocket message
    */
   private handleMessage(event: MessageEvent): void {
     try {
       const message: WebSocketMessage = JSON.parse(event.data)
+
+      // Validate message schema before processing
+      if (!this.validateMessageSchema(message)) {
+        monitoring.logError(
+          new Error('Invalid WebSocket message schema'),
+          {
+            feature: 'websocket_service',
+            action: 'validate_message',
+            additionalData: {
+              receivedType: typeof event.data,
+            },
+          }
+        )
+        return
+      }
 
       // Handle heartbeat pong
       if (message.type === 'pong') {

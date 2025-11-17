@@ -12,13 +12,15 @@ class MockWebSocket {
 
   readyState = MockWebSocket.CONNECTING
   url: string
+  protocol: string | string[]
   onopen: ((event: Event) => void) | null = null
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: Event) => void) | null = null
   onclose: ((event: CloseEvent) => void) | null = null
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url
+    this.protocol = protocols || ''
     setTimeout(() => {
       this.readyState = MockWebSocket.OPEN
       if (this.onopen) {
@@ -338,8 +340,8 @@ describe('SyncEngine - WebSocket Integration', () => {
     it('should handle failed connection attempts gracefully', async () => {
       // Mock WebSocket to fail immediately
       class FailingMockWebSocket extends MockWebSocket {
-        constructor(url: string) {
-          super(url)
+        constructor(url: string, protocols?: string | string[]) {
+          super(url, protocols)
           setTimeout(() => {
             this.readyState = MockWebSocket.CLOSED
             if (this.onerror) {

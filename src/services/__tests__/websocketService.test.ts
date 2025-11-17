@@ -14,13 +14,15 @@ class MockWebSocket {
 
   readyState = MockWebSocket.CONNECTING
   url: string
+  protocol: string | string[]
   onopen: ((event: Event) => void) | null = null
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: Event) => void) | null = null
   onclose: ((event: CloseEvent) => void) | null = null
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url
+    this.protocol = protocols || ''
     // Simulate async connection
     setTimeout(() => {
       this.readyState = MockWebSocket.OPEN
@@ -480,8 +482,8 @@ describe('WebSocketService', () => {
     it('should timeout if connection takes too long', async () => {
       // Mock WebSocket that never connects
       class SlowMockWebSocket extends MockWebSocket {
-        constructor(url: string) {
-          super(url)
+        constructor(url: string, protocols?: string | string[]) {
+          super(url, protocols)
           // Don't call onopen
         }
       }
@@ -494,6 +496,90 @@ describe('WebSocketService', () => {
       await vi.advanceTimersByTimeAsync(10000)
 
       await expect(connectPromise).rejects.toThrow('connection timeout')
+    })
+  })
+
+  describe('Message Validation', () => {
+    beforeEach(async () => {
+      await websocketService.connect('wss://test.com')
+      await vi.runAllTimersAsync()
+    })
+
+    it('should reject messages with missing type field', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_updated', handler)
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', {
+            data: JSON.stringify({
+              payload: { test: 'data' },
+              timestamp: new Date().toISOString(),
+            }),
+          })
+        )
+      }
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should reject messages with missing timestamp field', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_updated', handler)
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', {
+            data: JSON.stringify({
+              type: 'note_updated',
+              payload: { test: 'data' },
+            }),
+          })
+        )
+      }
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should reject messages with missing payload field', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_updated', handler)
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', {
+            data: JSON.stringify({
+              type: 'note_updated',
+              timestamp: new Date().toISOString(),
+            }),
+          })
+        )
+      }
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('should accept valid messages', async () => {
+      const handler = vi.fn()
+      websocketService.on('note_updated', handler)
+
+      const message: WebSocketMessage = {
+        type: 'note_updated',
+        payload: { test: 'data' },
+        timestamp: new Date().toISOString(),
+      }
+
+      const ws = (websocketService as any).ws
+      if (ws && ws.onmessage) {
+        ws.onmessage(
+          new MessageEvent('message', { data: JSON.stringify(message) })
+        )
+      }
+
+      expect(handler).toHaveBeenCalledWith(message.payload)
     })
   })
 })

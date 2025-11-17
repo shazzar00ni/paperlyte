@@ -26,7 +26,7 @@ The WebSocket service provides real-time bidirectional communication between the
 ### Connection Management
 
 - **Auto-connect**: Establishes WebSocket connection to specified server URL
-- **Authentication**: Supports token-based authentication via URL parameter
+- **Authentication**: Supports token-based authentication via Sec-WebSocket-Protocol header (secure, not exposed in URLs or logs)
 - **Connection timeout**: 10-second timeout for initial connection
 - **State tracking**: Monitors connection state (disconnected, connecting, connected, reconnecting, error)
 
@@ -318,11 +318,12 @@ For older browsers, the application gracefully degrades to polling-based sync.
 
 ## Security Considerations
 
-1. **Authentication**: Always use authentication tokens for WebSocket connections
+1. **Authentication**: Always use authentication tokens for WebSocket connections. Tokens are sent via Sec-WebSocket-Protocol header (not in URL parameters) to prevent exposure in server logs and intermediaries.
 2. **WSS Protocol**: Use secure WebSocket (wss://) in production
-3. **Input Validation**: Server should validate all incoming messages
+3. **Input Validation**: Both client and server validate all incoming messages against expected schema. Messages with missing or invalid fields are rejected.
 4. **Rate Limiting**: Server should implement rate limiting per connection
 5. **Token Expiration**: Handle token expiration and refresh gracefully
+6. **Message Schema Validation**: All incoming WebSocket messages are validated before processing to prevent malformed or malicious data from causing application errors
 
 ## Future Enhancements
 

@@ -97,6 +97,19 @@ class SyncEngine {
             action: 'update_sync_metadata_on_connect',
           })
         })
+      } else if (
+        data.currentState === 'disconnected' ||
+        data.currentState === 'error'
+      ) {
+        // Update metadata on disconnection to reflect accurate state
+        this.updateSyncMetadata({
+          lastSyncTime: null,
+        }).catch(error => {
+          monitoring.logError(error as Error, {
+            feature: 'sync_engine',
+            action: 'update_sync_metadata_on_disconnect',
+          })
+        })
       }
     })
   }
