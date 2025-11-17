@@ -187,7 +187,11 @@ button:not(:disabled):active {
   outline: none;
 }
 
-/* Markdown Preview Styles */
+/* Markdown Preview Styles
+ * Note: Using 'em' units for font sizes to enable relative scaling within the preview.
+ * This allows headings and text to scale proportionally based on the preview container's
+ * font size, which is beneficial for responsive typography in the Markdown context.
+ */
 .markdown-preview {
   line-height: 1.7;
 }
@@ -291,7 +295,7 @@ button:not(:disabled):active {
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9rem;
+  font-size: 0.9em;
 }
 
 .markdown-preview pre {
