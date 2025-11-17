@@ -301,3 +301,32 @@ export const withErrorBoundary = Sentry.withErrorBoundary
 
 // Higher-order component for error boundaries
 export const ErrorBoundary = Sentry.ErrorBoundary
+
+/**
+ * Safely log an error with fallback to console.error
+ *
+ * This helper ensures that error logging never throws, even if monitoring
+ * services fail. It wraps monitoring.logError with a try/catch block and
+ * falls back to console.error if the monitoring system is unavailable.
+ *
+ * @param error - The error to log
+ * @param context - Optional context for the error
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await riskyOperation()
+ * } catch (error) {
+ *   safeLogError(error as Error, { feature: 'my_feature', action: 'operation' })
+ * }
+ * ```
+ */
+export function safeLogError(error: Error, context?: ErrorContext): void {
+  try {
+    monitoring.logError(error, context)
+  } catch (loggingError) {
+    // Fallback to console if monitoring fails
+    console.error('Failed to log error to monitoring service:', loggingError)
+    console.error('Original error:', error, context)
+  }
+}
