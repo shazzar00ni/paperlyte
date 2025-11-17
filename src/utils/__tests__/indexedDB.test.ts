@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { indexedDB, STORE_NAMES } from '../indexedDB'
 
-describe.skipIf(!window.indexedDB)('IndexedDB Storage', () => {
+describe('IndexedDB Storage', () => {
   beforeEach(async () => {
     // Close any existing connections
     indexedDB.close()
