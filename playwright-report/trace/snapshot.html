@@ -10,10 +10,14 @@
         if (!navigator.serviceWorker.controller)
           await new Promise(f => navigator.serviceWorker.oncontrollerchange = f);
         const traceUrl = new URL(location.href).searchParams.get('trace');
+        if (!traceUrl) {
+          console.error('Missing "trace" parameter in snapshot URL:', location.href);
+          return;
+        }
         const params = new URLSearchParams();
         params.set('trace', traceUrl);
         await fetch('contexts?' + params.toString()).then(r => r.json());
-        await location.reload();
+        location.reload();
       })();
     </script>
     <script src="stall.js"></script>
