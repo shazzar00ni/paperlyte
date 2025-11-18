@@ -48,8 +48,9 @@ test.describe('Landing Page', () => {
     await waitlistButton.click()
 
     // Check if modal opened
-    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/Join.*Waitlist/i)).toBeVisible()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible({ timeout: 10000 })
+    await expect(dialog.getByRole('heading', { name: /Join.*Waitlist/i })).toBeVisible()
   })
 
   test('should be responsive on mobile', async ({ page }) => {
