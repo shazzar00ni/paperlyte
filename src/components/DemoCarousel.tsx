@@ -127,11 +127,11 @@ const DemoCarousel: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className='relative aspect-video bg-gray-50'>
+      <div className='relative bg-gray-50'>
         {/* Slide Content */}
-        <div className='flex h-full'>
+        <div className='flex flex-col md:flex-row'>
           {/* Image Section */}
-          <div className='flex-1 relative overflow-hidden'>
+          <div className='relative overflow-hidden aspect-video md:flex-1'>
             <img
               src={currentSlideData.image}
               alt={currentSlideData.alt}
@@ -155,27 +155,27 @@ const DemoCarousel: React.FC = () => {
             {/* Navigation Arrows */}
             <button
               onClick={prevSlide}
-              className='absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
+              className='absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
               aria-label='Previous slide'
             >
-              <ChevronLeft className='w-5 h-5 text-gray-700' />
+              <ChevronLeft className='w-4 h-4 md:w-5 md:h-5 text-gray-700' />
             </button>
 
             <button
               onClick={nextSlide}
-              className='absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
+              className='absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
               aria-label='Next slide'
             >
-              <ChevronRight className='w-5 h-5 text-gray-700' />
+              <ChevronRight className='w-4 h-4 md:w-5 md:h-5 text-gray-700' />
             </button>
           </div>
 
           {/* Text Section */}
-          <div className='flex-1 p-8 flex flex-col justify-center'>
-            <h4 className='text-2xl font-semibold text-dark mb-4'>
+          <div className='p-6 md:p-8 md:flex-1 flex flex-col justify-center'>
+            <h4 className='text-xl md:text-2xl font-semibold text-dark mb-3 md:mb-4'>
               {currentSlideData.title}
             </h4>
-            <p className='text-gray-600 text-lg leading-relaxed'>
+            <p className='text-gray-600 text-base md:text-lg leading-relaxed'>
               {currentSlideData.description}
             </p>
           </div>
