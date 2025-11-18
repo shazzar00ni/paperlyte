@@ -30,7 +30,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
   }, [isOpen, onClose])
 
   const handleNavClick = (item: string) => {
-    trackNavigationEvent('mobile_menu_click', { item })
+    trackNavigationEvent('menu_click', { item, source: 'mobile_menu' })
     onClose()
   }
 
