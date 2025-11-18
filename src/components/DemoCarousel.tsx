@@ -13,9 +13,16 @@ interface DemoSlide {
 
 // Generate SVG placeholder images for demo
 const generatePlaceholderSVG = (title: string, color: string) => {
+  // Remove emojis from title to avoid btoa encoding issues
+  const cleanTitle = title
+    .replace(
+      /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu,
+      ''
+    )
+    .trim()
   const svg = `<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
     <rect width="600" height="400" fill="${color}"/>
-    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
+    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${cleanTitle}</text>
   </svg>`
   return `data:image/svg+xml;base64,${btoa(svg)}`
 }
@@ -26,7 +33,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Lightning Fast Editor',
     description:
       'Start writing instantly with our distraction-free interface. No loading screens, no delays.',
-    image: generatePlaceholderSVG('✏️ Editor Demo', '#6C63FF'),
+    image: generatePlaceholderSVG('Editor Demo', '#6C63FF'),
     alt: 'Paperlyte editor interface showing clean, minimal design',
   },
   {
@@ -34,7 +41,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Smart Search & Tags',
     description:
       'Find your notes instantly with intelligent search and flexible tagging system.',
-    image: generatePlaceholderSVG('🔍 Search Demo', '#4F46E5'),
+    image: generatePlaceholderSVG('Search Demo', '#4F46E5'),
     alt: 'Search functionality with tags and filtering options',
   },
   {
@@ -42,7 +49,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Seamless Sync (Coming Soon)',
     description:
       'Your notes everywhere, always secure and private with end-to-end encryption.',
-    image: generatePlaceholderSVG('🔄 Sync Demo', '#7C3AED'),
+    image: generatePlaceholderSVG('Sync Demo', '#7C3AED'),
     alt: 'Multi-device sync visualization',
   },
   {
@@ -50,7 +57,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Privacy First',
     description:
       'Your thoughts stay yours. No ads, no tracking, no data mining.',
-    image: generatePlaceholderSVG('🔒 Privacy Demo', '#059669'),
+    image: generatePlaceholderSVG('Privacy Demo', '#059669'),
     alt: 'Privacy and security features illustration',
   },
 ]
