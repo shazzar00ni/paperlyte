@@ -7,7 +7,7 @@
 
 import { RefObject, useEffect, useRef, useState } from 'react'
 import { trackFeatureUsage } from '../utils/analytics'
-import { monitoring, safeLogError } from '../utils/monitoring'
+import { monitoring } from '../utils/monitoring'
 
 export interface UseFocusModeOptions {
   /** Whether to handle Escape key to exit focus mode */
@@ -76,17 +76,8 @@ export function useFocusMode(
    */
   const enterFocusMode = () => {
     setIsFocusMode(true)
-
-    try {
-      trackFeatureUsage('focus_mode', 'enter')
-      monitoring.addBreadcrumb('Entered focus mode', 'user_action')
-    } catch (error) {
-      safeLogError(error as Error, {
-        feature: 'focus_mode',
-        action: 'enter_tracking',
-      })
-    }
-
+    trackFeatureUsage('focus_mode', 'enter')
+    monitoring.addBreadcrumb('Entered focus mode', 'user_action')
     onEnterRef.current?.()
   }
 
@@ -95,17 +86,8 @@ export function useFocusMode(
    */
   const exitFocusMode = () => {
     setIsFocusMode(false)
-
-    try {
-      trackFeatureUsage('focus_mode', 'exit')
-      monitoring.addBreadcrumb('Exited focus mode', 'user_action')
-    } catch (error) {
-      safeLogError(error as Error, {
-        feature: 'focus_mode',
-        action: 'exit_tracking',
-      })
-    }
-
+    trackFeatureUsage('focus_mode', 'exit')
+    monitoring.addBreadcrumb('Exited focus mode', 'user_action')
     onExitRef.current?.()
   }
 
