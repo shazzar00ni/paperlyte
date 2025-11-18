@@ -194,9 +194,9 @@ describe('DataService Enhanced CRUD Operations', () => {
       )
     })
 
-    it('should reject notes with titles exceeding 255 characters', async () => {
+    it('should truncate titles exceeding 255 characters', async () => {
       const note: Note = {
-        id: 'note-invalid-2',
+        id: 'note-truncate-title',
         title: 'a'.repeat(300),
         content: 'Content',
         tags: [],
@@ -204,9 +204,14 @@ describe('DataService Enhanced CRUD Operations', () => {
         updatedAt: new Date().toISOString(),
       }
 
-      await expect(dataService.saveNote(note)).rejects.toThrow(
-        'Note title must be 255 characters or less'
-      )
+      // The service should truncate the title to 255 characters, not reject
+      const success = await dataService.saveNote(note)
+      expect(success).toBe(true)
+
+      const savedNote = await dataService.getNote('note-truncate-title')
+      expect(savedNote).toBeDefined()
+      expect(savedNote!.title).toHaveLength(255)
+      expect(savedNote!.title).toBe('a'.repeat(255))
     })
   })
 
