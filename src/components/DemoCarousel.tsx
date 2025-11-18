@@ -11,7 +11,13 @@ interface DemoSlide {
   alt: string
 }
 
-// Helper function to encode Unicode strings for base64
+/**
+ * Encodes a Unicode string to base64 using UTF-8 encoding.
+ * Handles characters outside the Latin1 range that would cause btoa() to fail.
+ * @param str - The string to encode
+ * @returns Base64-encoded string
+ * @throws Logs error and returns fallback if encoding fails
+ */
 const utf8ToBase64 = (str: string): string => {
   try {
     // Use TextEncoder to handle Unicode properly
