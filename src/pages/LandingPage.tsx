@@ -91,7 +91,7 @@ const LandingPage: React.FC = () => {
                 onClick={handleWaitlistClick}
                 className='btn-secondary btn-lg'
               >
-                Join Waitlist
+                Join the Waitlist
               </button>
             </div>
           </div>
