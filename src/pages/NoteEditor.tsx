@@ -320,6 +320,7 @@ const NoteEditor: React.FC = () => {
         <div className='p-4 border-b border-gray-200 md:hidden flex items-center justify-between'>
           <h2 className='text-lg font-semibold text-dark'>Notes</h2>
           <button
+            type="button"
             onClick={() => setIsSidebarOpen(false)}
             className='p-2 rounded-lg hover:bg-gray-100 transition-colors'
             aria-label='Close sidebar'
