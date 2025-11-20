@@ -422,6 +422,7 @@ const NoteEditor: React.FC = () => {
             <div className='bg-white border-b border-gray-200 p-4 flex items-center justify-between gap-2'>
               {/* Mobile Menu Button */}
               <button
+                type="button"
                 onClick={() => setIsSidebarOpen(true)}
                 className='md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0'
                 aria-label='Open sidebar'
