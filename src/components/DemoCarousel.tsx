@@ -11,13 +11,41 @@ interface DemoSlide {
   alt: string
 }
 
+/**
+ * Encodes a Unicode string to base64 using UTF-8 encoding.
+ * Handles characters outside the Latin1 range that would cause btoa() to fail.
+ * @param str - The string to encode
+ * @returns Base64-encoded string
+ * @throws Logs error and returns fallback if encoding fails
+ */
+const utf8ToBase64 = (str: string): string => {
+  try {
+    // Use TextEncoder to handle Unicode properly
+    const encoder = new TextEncoder()
+    const data = encoder.encode(str)
+    // Convert Uint8Array to binary string
+    let binary = ''
+    for (let i = 0; i < data.length; i++) {
+      binary += String.fromCharCode(data[i])
+    }
+    return btoa(binary)
+  } catch (error) {
+    // Fallback to URL encoding if base64 encoding fails
+    monitoring.logError(error as Error, {
+      feature: 'demo_carousel',
+      action: 'utf8_to_base64',
+    })
+    return encodeURIComponent(str)
+  }
+}
+
 // Generate SVG placeholder images for demo
 const generatePlaceholderSVG = (title: string, color: string) => {
   const svg = `<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
     <rect width="600" height="400" fill="${color}"/>
     <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
   </svg>`
-  return `data:image/svg+xml;base64,${btoa(svg)}`
+  return `data:image/svg+xml;base64,${utf8ToBase64(svg)}`
 }
 
 const demoSlides: DemoSlide[] = [
