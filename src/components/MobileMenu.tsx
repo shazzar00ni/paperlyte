@@ -60,6 +60,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
               <span className='font-bold text-lg text-dark'>Paperlyte</span>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className='p-2 rounded-lg hover:bg-gray-100 transition-colors'
               aria-label='Close menu'
