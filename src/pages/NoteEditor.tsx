@@ -488,6 +488,7 @@ const NoteEditor: React.FC = () => {
           <div className='flex-1 flex flex-col items-center justify-center text-gray-500'>
             {/* Mobile Menu Button for Empty State */}
             <button
+              type="button"
               onClick={() => setIsSidebarOpen(true)}
               className='md:hidden mb-4 p-3 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center space-x-2'
               aria-label='Open notes list'
