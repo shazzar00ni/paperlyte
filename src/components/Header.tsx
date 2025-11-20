@@ -48,6 +48,7 @@ const Header: React.FC = () => {
             {/* Desktop CTA Button */}
             <div className='hidden md:block'>
               <button
+                type="button"
                 className='btn-primary btn-md'
                 onClick={() => handleNavClick('waitlist_cta')}
               >
