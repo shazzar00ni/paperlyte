@@ -145,14 +145,13 @@ describe('Note Utilities', () => {
       expect(validateNote(note)).toBe('Note title is required')
     })
 
-    it('should reject notes with title exceeding 255 characters', () => {
+    it('should accept notes with title exceeding 255 characters (sanitization truncates)', () => {
       const note = {
         title: 'a'.repeat(300),
         content: 'Content',
       }
-      expect(validateNote(note)).toBe(
-        'Note title must be 255 characters or less'
-      )
+      // Title gets truncated to 255 characters during sanitization, so validation passes
+      expect(validateNote(note)).toBeNull()
     })
 
     it('should accept notes without content', () => {

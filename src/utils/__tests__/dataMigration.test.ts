@@ -288,14 +288,13 @@ describe('Data Migration', () => {
     })
 
     it('should return false when IndexedDB is not available', () => {
-      const originalIndexedDB = global.indexedDB
-      // @ts-expect-error - Testing undefined scenario
-      global.indexedDB = undefined
+      // Use vi.stubGlobal to properly mock undefined indexedDB
+      vi.stubGlobal('indexedDB', undefined)
 
       expect(isIndexedDBAvailable()).toBe(false)
 
-      // Restore
-      global.indexedDB = originalIndexedDB
+      // Restore by unstubbing
+      vi.unstubAllGlobals()
     })
   })
 

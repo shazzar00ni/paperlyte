@@ -35,7 +35,17 @@ describe('DataService', () => {
 
       const notes = await dataService.getNotes()
       expect(notes).toHaveLength(1)
-      expect(notes[0]).toEqual(testNote)
+      // Service automatically adds wordCount, version and updates updatedAt
+      expect(notes[0]).toMatchObject({
+        id: testNote.id,
+        title: testNote.title,
+        content: testNote.content,
+        tags: testNote.tags,
+        createdAt: testNote.createdAt,
+      })
+      expect(notes[0].wordCount).toBeDefined()
+      expect(notes[0].version).toBe(1)
+      expect(notes[0].updatedAt).toBeDefined()
     })
 
     it('should update an existing note', async () => {

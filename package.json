@@ -25,10 +25,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "NODE_OPTIONS='--max-old-space-size=4096' vitest",
-    "test:ci": "NODE_OPTIONS='--max-old-space-size=4096' vitest run --reporter=verbose || exit 0",
-    "test:coverage": "NODE_OPTIONS='--max-old-space-size=4096' vitest run --coverage",
-    "test:ui": "NODE_OPTIONS='--max-old-space-size=4096' vitest --ui",
+    "test": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest",
+    "test:ci": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest run --reporter=verbose || exit 0",
+    "test:coverage": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest run --coverage",
+    "test:ui": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest --ui",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "format": "prettier --write .",
@@ -45,8 +45,8 @@
     "deps:validate": "npm run ci && npm run security-audit",
     "deps:test-updates": "./scripts/validate-deps.sh",
     "ci": "npm run lint && npm run type-check && npm run test:ci && npm run build",
-    "test:run": "NODE_OPTIONS='--max-old-space-size=4096' vitest run",
-    "test:watch": "NODE_OPTIONS='--max-old-space-size=4096' vitest --watch",
+    "test:run": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest run",
+    "test:watch": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest --watch",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
@@ -84,6 +84,7 @@
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.21",
     "axe-core": "^4.11.0",
+    "cross-env": "^10.1.0",
     "eslint": "^8.53.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -102,8 +103,8 @@
     "vitest-axe": "^0.1.0"
   },
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=7.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
