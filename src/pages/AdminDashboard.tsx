@@ -172,19 +172,19 @@ const AdminDashboard: React.FC = () => {
   return (
     <>
       <Header />
-      <div className='min-h-screen bg-background p-6'>
+      <div className='min-h-screen bg-background p-4 md:p-6'>
         <div className='max-w-7xl mx-auto'>
           {/* Header */}
-          <div className='flex justify-between items-center mb-8'>
+          <div className='flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 gap-4'>
             <div>
-              <h1 className='text-3xl font-bold text-dark'>
+              <h1 className='text-2xl md:text-3xl font-bold text-dark'>
                 Analytics Dashboard
               </h1>
-              <p className='text-gray-600'>
+              <p className='text-sm md:text-base text-gray-600'>
                 Monitor app performance and user behavior
               </p>
             </div>
-            <div className='flex items-center space-x-4'>
+            <div className='flex items-center space-x-2 md:space-x-4'>
               <select
                 value={timeRange}
                 onChange={e => setTimeRange(e.target.value)}

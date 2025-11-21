@@ -2,6 +2,8 @@ import { CheckCircle, Search, Shield, Smartphone, Tag, Zap } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DemoCarousel from '../components/DemoCarousel'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 import WaitlistModal from '../components/WaitlistModal'
 import {
   trackFeatureUsage,
@@ -65,9 +67,11 @@ const LandingPage: React.FC = () => {
   ]
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col min-h-screen'>
+      <Header />
+
       {/* Hero Section */}
-      <section className='bg-gradient-to-br from-primary/10 to-accent/10 py-20'>
+      <section className='bg-gradient-to-br from-primary/10 to-accent/10 py-12 md:py-20'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='text-center mb-12'>
             <h1 className='text-4xl md:text-6xl font-bold text-dark mb-6'>
@@ -171,6 +175,8 @@ const LandingPage: React.FC = () => {
           </button>
         </div>
       </section>
+
+      <Footer />
 
       {/* Waitlist Modal */}
       <WaitlistModal
