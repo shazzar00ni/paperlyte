@@ -8,6 +8,11 @@ import type {
 import { monitoring } from '../utils/monitoring'
 import { indexedDB, STORE_NAMES } from '../utils/indexedDB'
 import { isIndexedDBAvailable } from '../utils/dataMigration'
+import {
+  websocketService,
+  type NoteUpdatePayload,
+  type NoteDeletePayload,
+} from './websocketService'
 
 /**
  * Sync Engine - Manages cloud synchronization and conflict resolution
@@ -27,9 +32,86 @@ class SyncEngine {
   private storagePrefix = 'paperlyte_sync_'
   private syncInProgress = false
   private useIndexedDB: boolean = false
+  private realtimeSyncEnabled = false
+  private realtimeSyncCallbacks: Set<(note: Note) => void> = new Set()
 
   constructor() {
     this.useIndexedDB = isIndexedDBAvailable()
+    this.setupWebSocketListeners()
+  }
+
+  /**
+   * Setup WebSocket event listeners for real-time sync
+   */
+  private setupWebSocketListeners(): void {
+    // Listen for real-time note updates from server
+    websocketService.on<NoteUpdatePayload>('note_updated', data => {
+      monitoring.addBreadcrumb('Received real-time note update', 'sync', {
+        noteId: data.note.id,
+      })
+
+      // Notify callbacks about the update
+      this.realtimeSyncCallbacks.forEach(callback => {
+        try {
+          callback(data.note)
+        } catch (error) {
+          monitoring.logError(error as Error, {
+            feature: 'sync_engine',
+            action: 'realtime_callback',
+          })
+        }
+      })
+    })
+
+    // Listen for real-time note deletions
+    websocketService.on<NoteDeletePayload>('note_deleted', data => {
+      monitoring.addBreadcrumb('Received real-time note deletion', 'sync', {
+        noteId: data.noteId,
+      })
+    })
+
+    // Listen for sync required events
+    websocketService.on<{ reason: string }>('sync_required', data => {
+      monitoring.addBreadcrumb('Sync required by server', 'sync', {
+        reason: data.reason,
+      })
+    })
+
+    // Listen for connection state changes
+    websocketService.on<{
+      previousState: string
+      currentState: string
+    }>('connection_state_changed', data => {
+      monitoring.addBreadcrumb('WebSocket connection state changed', 'info', {
+        from: data.previousState,
+        to: data.currentState,
+      })
+
+      // Update sync metadata based on connection state
+      if (data.currentState === 'connected') {
+        this.updateSyncMetadata({
+          lastSyncTime: new Date().toISOString(),
+        }).catch(error => {
+          monitoring.logError(error as Error, {
+            feature: 'sync_engine',
+            action: 'update_sync_metadata_on_connect',
+          })
+        })
+      } else if (
+        data.currentState === 'disconnected' ||
+        data.currentState === 'error'
+      ) {
+        // Update metadata on disconnection to reflect accurate state
+        this.updateSyncMetadata({
+          lastSyncTime: null,
+        }).catch(error => {
+          monitoring.logError(error as Error, {
+            feature: 'sync_engine',
+            action: 'update_sync_metadata_on_disconnect',
+          })
+        })
+      }
+    })
   }
 
   /**
@@ -604,6 +686,130 @@ class SyncEngine {
    */
   isSyncInProgress(): boolean {
     return this.syncInProgress
+  }
+
+  /**
+   * Enable real-time sync via WebSocket
+   *
+   * @param wsUrl - WebSocket server URL (e.g., 'wss://api.paperlyte.com/sync')
+   * @param token - Optional authentication token
+   */
+  async enableRealtimeSync(wsUrl: string, token?: string): Promise<boolean> {
+    try {
+      monitoring.addBreadcrumb('Enabling real-time sync', 'info', { wsUrl })
+
+      const connected = await websocketService.connect(wsUrl, token)
+
+      if (connected) {
+        this.realtimeSyncEnabled = true
+        monitoring.addBreadcrumb('Real-time sync enabled', 'info')
+        return true
+      }
+
+      monitoring.addBreadcrumb('Failed to enable real-time sync', 'warning')
+      return false
+    } catch (error) {
+      monitoring.logError(error as Error, {
+        feature: 'sync_engine',
+        action: 'enable_realtime_sync',
+      })
+      return false
+    }
+  }
+
+  /**
+   * Disable real-time sync and disconnect WebSocket
+   * Clears all registered callbacks to prevent memory leaks
+   */
+  disableRealtimeSync(): void {
+    monitoring.addBreadcrumb('Disabling real-time sync', 'info')
+    websocketService.disconnect()
+    this.realtimeSyncEnabled = false
+    
+    // Clear all callbacks to prevent memory leaks
+    this.realtimeSyncCallbacks.clear()
+    
+    monitoring.addBreadcrumb(
+      'Cleared all real-time sync callbacks',
+      'info'
+    )
+  }
+
+  /**
+   * Check if real-time sync is enabled and connected
+   */
+  isRealtimeSyncActive(): boolean {
+    return this.realtimeSyncEnabled && websocketService.isConnected()
+  }
+
+  /**
+   * Send note update via WebSocket for real-time sync
+   *
+   * @param note - The note to sync
+   */
+  sendNoteUpdate(note: Note): boolean {
+    if (!this.isRealtimeSyncActive()) {
+      monitoring.addBreadcrumb(
+        'Cannot send note update: real-time sync not active',
+        'warning'
+      )
+      return false
+    }
+
+    const payload: NoteUpdatePayload = {
+      note,
+      userId: note.userId,
+    }
+
+    return websocketService.send('note_update', payload)
+  }
+
+  /**
+   * Send note deletion via WebSocket for real-time sync
+   *
+   * @param noteId - The ID of the note to delete
+   * @param userId - Optional user ID
+   */
+  sendNoteDelete(noteId: string, userId?: string): boolean {
+    if (!this.isRealtimeSyncActive()) {
+      monitoring.addBreadcrumb(
+        'Cannot send note deletion: real-time sync not active',
+        'warning'
+      )
+      return false
+    }
+
+    const payload: NoteDeletePayload = {
+      noteId,
+      userId,
+    }
+
+    return websocketService.send('note_delete', payload)
+  }
+
+  /**
+   * Register a callback for real-time note updates
+   *
+   * @param callback - Function to call when a note is updated
+   */
+  onRealtimeUpdate(callback: (note: Note) => void): void {
+    this.realtimeSyncCallbacks.add(callback)
+  }
+
+  /**
+   * Unregister a callback for real-time note updates
+   *
+   * @param callback - The callback function to remove
+   */
+  offRealtimeUpdate(callback: (note: Note) => void): void {
+    this.realtimeSyncCallbacks.delete(callback)
+  }
+
+  /**
+   * Get WebSocket connection state
+   */
+  getRealtimeConnectionState(): string {
+    return websocketService.getConnectionState()
   }
 }
 
