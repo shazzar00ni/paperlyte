@@ -28,17 +28,31 @@ function parseShortcut(shortcut: string): {
   shift: boolean
   alt: boolean
 } {
-  const parts = shortcut.toLowerCase().split('+')
-  const modifiers = parts.slice(0, -1)
-  const key = parts[parts.length - 1]
+  const lowerCaseShortcut = shortcut.toLowerCase();
+  const lastPlusIndex = lowerCaseShortcut.lastIndexOf('+');
+
+  let key: string;
+  let modifierParts: string[];
+
+  if (lastPlusIndex === -1) {
+    key = lowerCaseShortcut;
+    modifierParts = [];
+  } else {
+    const keyPart = lowerCaseShortcut.substring(lastPlusIndex + 1);
+    // If key is '+', the part after the last '+' will be empty.
+    key = keyPart === '' ? '+' : keyPart;
+    modifierParts = lowerCaseShortcut.substring(0, lastPlusIndex).split('+');
+  }
+
+  const modifiers = new Set(modifierParts);
 
   return {
     key,
-    ctrl: modifiers.includes('ctrl'),
-    cmd: modifiers.includes('cmd') || modifiers.includes('meta'),
-    shift: modifiers.includes('shift'),
-    alt: modifiers.includes('alt'),
-  }
+    ctrl: modifiers.has('ctrl'),
+    cmd: modifiers.has('cmd') || modifiers.has('meta'),
+    shift: modifiers.has('shift'),
+    alt: modifiers.has('alt'),
+  };
 }
 
 /**
