@@ -35,8 +35,8 @@
     "lighthouse:ci": "lhci autorun",
     "lighthouse:local": "lighthouse http://localhost:4173 --output html --output-path ./lighthouse-report.html --view",
     "performance:audit": "npm run build && npm run preview & sleep 3 && npm run lighthouse:ci && pkill -f 'vite preview'",
-    "test": "node --test tests/*.test.js tests/**/*.test.js",
-    "test:package": "node --test tests/package.validation.test.js tests/package.schema.test.js",
+    "test": "vitest run",
+    "test:package": "vitest run test/package.validation.test.ts test/package.schema.test.ts",
     "test:config": "npm run test:package",
     "prepare": "husky install",
     "test:watch": "vitest"
