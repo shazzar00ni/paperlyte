@@ -3,8 +3,8 @@
   How to run: npm test
 */
 import { describe, test, expect, beforeAll } from 'vitest';
-const fs = require('fs');
-const yaml = require('js-yaml');
+import fs from 'node:fs';
+import yaml from 'js-yaml';
 
 describe('CI Workflow Configuration (.github/workflows/ci.yml)', () => {
   let workflowContent;
