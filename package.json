@@ -34,7 +34,7 @@
     "security-fix": "npm audit fix",
     "lighthouse:ci": "lhci autorun",
     "lighthouse:local": "lighthouse http://localhost:4173 --output html --output-path ./lighthouse-report.html --view",
-    "performance:audit": "npm run build && npm run preview & sleep 3 && npm run lighthouse:ci && pkill -f 'vite preview'",
+    "performance:audit": "bash scripts/performance-audit.sh",
     "test": "vitest run",
     "test:package": "vitest run test/package.validation.test.ts test/package.schema.test.ts",
     "test:config": "npm run test:package",
