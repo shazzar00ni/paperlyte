@@ -2,6 +2,7 @@
   Testing framework: Vitest
   How to run: npm test
 */
+import { describe, test, expect, beforeAll } from 'vitest';
 const fs = require('fs');
 const yaml = require('js-yaml');
 
