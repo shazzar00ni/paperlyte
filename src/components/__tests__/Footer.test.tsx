@@ -334,7 +334,9 @@ describe('Footer', () => {
       // Re-render
       rerender(<Footer />)
 
-      expect(feedbackModal).toHaveAttribute('data-open', 'true')
+      // Re-query after rerender to get fresh reference
+      const feedbackModalAfterRerender = screen.getByTestId('feedback-modal')
+      expect(feedbackModalAfterRerender).toHaveAttribute('data-open', 'true')
     })
   })
 })
