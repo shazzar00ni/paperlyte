@@ -23,7 +23,7 @@ vi.mock('../../utils/monitoring', () => ({
 vi.mock('../FeedbackModal', () => ({
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
     <div data-testid="feedback-modal" data-open={isOpen}>
-      <button onClick={onClose}>Close Modal</button>
+      <button type="button" onClick={onClose}>Close Modal</button>
     </div>
   ),
 }))
