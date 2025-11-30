@@ -26,12 +26,16 @@ vi.mock('../../utils/monitoring', () => ({
 }))
 
 // Mock validation utilities
-vi.mock('../../utils/validation', () => ({
-  isValidEmail: vi.fn((email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  ),
-  normalizeEmail: vi.fn((email: string) => email.toLowerCase().trim()),
-}))
+// Use actual validation utilities to ensure tests reflect real behavior
+vi.mock('../../utils/validation', async () => {
+  const actual = await vi.importActual<typeof import('../../utils/validation')>(
+    '../../utils/validation'
+  )
+  return {
+    isValidEmail: vi.fn(actual.isValidEmail),
+    normalizeEmail: vi.fn(actual.normalizeEmail),
+  }
+})
 
 describe('FeedbackModal', () => {
   const mockOnClose = vi.fn()
