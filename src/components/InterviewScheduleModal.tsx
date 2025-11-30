@@ -203,7 +203,7 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
               Thank you for your interest in sharing feedback. We&apos;ll reach
               out via email to schedule a time that works for you.
             </p>
-            <button onClick={handleClose} className='btn-primary btn-md'>
+            <button type='button' onClick={handleClose} className='btn-primary btn-md'>
               Close
             </button>
           </div>
