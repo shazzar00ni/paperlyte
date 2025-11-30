@@ -135,7 +135,7 @@ const FeedbackModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
               Thank you for helping us improve Paperlyte. We review all feedback
               and use it to build a better product.
             </p>
-            <button onClick={handleClose} className='btn-primary btn-md'>
+            <button type='button' onClick={handleClose} className='btn-primary btn-md'>
               Close
             </button>
           </div>
