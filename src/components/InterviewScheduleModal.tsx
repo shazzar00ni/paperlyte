@@ -320,10 +320,10 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
             {/* Topics */}
             <div>
-              <label className='block text-sm font-medium text-dark mb-2'>
+              <span id='topics-label' className='block text-sm font-medium text-dark mb-2'>
                 Topics to Discuss *
-              </label>
-              <div className='space-y-2'>
+              </span>
+              <div className='space-y-2' role='group' aria-labelledby='topics-label'>
                 {interviewTopics.map(topic => (
                   <label
                     key={topic}
