@@ -296,10 +296,10 @@ const InterviewScheduleModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
             {/* Preferred Days */}
             <div>
-              <label className='block text-sm font-medium text-dark mb-2'>
+              <span id='preferred-days-label' className='block text-sm font-medium text-dark mb-2'>
                 Preferred Days *
-              </label>
-              <div className='grid grid-cols-2 gap-2'>
+              </span>
+              <div className='grid grid-cols-2 gap-2' role='group' aria-labelledby='preferred-days-label'>
                 {availableDays.map(day => (
                   <button
                     key={day}
