@@ -8,7 +8,7 @@ import Footer from '../Footer'
 vi.mock('../FeedbackModal', () => ({
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
     <div data-testid="feedback-modal" data-open={isOpen}>
-      <button onClick={onClose}>Close Feedback</button>
+      <button type="button" onClick={onClose}>Close Feedback</button>
     </div>
   ),
 }))
@@ -16,7 +16,7 @@ vi.mock('../FeedbackModal', () => ({
 vi.mock('../InterviewScheduleModal', () => ({
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
     <div data-testid="interview-modal" data-open={isOpen}>
-      <button onClick={onClose}>Close Interview</button>
+      <button type="button" onClick={onClose}>Close Interview</button>
     </div>
   ),
 }))
