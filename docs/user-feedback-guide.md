@@ -265,8 +265,8 @@ A: As often as you'd like! We appreciate all input.
 Questions about feedback or interviews?
 
 - Email: <feedback@paperlyte.com>
-- Check our FAQ: [Link to FAQ]
-- Join our community: [Link to Discord/Forum]
+- Check our FAQ: [FAQ](/faq)
+- Join our community: [Discord](https://discord.gg/paperlyte)
 
 ---
 
