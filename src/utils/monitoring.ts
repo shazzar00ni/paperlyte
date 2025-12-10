@@ -326,7 +326,12 @@ export function safeLogError(error: Error, context?: ErrorContext): void {
     monitoring.logError(error, context)
   } catch (loggingError) {
     // Fallback to console if monitoring fails
-    console.error('Failed to log error to monitoring service:', loggingError)
-    console.error('Original error:', error, context)
+    try {
+      console.error('Failed to log error to monitoring service:', loggingError)
+      console.error('Original error:', error, context)
+    } catch {
+      // If console.error also fails, fail silently
+      // This is an extreme edge case but we don't want to throw
+    }
   }
 }
