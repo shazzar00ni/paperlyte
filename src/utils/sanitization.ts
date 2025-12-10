@@ -36,10 +36,14 @@ export function sanitizeTitle(title: string): string {
   let sanitized = DOMPurify.sanitize(title, { ALLOWED_TAGS: [] })
   const hadScriptOrHtmlTags = sanitized.length !== title.length
   if (hadScriptOrHtmlTags) {
-    monitoring.addBreadcrumb('Removed HTML/script tags from title using DOMPurify', 'warning', {
-      originalLength,
-      lengthAfterSanitization: sanitized.length,
-    });
+    monitoring.addBreadcrumb(
+      'Removed HTML/script tags from title using DOMPurify',
+      'warning',
+      {
+        originalLength,
+        lengthAfterSanitization: sanitized.length,
+      }
+    )
   }
 
   // Trim and remove control characters
@@ -180,7 +184,12 @@ export function stripHtml(html: string): string {
     originalLength,
   })
 
-  const stripped = html.replace(/<[^>]*>/g, ' ').trim()
+  // Use DOMPurify to safely strip all HTML tags including script tags with content
+  // This is more secure than regex-based tag removal
+  const stripped = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [], // No tags allowed - strip everything
+    KEEP_CONTENT: true, // Preserve text content when removing tags
+  }).trim()
 
   monitoring.addBreadcrumb('HTML tag stripping complete', 'info', {
     originalLength,
