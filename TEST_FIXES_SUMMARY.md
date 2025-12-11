@@ -21,7 +21,7 @@ exclude: [
   '**/cypress/**',
   '**/.{idea,git,cache,output,temp}/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-  '**/tests/e2e/**', // Exclude Playwright E2E tests
+  '**/tests/e2e/**/*.spec.ts', // Exclude Playwright E2E .spec.ts Playwright tests
 ],
 ```
 
