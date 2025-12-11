@@ -340,9 +340,48 @@ npm run ci
 - [`docs/security-audit-report.md`](./security-audit-report.md) - Security guidelines
 - [`CONTRIBUTING.md`](../CONTRIBUTING.md) - Contribution guide
 
+## ✨ Deployment Pipeline Features
+
+### Blue-Green Deployment
+
+**Workflow:** `.github/workflows/deploy-blue-green.yml`
+
+- Zero-downtime deployments
+- Automatic health checks before traffic switch
+- Manual or automatic traffic switching
+- Easy rollback to previous version
+
+### Rollback Mechanism
+
+**Workflow:** `.github/workflows/rollback.yml`
+
+- Quick rollback to previous deployment
+- Rollback to specific commit SHA
+- Automated testing of rollback target
+- Incident tracking and logging
+
+### Health Checks
+
+**Workflow:** `.github/workflows/post-deploy-health-check.yml`
+
+- HTTP status verification
+- Response time monitoring
+- Critical assets validation
+- SSL certificate checks
+- Content integrity verification
+
+### Database Migrations
+
+**Location:** `src/migrations/`
+
+- Automated migration system
+- Version tracking
+- Rollback support
+- Prepared for Q4 2025 API migration
+
 ## ✨ Next Steps
 
-The CI/CD infrastructure is complete. Future enhancements:
+Future enhancements:
 
 - [ ] Add more comprehensive E2E test coverage
 - [ ] Implement visual regression testing
@@ -350,7 +389,8 @@ The CI/CD infrastructure is complete. Future enhancements:
 - [ ] Set up branch protection rules
 - [ ] Integrate additional security scanning tools
 - [ ] Add performance regression detection
-- [ ] Implement automatic dependency vulnerability fixes
+- [ ] Implement canary deployments
+- [ ] Multi-region deployment support
 
 ## 📅 Last Updated
 

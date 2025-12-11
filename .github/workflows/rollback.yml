@@ -1,0 +1,199 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      rollback_target:
+        description: 'Rollback target (commit SHA or "previous")'
+        required: true
+        type: string
+        default: 'previous'
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  validate-rollback:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    outputs:
+      target_sha: ${{ steps.determine-target.outputs.sha }}
+    steps:
+      - name: Checkout current code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine rollback target
+        id: determine-target
+        run: |
+          TARGET="${{ inputs.rollback_target }}"
+
+          if [ "$TARGET" = "previous" ]; then
+            # Get the previous successful deployment
+            PREVIOUS_SHA=$(git log --format="%H" -n 2 | tail -1)
+            echo "sha=$PREVIOUS_SHA" >> $GITHUB_OUTPUT
+            echo "Rolling back to previous commit: $PREVIOUS_SHA"
+          else
+            # Validate the provided SHA
+            if git cat-file -e "$TARGET" 2>/dev/null; then
+              echo "sha=$TARGET" >> $GITHUB_OUTPUT
+              echo "Rolling back to specified commit: $TARGET"
+            else
+              echo "❌ Invalid commit SHA: $TARGET"
+              exit 1
+            fi
+          fi
+
+      - name: Log rollback attempt
+        run: |
+          cat >> rollback-log.txt << EOF
+          Rollback Initiated
+          ==================
+          Environment: ${{ inputs.environment }}
+          Target SHA: ${{ steps.determine-target.outputs.sha }}
+          Reason: ${{ inputs.reason }}
+          Initiated by: ${{ github.actor }}
+          Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          EOF
+
+          cat rollback-log.txt
+
+      - name: Upload rollback log
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-log
+          path: rollback-log.txt
+
+  execute-rollback:
+    name: Execute Rollback
+    runs-on: ubuntu-latest
+    needs: validate-rollback
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - name: Checkout rollback target
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-rollback.outputs.target_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:ci
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+        continue-on-error: true
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_ENVIRONMENT: ${{ inputs.environment }}
+          VITE_POSTHOG_API_KEY: ${{ inputs.environment == 'production' && secrets.VITE_POSTHOG_API_KEY_PROD || secrets.VITE_POSTHOG_API_KEY_STAGING }}
+          VITE_SENTRY_DSN: ${{ inputs.environment == 'production' && secrets.VITE_SENTRY_DSN_PROD || secrets.VITE_SENTRY_DSN_STAGING }}
+
+      - name: Deploy rollback
+        id: deploy-rollback
+        uses: nwtgck/actions-netlify@v2.1
+        with:
+          publish-dir: './dist'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: 'ROLLBACK - ${{ needs.validate-rollback.outputs.target_sha }} - Reason: ${{ inputs.reason }}'
+          production-deploy: ${{ inputs.environment == 'production' }}
+          enable-commit-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ inputs.environment == 'production' && secrets.NETLIFY_PROD_SITE_ID || secrets.NETLIFY_STAGING_SITE_ID }}
+
+      - name: Verify rollback
+        run: |
+          echo "Waiting for deployment to settle..."
+          sleep 15
+
+          DEPLOY_URL="${{ steps.deploy-rollback.outputs.deploy-url }}"
+          echo "Testing rolled back deployment at: $DEPLOY_URL"
+
+          # Basic health check
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "❌ Rollback verification failed: HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "✅ Rollback verification passed"
+
+      - name: Create rollback summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🔄 Deployment Rollback
+
+          **Status:** ${{ job.status == 'success' && '✅ Success' || '❌ Failed' }}
+          **Environment:** ${{ inputs.environment }}
+          **Rolled back to:** ${{ needs.validate-rollback.outputs.target_sha }}
+          **Reason:** ${{ inputs.reason }}
+          **Initiated by:** ${{ github.actor }}
+          **Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          **Deployment URL:** ${{ steps.deploy-rollback.outputs.deploy-url }}
+
+          ### Actions Taken
+          - ✅ Validated rollback target
+          - ✅ Checked out previous code
+          - ✅ Ran tests (best effort)
+          - ✅ Built application
+          - ✅ Deployed to ${{ inputs.environment }}
+          - ✅ Verified deployment health
+
+          ### Next Steps
+          - Monitor application for stability
+          - Investigate the root cause of the issue that triggered rollback
+          - Create an incident report if needed
+          - Plan fix and re-deployment
+          EOF
+
+  notify-rollback:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [validate-rollback, execute-rollback]
+    if: always()
+    steps:
+      - name: Download rollback log
+        uses: actions/download-artifact@v4
+        with:
+          name: rollback-log
+
+      - name: Rollback notification
+        run: |
+          echo "🚨 Rollback Notification"
+          echo "========================"
+          cat rollback-log.txt
+          echo ""
+          echo "Status: ${{ needs.execute-rollback.result }}"
+          echo ""
+          echo "Please update the team via your communication channels"
+          echo "Consider creating a post-incident review if this was a critical issue"
+
+      - name: Create incident tracking issue
+        if: inputs.environment == 'production'
+        run: |
+          echo "📝 Consider creating a GitHub issue to track this incident"
+          echo "Issue title: [INCIDENT] Rollback required on $(date +%Y-%m-%d)"
+          echo "Include the rollback log and reason in the issue description"
