@@ -41,9 +41,16 @@ const utf8ToBase64 = (str: string): string => {
 
 // Generate SVG placeholder images for demo
 const generatePlaceholderSVG = (title: string, color: string) => {
+  // Remove emojis from title to avoid btoa encoding issues
+  const cleanTitle = title
+    .replace(
+      /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu,
+      ''
+    )
+    .trim()
   const svg = `<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
     <rect width="600" height="400" fill="${color}"/>
-    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${title}</text>
+    <text x="300" y="200" font-family="Inter, system-ui" font-size="24" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="middle">${cleanTitle}</text>
   </svg>`
   return `data:image/svg+xml;base64,${utf8ToBase64(svg)}`
 }
@@ -54,7 +61,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Lightning Fast Editor',
     description:
       'Start writing instantly with our distraction-free interface. No loading screens, no delays.',
-    image: generatePlaceholderSVG('✏️ Editor Demo', '#6C63FF'),
+    image: generatePlaceholderSVG('Editor Demo', '#6C63FF'),
     alt: 'Paperlyte editor interface showing clean, minimal design',
   },
   {
@@ -62,7 +69,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Smart Search & Tags',
     description:
       'Find your notes instantly with intelligent search and flexible tagging system.',
-    image: generatePlaceholderSVG('🔍 Search Demo', '#4F46E5'),
+    image: generatePlaceholderSVG('Search Demo', '#4F46E5'),
     alt: 'Search functionality with tags and filtering options',
   },
   {
@@ -70,7 +77,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Seamless Sync (Coming Soon)',
     description:
       'Your notes everywhere, always secure and private with end-to-end encryption.',
-    image: generatePlaceholderSVG('🔄 Sync Demo', '#7C3AED'),
+    image: generatePlaceholderSVG('Sync Demo', '#7C3AED'),
     alt: 'Multi-device sync visualization',
   },
   {
@@ -78,7 +85,7 @@ const demoSlides: DemoSlide[] = [
     title: 'Privacy First',
     description:
       'Your thoughts stay yours. No ads, no tracking, no data mining.',
-    image: generatePlaceholderSVG('🔒 Privacy Demo', '#059669'),
+    image: generatePlaceholderSVG('Privacy Demo', '#059669'),
     alt: 'Privacy and security features illustration',
   },
 ]
@@ -148,11 +155,11 @@ const DemoCarousel: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className='relative aspect-video bg-gray-50'>
+      <div className='relative bg-gray-50'>
         {/* Slide Content */}
-        <div className='flex h-full'>
+        <div className='flex flex-col md:flex-row'>
           {/* Image Section */}
-          <div className='flex-1 relative overflow-hidden'>
+          <div className='relative overflow-hidden aspect-video md:flex-1'>
             <img
               src={currentSlideData.image}
               alt={currentSlideData.alt}
@@ -176,27 +183,27 @@ const DemoCarousel: React.FC = () => {
             {/* Navigation Arrows */}
             <button
               onClick={prevSlide}
-              className='absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
+              className='absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
               aria-label='Previous slide'
             >
-              <ChevronLeft className='w-5 h-5 text-gray-700' />
+              <ChevronLeft className='w-4 h-4 md:w-5 md:h-5 text-gray-700' />
             </button>
 
             <button
               onClick={nextSlide}
-              className='absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
+              className='absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all duration-200 hover:scale-110'
               aria-label='Next slide'
             >
-              <ChevronRight className='w-5 h-5 text-gray-700' />
+              <ChevronRight className='w-4 h-4 md:w-5 md:h-5 text-gray-700' />
             </button>
           </div>
 
           {/* Text Section */}
-          <div className='flex-1 p-8 flex flex-col justify-center'>
-            <h4 className='text-2xl font-semibold text-dark mb-4'>
+          <div className='p-6 md:p-8 md:flex-1 flex flex-col justify-center'>
+            <h4 className='text-xl md:text-2xl font-semibold text-dark mb-3 md:mb-4'>
               {currentSlideData.title}
             </h4>
-            <p className='text-gray-600 text-lg leading-relaxed'>
+            <p className='text-gray-600 text-base md:text-lg leading-relaxed'>
               {currentSlideData.description}
             </p>
           </div>

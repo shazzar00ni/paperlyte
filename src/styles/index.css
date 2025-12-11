@@ -33,6 +33,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
 }
 
 h1 {
@@ -185,4 +187,76 @@ button:not(:disabled):active {
 /* Focus styles */
 .rich-text-content:focus {
   outline: none;
+}
+
+/* Mobile-Friendly Improvements */
+/* Ensure minimum touch target size of 44x44px for accessibility */
+@media (max-width: 768px) {
+  button,
+  a,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve tap highlight on mobile */
+  button,
+  a {
+    -webkit-tap-highlight-color: rgba(108, 99, 255, 0.2);
+  }
+
+  /* Better spacing for mobile inputs */
+  input,
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Optimize modal for mobile */
+  .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* Smooth scrolling for better mobile UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent pull-to-refresh on mobile when scrolling */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Better focus indicators for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #6C63FF;
+  outline-offset: 2px;
+}
+
+/* Improve button touch targets */
+.btn-sm {
+  padding: 0.5rem 1rem;
+}
+
+.btn-md {
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+}
+
+/* Ensure cards are touch-friendly */
+.card {
+  min-height: 44px;
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Optimize for tablet landscape/portrait */
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
