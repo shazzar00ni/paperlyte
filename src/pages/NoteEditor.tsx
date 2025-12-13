@@ -1,5 +1,6 @@
 import {
   Maximize2,
+  Menu,
   PlusCircle,
   Save,
   Search,
@@ -26,6 +27,7 @@ const NoteEditor: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const focusModeRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -298,9 +300,35 @@ const NoteEditor: React.FC = () => {
   )
 
   return (
-    <div className='h-screen flex bg-background'>
+    <div className='h-screen flex bg-background relative'>
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden'
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden='true'
+        />
+      )}
+
       {/* Sidebar */}
-      <div className='w-80 bg-white border-r border-gray-200 flex flex-col'>
+      <div
+        className={`fixed md:static inset-y-0 left-0 z-20 w-80 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        {/* Sidebar Header with Close Button (Mobile) */}
+        <div className='p-4 border-b border-gray-200 md:hidden flex items-center justify-between'>
+          <h2 className='text-lg font-semibold text-dark'>Notes</h2>
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(false)}
+            className='p-2 rounded-lg hover:bg-gray-100 transition-colors'
+            aria-label='Close sidebar'
+          >
+            <X className='h-5 w-5 text-gray-600' />
+          </button>
+        </div>
+
         {/* Search */}
         <div className='p-4 border-b border-gray-200'>
           <div className='relative'>
@@ -337,6 +365,7 @@ const NoteEditor: React.FC = () => {
               key={note.id}
               onClick={() => {
                 setCurrentNote(note)
+                setIsSidebarOpen(false) // Close sidebar on mobile when note is selected
                 trackFeatureUsage('note_list', 'select_note', {
                   noteId: note.id,
                 })
@@ -391,22 +420,32 @@ const NoteEditor: React.FC = () => {
         {currentNote ? (
           <>
             {/* Editor Header */}
-            <div className='bg-white border-b border-gray-200 p-4 flex items-center justify-between'>
+            <div className='bg-white border-b border-gray-200 p-4 flex items-center justify-between gap-2'>
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(true)}
+                className='md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0'
+                aria-label='Open sidebar'
+              >
+                <Menu className='h-5 w-5 text-gray-600' />
+              </button>
+
               <input
                 type='text'
                 value={currentNote.title}
                 onChange={e => updateCurrentNote({ title: e.target.value })}
-                className='text-xl font-semibold text-dark bg-transparent border-none outline-none flex-1'
+                className='text-lg md:text-xl font-semibold text-dark bg-transparent border-none outline-none flex-1 min-w-0'
                 placeholder='Note title...'
               />
-              <div className='flex items-center space-x-2'>
+              <div className='flex items-center space-x-2 flex-shrink-0'>
                 <button
                   onClick={() => setIsTagModalOpen(true)}
                   className='btn-ghost btn-sm flex items-center space-x-1'
                   title='Manage Tags (Ctrl+T)'
                 >
                   <Tag className='h-4 w-4' />
-                  <span>Tags</span>
+                  <span className='hidden sm:inline'>Tags</span>
                   {currentNote.tags.length > 0 && (
                     <span className='ml-1 px-2 py-0.5 bg-primary text-white text-xs rounded-full'>
                       {currentNote.tags.length}
@@ -419,7 +458,7 @@ const NoteEditor: React.FC = () => {
                   title='Enter Focus Mode'
                 >
                   <Maximize2 className='h-4 w-4' />
-                  <span>Focus</span>
+                  <span className='hidden sm:inline'>Focus</span>
                 </button>
                 <button
                   onClick={saveCurrentNote}
@@ -427,7 +466,9 @@ const NoteEditor: React.FC = () => {
                   className='btn-primary btn-sm flex items-center space-x-1'
                 >
                   <Save className='h-4 w-4' />
-                  <span>{isLoading ? 'Saving...' : 'Save'}</span>
+                  <span className='hidden sm:inline'>
+                    {isLoading ? 'Saving...' : 'Save'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -444,7 +485,17 @@ const NoteEditor: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className='flex-1 flex items-center justify-center text-gray-500'>
+          <div className='flex-1 flex flex-col items-center justify-center text-gray-500'>
+            {/* Mobile Menu Button for Empty State */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className='md:hidden mb-4 p-3 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center space-x-2'
+              aria-label='Open notes list'
+            >
+              <Menu className='h-5 w-5' />
+              <span>Open Notes</span>
+            </button>
             <div className='text-center'>
               <PlusCircle className='h-12 w-12 mx-auto mb-4 text-gray-300' />
               <p className='text-lg'>Select a note to start editing</p>
