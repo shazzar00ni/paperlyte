@@ -8,6 +8,8 @@ import {
 import LoadingFallback from './components/LoadingFallback'
 import './styles/App.css'
 import { monitoring } from './utils/monitoring'
+import './health'
+import { migrationManager } from './migrations'
 
 // Lazy-load route components for optimal bundle splitting
 // This reduces initial bundle size by ~40% and improves Time to Interactive
@@ -19,6 +21,24 @@ function App() {
   useEffect(() => {
     // Initialize monitoring on app load
     monitoring.addBreadcrumb('Application initialized', 'navigation')
+
+    // Run database migrations on startup
+    const runMigrations = async () => {
+      try {
+        if (migrationManager.needsMigration()) {
+          monitoring.addBreadcrumb('Running pending migrations', 'info')
+          await migrationManager.migrate()
+          monitoring.addBreadcrumb('Database migrations completed', 'info')
+        }
+      } catch (error) {
+        monitoring.logError(error as Error, {
+          feature: 'migrations',
+          action: 'startup',
+        })
+      }
+    }
+
+    runMigrations()
   }, [])
 
   return (

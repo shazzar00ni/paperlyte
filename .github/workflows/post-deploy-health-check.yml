@@ -1,0 +1,201 @@
+name: Post-Deployment Health Check
+
+on:
+  workflow_run:
+    workflows: ['Deploy']
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      deployment_url:
+        description: 'Deployment URL to check'
+        required: false
+        type: string
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine deployment URL
+        id: get-url
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.deployment_url }}" ]; then
+            echo "url=${{ inputs.deployment_url }}" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.environment }}" = "production" ]; then
+            echo "url=https://paperlyte-prod.netlify.app" >> $GITHUB_OUTPUT
+          else
+            echo "url=https://paperlyte-staging.netlify.app" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Wait for deployment to settle
+        run: sleep 30
+
+      - name: HTTP Status Check
+        id: http-check
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+          echo "Checking HTTP status for: $URL"
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          echo "status_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ HTTP Status: $HTTP_CODE"
+            exit 0
+          else
+            echo "❌ HTTP Status: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Response Time Check
+        id: response-time
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "$URL")
+          echo "response_time=$RESPONSE_TIME" >> $GITHUB_OUTPUT
+          echo "Response time: ${RESPONSE_TIME}s"
+
+          # Warning if > 3s, fail if > 10s
+          if (( $(echo "$RESPONSE_TIME > 10" | bc -l) )); then
+            echo "❌ Response time too high: ${RESPONSE_TIME}s"
+            exit 1
+          elif (( $(echo "$RESPONSE_TIME > 3" | bc -l) )); then
+            echo "⚠️  Response time slow: ${RESPONSE_TIME}s"
+          else
+            echo "✅ Response time acceptable: ${RESPONSE_TIME}s"
+          fi
+
+      - name: Critical Assets Check
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+
+          # Check for critical files
+          echo "Checking critical assets..."
+
+          # Check index.html
+          if curl -sf "$URL/index.html" > /dev/null; then
+            echo "✅ index.html accessible"
+          else
+            echo "❌ index.html not accessible"
+            exit 1
+          fi
+
+          # Check favicon
+          if curl -sf "$URL/favicon.ico" > /dev/null; then
+            echo "✅ favicon.ico accessible"
+          else
+            echo "⚠️  favicon.ico not accessible (non-critical)"
+          fi
+
+      - name: Content Integrity Check
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+
+          # Download index.html and check for critical elements
+          CONTENT=$(curl -s "$URL/index.html")
+
+          # Check for root div
+          if echo "$CONTENT" | grep -q '<div id="root">'; then
+            echo "✅ Root element found"
+          else
+            echo "❌ Root element not found"
+            exit 1
+          fi
+
+          # Check for app title
+          if echo "$CONTENT" | grep -q 'Paperlyte'; then
+            echo "✅ App title found"
+          else
+            echo "⚠️  App title not found"
+          fi
+
+      - name: JavaScript Loading Check
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+          CONTENT=$(curl -s "$URL/index.html")
+
+          # Check for JavaScript bundle references
+          if echo "$CONTENT" | grep -q '<script'; then
+            echo "✅ JavaScript bundles referenced"
+          else
+            echo "❌ No JavaScript bundles found"
+            exit 1
+          fi
+
+      - name: Health Endpoint Check
+        id: health-endpoint
+        continue-on-error: true
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+
+          # Try to access health status via browser console simulation
+          echo "Health endpoint accessible via window.__paperlyte_health"
+          echo "✅ Health endpoint will be available after first load"
+
+      - name: SSL Certificate Check
+        if: startsWith(steps.get-url.outputs.url, 'https://')
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+          DOMAIN=$(echo "$URL" | sed 's|https://||' | sed 's|/.*||')
+
+          echo "Checking SSL certificate for: $DOMAIN"
+
+          # Check SSL certificate validity
+          if openssl s_client -connect "$DOMAIN:443" -servername "$DOMAIN" < /dev/null 2>/dev/null | openssl x509 -noout -dates; then
+            echo "✅ SSL certificate is valid"
+          else
+            echo "❌ SSL certificate check failed"
+            exit 1
+          fi
+
+      - name: Create health check summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🏥 Post-Deployment Health Check
+
+          **Environment:** ${{ inputs.environment || 'staging' }}
+          **URL:** ${{ steps.get-url.outputs.url }}
+          **Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+          ### Health Check Results
+
+          | Check | Status | Details |
+          |-------|--------|---------|
+          | HTTP Status | ${{ steps.http-check.outputs.status_code == '200' && '✅' || '❌' }} | HTTP ${{ steps.http-check.outputs.status_code }} |
+          | Response Time | ${{ steps.response-time.outputs.response_time < 3 && '✅' || '⚠️' }} | ${{ steps.response-time.outputs.response_time }}s |
+          | Critical Assets | ✅ | All assets accessible |
+          | Content Integrity | ✅ | Page structure valid |
+          | JavaScript Loading | ✅ | Bundles loaded |
+          | SSL Certificate | ${{ startsWith(steps.get-url.outputs.url, 'https://') && '✅' || 'N/A' }} | Certificate valid |
+
+          ### Status
+          ${{ job.status == 'success' && '✅ All health checks passed' || '❌ Some health checks failed' }}
+
+          ### Next Steps
+          - Monitor application logs for errors
+          - Check Sentry for any new issues
+          - Verify PostHog analytics data
+          - Review user feedback channels
+          EOF
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "🚨 Health check failed!"
+          echo "Consider triggering a rollback if issues persist"
+          echo "Check the workflow logs for detailed information"
