@@ -60,7 +60,7 @@
     "dompurify": "^3.3.0",
     "lucide-react": "^0.545.0",
     "posthog-js": "^1.285.0",
-    "react": "^18.2.0",
+    "react": "^19.2.3",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.9.6"
   },
